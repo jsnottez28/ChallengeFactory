@@ -62,7 +62,7 @@ docker run -d -p 1025:1025 -p 8025:8025 --name challengefactory-mailhog mailhog/
   "SmtpUser": "",
   "SmtpPassword": "",
   "ExpediteurEmail": "no-reply@example.com",
-  "ExpediteurNom": "Challenge Factory"
+  "ExpediteurNom": "Challenges Factory"
 }
 ```
 - Ouvrez l'interface MailHog à `http://localhost:8025` pour voir les emails de confirmation et mot de passe oublié.

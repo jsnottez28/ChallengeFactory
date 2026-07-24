@@ -1,0 +1,97 @@
+@model Web.Controllers.ContactFormModel
+@{
+    ViewData["Title"] = "Contact";
+    var contactEnvoye = TempData["ContactEnvoye"] as bool? ?? false;
+}
+
+<section class="cf-hero-home" style="padding:90px 0 50px;">
+    <div class="container">
+        <span class="cf-badge">On vous répond en 24h</span>
+        <h1 class="cf-h1 mb-3" style="font-size:clamp(34px,4.5vw,52px);">Parlons de votre prochain <span class="cf-accent">Challenge</span></h1>
+        <p class="cf-lead" style="max-width:620px;">
+            Nos experts analysent votre besoin et vous montrent comment le transformer en Challenge Factory —
+            que vous soyez une entreprise ou un stagiaire individuel.
+        </p>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🏢</div>
+                    <h3 class="cf-h3 mb-2">Vous êtes une entreprise</h3>
+                    <p class="mb-4">
+                        En 30 minutes, nos experts analysent votre défi terrain et vous expliquent comment le
+                        transformer en Challenge pour vos équipes. Gratuit, sans engagement.
+                    </p>
+                    <a class="cf-btn cf-btn-primary" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">
+                        📅 Cadrer le Challenge de mon entreprise
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🙋</div>
+                    <h3 class="cf-h3 mb-2">Vous êtes un particulier</h3>
+                    <p class="mb-4">
+                        Décrivez votre besoin dans le formulaire ci-dessous, ou créez directement votre compte.
+                        L'accès à la plateforme est ensuite validé par un administrateur.
+                    </p>
+                    <a class="cf-btn cf-btn-outline" asp-area="Identity" asp-page="/Account/Register">
+                        Créer mon compte →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="cf-card">
+                    <h3 class="cf-h3 mb-3">Cadrer votre besoin</h3>
+
+                    @if (contactEnvoye)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            Votre message a bien été envoyé. Nous vous répondons sous 24h.
+                        </div>
+                    }
+
+                    <form asp-controller="Home" asp-action="Contact" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        <div class="mb-3">
+                            <label asp-for="Nom" class="form-label"></label>
+                            <input asp-for="Nom" class="form-control" />
+                            <span asp-validation-for="Nom" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Message" class="form-label"></label>
+                            <textarea asp-for="Message" class="form-control" rows="5" placeholder="Décrivez votre besoin ou votre défi..."></textarea>
+                            <span asp-validation-for="Message" class="text-danger small"></span>
+                        </div>
+                        <button type="submit" class="cf-btn cf-btn-primary">Envoyer mon message</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="cf-card h-100">
+                    <h3 class="cf-h3 mb-3">Coordonnées</h3>
+                    <p class="mb-2"><strong>Email :</strong> <a href="mailto:contact@challenges-factory.fr">contact@challenges-factory.fr</a></p>
+                    <p class="mb-2"><strong>Téléphone :</strong> <a href="tel:+33699876114">+33 (0)6 99 87 61 14</a></p>
+                    <p class="mb-2"><strong>Disponibilité :</strong> Lun–Ven, 9h–18h</p>
+                    <p class="text-muted small mb-0">Notre organisme est certifié Qualiopi — vos formations sont éligibles aux financements OPCO.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

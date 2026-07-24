@@ -1,0 +1,348 @@
+@{
+    ViewData["Title"] = "La méthode";
+}
+
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">La méthode Challenges Factory</span>
+                <h1 class="cf-h1 mb-3">La formation qui <span class="cf-accent">change vraiment</span> les comportements.</h1>
+                <p class="cf-lead" style="max-width:640px;">
+                    Oubliez les PowerPoint et les e-learnings oubliés le lendemain. La méthode Challenges Factory
+                    transforme un vrai problème en aventure collective de 8 semaines — avec ou sans plateforme digitale.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-stats-band">
+    <div class="container">
+        <div class="cf-stats-grid">
+            <div class="cf-stat-item">
+                <div class="cf-stat-num">80%</div>
+                <div class="cf-stat-label">d'abandon dans les formations classiques</div>
+            </div>
+            <div class="cf-stat-item">
+                <div class="cf-stat-num">10%</div>
+                <div class="cf-stat-label">seulement de rétention après 72h en e-learning passif</div>
+            </div>
+            <div class="cf-stat-item">
+                <div class="cf-stat-num">90%</div>
+                <div class="cf-stat-label">de rétention avec la méthode Enseigner + Valider</div>
+            </div>
+        </div>
+        <p class="text-center mt-4 mb-0" style="color:rgba(255,255,255,.7);font-style:italic;">
+            « On n'apprend jamais mieux qu'en résolvant ensemble un problème réel. »
+        </p>
+    </div>
+</section>
+
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">La comparaison</span>
+            <h2 class="cf-h2">Formation classique vs méthode Challenge</h2>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-5">
+                <div class="cf-flip-card cf-flip-before">
+                    <h5 class="mb-3">😴 Formation classique</h5>
+                    <ol class="mb-0 ps-3 cf-flip-list">
+                        <li class="mb-2">Écouter pendant 2 jours</li>
+                        <li class="mb-2">Passer un QCM</li>
+                        <li class="mb-2">Ranger le classeur</li>
+                        <li>Reprendre comme avant</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="cf-flip-card cf-flip-after">
+                    <h5 class="mb-3">⚡ Méthode Challenge</h5>
+                    <ol class="mb-0 ps-3 cf-flip-list">
+                        <li class="mb-2">Relever un vrai défi terrain</li>
+                        <li class="mb-2">Résoudre en équipe</li>
+                        <li class="mb-2">Prouver par l'action</li>
+                        <li>Changer durablement</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Ce que la recherche montre</span>
+            <h2 class="cf-h2">La rétention mémorielle selon la méthode</h2>
+        </div>
+        <div class="row g-3 justify-content-center" style="max-width:700px;margin:0 auto;">
+            @{
+                var retention = new (string Label, int Value)[]
+                {
+                    ("Vidéo / e-learning", 10),
+                    ("Présentiel classique", 25),
+                    ("Discussion & échange", 50),
+                    ("Mise en pratique terrain", 75),
+                    ("Enseigner + Valider (notre méthode)", 90),
+                };
+            }
+            @foreach (var item in retention)
+            {
+                <div class="col-12">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div style="width:220px;font-size:14px;">@item.Label</div>
+                        <div class="flex-grow-1" style="background:var(--cf-grey-200);border-radius:6px;height:14px;overflow:hidden;">
+                            <div style="width:@(item.Value)%;background:var(--cf-orange);height:100%;"></div>
+                        </div>
+                        <div style="width:44px;text-align:right;font-weight:700;color:var(--cf-orange);">@item.Value%</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Le déroulé</span>
+            <h2 class="cf-h2">Les 3 actes, sur 8 semaines</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">ACTE 1 · J-30</span>
+                    <h5>Cadrage &amp; Alignement</h5>
+                    <ul class="ps-3 mb-0 text-muted small">
+                        <li>Identifier le vrai problème terrain</li>
+                        <li>Reformuler en enjeu positif</li>
+                        <li>Nommer et packager le Challenge</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">ACTE 2 · J-15</span>
+                    <h5>Design &amp; Ingénierie</h5>
+                    <ul class="ps-3 mb-0 text-muted small">
+                        <li>Photo de départ (état des compétences)</li>
+                        <li>Scénarisation des 8 défis hebdo</li>
+                        <li>Sélection des ressources pédagogiques</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">ACTE 3 · 8 semaines</span>
+                    <h5>Déploiement &amp; Impact</h5>
+                    <ul class="ps-3 mb-0 text-muted small">
+                        <li>Lancement collectif (Kick-off)</li>
+                        <li>1 défi terrain par semaine</li>
+                        <li>Mesure d'impact avant/après</li>
+                        <li>Capitalisation du savoir-métier</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Chaque semaine</span>
+            <h2 class="cf-h2">Une semaine type : S'engager → Investiguer → Agir</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cf-process-step">
+                    <span class="cf-process-num">Lun.</span>
+                    <h5 class="mb-2">La mission</h5>
+                    <p class="text-muted mb-0">Réception du défi de la semaine. Chaque équipe comprend son objectif.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-process-step">
+                    <span class="cf-process-num">Mar.–Jeu.</span>
+                    <h5 class="mb-2">Le terrain</h5>
+                    <p class="text-muted mb-0">Action individuelle sur le poste de travail. Observation, test, preuve.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-process-step">
+                    <span class="cf-process-num">Ven.</span>
+                    <h5 class="mb-2">L'atelier</h5>
+                    <p class="text-muted mb-0">45 min en groupe : partage des preuves, validation par les pairs, apprentissage collectif.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🔥</div>
+                    <h5>Semaines 1–2 · S'engager</h5>
+                    <p class="mb-0">Créer l'envie et la cohésion. Résultat : équipes formées, premier défi lancé, chacun connaît son rôle.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🔍</div>
+                    <h5>Semaines 3–4 · Investiguer</h5>
+                    <p class="mb-0">Aller sur le terrain avant de chercher des solutions. Résultat : un diagnostic partagé, ancré dans la réalité.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">⚡</div>
+                    <h5>Semaines 5–8 · Agir</h5>
+                    <p class="mb-0">Construire, tester et valider des solutions concrètes. Résultat : nouvelles pratiques, outils créés, compétences prouvées.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Qui fait quoi</span>
+            <h2 class="cf-h2">Les 4 acteurs indispensables</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <h5>Le Sponsor</h5>
+                    <p class="text-muted small mb-2">Implication ponctuelle · ~2h sur 8 semaines</p>
+                    <p class="mb-0 small">Légitimer le Challenge, lancer le kick-off, valider les livrables, célébrer les succès.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <h5>Le Chef de Projet</h5>
+                    <p class="text-muted small mb-2">Implication forte · 2–3h/semaine</p>
+                    <p class="mb-0 small">Concevoir les 8 défis, animer les ateliers, suivre l'engagement, mesurer l'impact.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <h5>Les Tuteurs</h5>
+                    <p class="text-muted small mb-2">Implication modérée · 1h/semaine</p>
+                    <p class="mb-0 small">Valider les défis individuels, animer les échanges, partager les bonnes pratiques.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <h5>Les Participants</h5>
+                    <p class="text-muted small mb-2">Implication totale · 1–2h/semaine</p>
+                    <p class="mb-0 small">Relever 1 défi par semaine, apporter la preuve terrain, valider le défi du binôme.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Pourquoi ça marche</span>
+            <h2 class="cf-h2">6 points clés</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">01</span>
+                    <h5>Des compétences qui collent</h5>
+                    <p class="mb-0">Pratiquées sur leur propre poste, dans leur vrai contexte, les compétences ne s'évaporent pas le lundi suivant.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">02</span>
+                    <h5>Des résultats mesurables</h5>
+                    <p class="mb-0">Mesure de l'état des compétences avant et après le Challenge. Des chiffres concrets à présenter.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">03</span>
+                    <h5>Un savoir-métier qui reste</h5>
+                    <p class="mb-0">Les livrables produits deviennent les nouveaux standards de l'organisation.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">04</span>
+                    <h5>Des équipes plus soudées</h5>
+                    <p class="mb-0">Travailler ensemble sur un vrai problème crée de la cohésion bien plus qu'un team building artificiel.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">05</span>
+                    <h5>Éligible aux financements OPCO</h5>
+                    <p class="mb-0">Certifié Qualiopi, pris en charge par l'OPCO. Un ROI réel et souvent immédiatement positif.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">06</span>
+                    <h5>Flexible : avec ou sans plateforme</h5>
+                    <p class="mb-0">Fonctionne avec un simple groupe Teams ou WhatsApp. La plateforme amplifie les résultats, sans être un prérequis.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Cas concret</span>
+            <h2 class="cf-h2">Feedback managérial</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">Le problème</span>
+                    <p class="mb-0 small">« Nos managers ne donnent jamais de retour à leurs équipes. Beaucoup de turn-over. »</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">Mission reformulée</span>
+                    <p class="mb-0 small">« Mission Boussole : devenir le manager qui donne confiance à son équipe — en 8 semaines. »</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">Défi S1</span>
+                    <p class="mb-0 small">« Cette semaine, donnez un feedback positif de moins de 2 minutes à un collaborateur. Notez-le pour le prouver. »</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">Résultat S8</span>
+                    <p class="mb-0 small">Un guide du feedback co-construit par les managers, une nouvelle routine hebdo, une baisse mesurée du turn-over.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="cf-cta-band">
+            <h2 class="cf-h2 mb-3" style="color:#fff;">Prêt à transformer un problème en <span class="cf-accent">victoire collective</span> ?</h2>
+            <p class="mb-4" style="color:rgba(255,255,255,.65);max-width:520px;margin-left:auto;margin-right:auto;">
+                En 30 minutes, nos experts analysent votre défi terrain et vous expliquent comment le transformer en Challenge. Gratuit, sans engagement.
+            </p>
+            <a class="cf-btn cf-btn-primary" asp-controller="Home" asp-action="Contact">
+                Cadrer mon Challenge →
+            </a>
+        </div>
+    </div>
+</section>

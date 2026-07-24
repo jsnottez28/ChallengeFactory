@@ -7,7 +7,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Challenge Factory</title>
+    <title>@ViewData["Title"] - Challenges Factory</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="~/assets/css/fontawesome-all.min.css" />
     <!-- CSS here -->
@@ -20,6 +24,7 @@
     <link rel="stylesheet" href="~/assets/css/odometer.css">
     <link rel="stylesheet" href="~/assets/css/default.css">
     <link rel="stylesheet" href="~/assets/css/main.css">
+    <link rel="stylesheet" href="~/assets/css/brand-challenges-factory.css" asp-append-version="true">
 
 </head>
 <body class="site-bg">
@@ -27,73 +32,46 @@
     <header class="site-header">
         <div id="header-sticky" class="td-header__area header-mobile-spacing td-transparent z-index-2">
             <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-xl-9 col-6">
-                        <div class="tdmenu__wrap d-flex align-items-center justify-content-between">
-                            <div class="logo">
-                                <a class="logo-1" asp-controller="Home" asp-action="Index">
-                                    <img src="~/logos/logo-header.svg" alt="Challenge Factory">
-                                </a>
-                            </div>
-                            <nav class="tdmenu__nav tdmenu-2 tdmenu-4 mr-90 d-none d-xl-flex">
-                                <div class="tdmenu__navbar-wrap tdmenu__main-menu">
-                                    <ul class="navigation">
-                                        <li class="active menu-item-has-children">
-                                            <a asp-controller="Home" asp-action="Index">Accueil</a>
-                                            <ul class="sub-menu">
-                                                <li><a href="#">Qui sommes nous ?</a></li>
-                                                <li><a href="#">La plateforme</a></li>
-                                                <li><a href="#">Les formateurs</a></li>
-                                                <li><a href="#">Catalogue de formations</a></li>
-                                                <li><a href="#">Parcours certifiants</a></li>
-                                                <li><a href="#">Ateliers pratiques</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="menu-item-has-children"><a asp-controller="Home" asp-action="Index">Formateurs</a>
-                                            <ul class="sub-menu">
-                                                <li><a href="#">Nos formateurs</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="menu-item-has-children"><a asp-controller="Home" asp-action="Index">Pages</a>
-                                            <ul class="sub-menu">
-                                                <li><a href="#">Faq</a></li>
-                                                <li><a href="#">Tarifs et services</a></li>
-                                                <li><a href="#">Rejoindre la plateforme</a></li>
-                                                <li><a href="#">Contact</a></li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </nav>
-                        </div>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 py-2">
+                    <div class="logo flex-shrink-0">
+                        <a class="cf-logo" asp-controller="Home" asp-action="Index">
+                            <span class="cf-logo-name">CHALLENGES<span class="cf-logo-dash">-</span>FACTORY</span>
+                            <span class="cf-logo-tagline">Vous apprenez en faisant</span>
+                        </a>
                     </div>
-                    <div class="col-xl-3 col-6">
-                        <div class="td-menu-right-action td-menu-right-action-2 d-flex align-items-center justify-content-end">
-                           
-                            
-                            @if (!SignInManager.IsSignedIn(User))
-                            {
-                                <div class="header-auth d-flex align-items-center ml-25">
-                                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary btn-sm me-2">Se connecter</a>
-                                    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-sm">S'inscrire</a>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="header-auth d-flex align-items-center ml-25">
-                                    <a asp-area="" asp-page="/Dashboard/Index" class="btn btn-outline-primary btn-sm me-2">Dashboard</a>
-                                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline-flex align-items-center">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
-                                    </form>
-                                </div>
-                            }
-                            <div class="td-header-menu-bar lh-1 p-relative ml-25 d-block d-xl-none">
-                                <button class="tdmenu-offcanvas-open-btn mobile-nav-toggler">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </button>
+                    <nav class="tdmenu__nav tdmenu-2 tdmenu-4 d-none d-xl-flex flex-shrink-1">
+                        <div class="tdmenu__navbar-wrap tdmenu__main-menu">
+                            <ul class="navigation">
+                                <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+                                <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
+                                <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
+                                <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+                            </ul>
+                        </div>
+                    </nav>
+                    <div class="td-menu-right-action td-menu-right-action-2 d-flex align-items-center flex-shrink-0">
+                        @if (!SignInManager.IsSignedIn(User))
+                        {
+                            <div class="header-auth d-flex align-items-center gap-2">
+                                <a asp-area="Identity" asp-page="/Account/Login" class="cf-btn cf-btn-outline">Se connecter</a>
+                                <a asp-area="Identity" asp-page="/Account/Register" class="cf-btn cf-btn-primary">S'inscrire</a>
                             </div>
+                        }
+                        else
+                        {
+                            <div class="header-auth d-flex align-items-center gap-2">
+                                <a asp-area="" asp-page="/Dashboard/Index" class="cf-btn cf-btn-outline">Dashboard</a>
+                                <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline-flex align-items-center">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                                </form>
+                            </div>
+                        }
+                        <div class="td-header-menu-bar lh-1 p-relative ms-3 d-block d-xl-none">
+                            <button class="tdmenu-offcanvas-open-btn mobile-nav-toggler">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -107,22 +85,21 @@
 
     <!-- footer-area-start -->
     <footer>
-        <div class="td-footer-area bg-position pt-80" style="background-image: url('/assets/img/footer/bg.jpg');">
+        <div class="td-footer-area pt-80" style="background-color: var(--cf-black);">
 
             <div class="td-footer-4-top pb-20">
                 <div class="container">
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="td-footer-logo mb-30">
-                                <a asp-controller="Home" asp-action="Index">
-                                    <img src="~/logos/logo-header.svg" alt="Challenge Factory"></a>
+                                <a class="cf-logo" asp-controller="Home" asp-action="Index">
+                                    <span class="cf-logo-name cf-logo-invert">CHALLENGES<span class="cf-logo-dash">-</span>FACTORY</span>
+                                </a>
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="td-footer-bottom-social text-right mb-30">
-                                <span><a href="#"><i class="fa-brands fa-linkedin"></i></a></span>
-                                <span><a href="#"><i class="fa-brands fa-instagram"></i></a></span>
-                                <span><a href="#"><i class="fa-brands fa-whatsapp"></i></a></span>
+                                <span><a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a></span>
                             </div>
                         </div>
                     </div>
@@ -132,49 +109,43 @@
             <div class="td-footer-main pt-65 pb-45">
                 <div class="container">
                     <div class="row mb-30">
-                        <div class="col-lg-3 col-md-5">
+                        <div class="col-lg-4 col-md-5">
                             <div class="td-footer-widget td-footer-4-widget mb-40">
-                                <h3 class="td-footer-title mb-20">Contact</h3>
-                                <p class="text mb-10">Challenge Factory <br>Plateforme d'apprentissage en ligne</p>
-                                <a class="number mb-10 d-inline-block" href="tel:+123(55)90067990">+33  01 40 62 16 40 </a>
-                                <a class="email" href="mailto:contact@challenge-factory.fr">contact@challenge-factory.fr</a>
+                                <h3 class="td-footer-title mb-20">Challenges Factory</h3>
+                                <p class="text mb-10">Nous transformons le savoir passif en compétence active.</p>
+                                <a class="email" href="mailto:contact@challenges-factory.fr">contact@challenges-factory.fr</a>
                             </div>
                         </div>
-                        <div class="col-lg-5 col-md-7">
-                            <div class="td-footer-widget td-footer-4-widget space ml-90 mb-40">
-                                <h3 class="td-footer-title mb-20">Liens rapides </h3>
-                                <div class="row">
-                                    <div class="col-lg-6 col-md-6 col-sm-6">
-                                        <div class="td-footer-links">
-                                            <ul>
-                                                <li><a href="#">La plateforme</a></li>
-                                                <li><a href="#">Nous rejoindre</a></li>
-                                                <li><a href="#">Formateurs</a></li>
-                                                <li><a href="#">Catalogue</a></li>
-                                                <li><a href="#">Partenaires</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6 col-md-6 col-sm-6">
-                                        <div class="td-footer-links">
-                                            <ul>
-                                                <li><a href="#">Actualités</a></li>
-                                                <li><a href="#">Nos formations</a></li>
-                                                <li><a href="#">Contactez nous</a></li>
-                                                <li><a href="/cgu">Conditions générales d'utilisation</a></li>
-                                                <li><a href="/confidentialite">Politique de protection des données</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
+                        <div class="col-lg-4 col-md-3">
+                            <div class="td-footer-widget td-footer-4-widget mb-40">
+                                <h3 class="td-footer-title mb-20">Entreprise</h3>
+                                <div class="td-footer-links">
+                                    <ul>
+                                        <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
+                                        <li><a asp-controller="Home" asp-action="Methode">La méthode CBL</a></li>
+                                        <li><a href="#">Blog &amp; Ressources</a></li>
+                                        <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
-                        
+                        <div class="col-lg-4 col-md-4">
+                            <div class="td-footer-widget td-footer-4-widget mb-40">
+                                <h3 class="td-footer-title mb-20">Contact</h3>
+                                <div class="td-footer-links">
+                                    <ul>
+                                        <li><a href="/cgu">CGU</a></li>
+                                        <li><a href="/confidentialite">Politique de confidentialité</a></li>
+                                        <li><a href="https://drive.google.com/file/d/1VeMxMylNISKGGZWuJ_FqUh6wxRHJfGum/view?usp=sharing" target="_blank" rel="noopener">Certification Qualiopi</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="td-footer-bottom-copyright td-footer-4-copyright text-center">
-                <p class="mb-0">© @DateTime.Now.Year Challenge Factory</p>
+                <p class="mb-0">© @DateTime.Now.Year Challenges Factory</p>
             </div>
         </div>
     </footer>

@@ -75,7 +75,7 @@ public class ForgotPasswordModel : PageModel
             var corpsEmail = EmailTemplates.ResetMotDePasse(nomUtilisateur, callbackUrl);
             await _emailSender.SendEmailAsync(
                 Input.Email,
-                "Réinitialisation de votre mot de passe — Challenge Factory",
+                "Réinitialisation de votre mot de passe — Challenges Factory",
                 corpsEmail);
 
             return RedirectToPage("./ForgotPasswordConfirmation");

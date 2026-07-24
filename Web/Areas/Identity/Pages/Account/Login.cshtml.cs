@@ -137,6 +137,23 @@ public class LoginModel : PageModel
                 _logger.LogWarning("User account locked out.");
                 return RedirectToPage("./Lockout");
             }
+            if (result.IsNotAllowed)
+            {
+                var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+                if (user is not null && !await _signInManager.UserManager.IsEmailConfirmedAsync(user))
+                {
+                    ModelState.AddModelError(string.Empty, "Vous devez d'abord confirmer votre adresse email (voir le lien reçu par email).");
+                }
+                else if (user is not null && user.Statut != StatutUtilisateur.Actif && !user.EstSuperAdministrateur)
+                {
+                    ModelState.AddModelError(string.Empty, "Votre compte est en attente de validation par un administrateur. Vous recevrez un email dès qu'il sera activé.");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Connexion impossible pour ce compte.");
+                }
+                return Page();
+            }
             else
             {
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");

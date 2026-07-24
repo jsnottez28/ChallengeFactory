@@ -1,4 +1,5 @@
 @page
+@using Web.Data
 @model UtilisateursModel
 @{
     ViewData["Title"] = "Utilisateurs";
@@ -39,7 +40,16 @@
                                 <h2 class="h5 mb-1">Liste des utilisateurs</h2>
                                 <p class="text-muted mb-0">Vue d'ensemble des comptes de la plateforme.</p>
                             </div>
-                            <span class="badge text-bg-light">@Model.Users.Count utilisateur(s)</span>
+                            <div class="d-flex gap-2">
+                                @{
+                                    var enAttente = Model.Users.Count(u => u.Statut == StatutUtilisateur.Modere);
+                                }
+                                @if (enAttente > 0)
+                                {
+                                    <span class="badge text-bg-warning">@enAttente en attente de validation</span>
+                                }
+                                <span class="badge text-bg-light">@Model.Users.Count utilisateur(s)</span>
+                            </div>
                         </div>
 
                         <div class="table-responsive">
@@ -48,15 +58,16 @@
                                     <tr>
                                         <th scope="col">Nom</th>
                                         <th scope="col">Email</th>
+                                        <th scope="col">Statut</th>
                                         <th scope="col">Rôle</th>
-                                        <th scope="col" class="text-end">Rôles (RBAC)</th>
+                                        <th scope="col" class="text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @if (Model.Users.Count == 0)
                                     {
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted py-4">Aucun utilisateur trouvé.</td>
+                                            <td colspan="5" class="text-center text-muted py-4">Aucun utilisateur trouvé.</td>
                                         </tr>
                                     }
                                     else
@@ -65,7 +76,27 @@
                                         {
                                             <tr>
                                                 <td class="fw-semibold">@user.DisplayName</td>
-                                                <td>@user.Email</td>
+                                                <td>
+                                                    @user.Email
+                                                    @if (!user.EmailConfirmed)
+                                                    {
+                                                        <span class="badge text-bg-light text-muted ms-1" title="L'utilisateur n'a pas encore confirmé son email">email non confirmé</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @switch (user.Statut)
+                                                    {
+                                                        case StatutUtilisateur.Actif:
+                                                            <span class="badge text-bg-success">Actif</span>
+                                                            break;
+                                                        case StatutUtilisateur.Modere:
+                                                            <span class="badge text-bg-warning">En attente</span>
+                                                            break;
+                                                        default:
+                                                            <span class="badge text-bg-secondary">Inactif</span>
+                                                            break;
+                                                    }
+                                                </td>
                                                 <td>
                                                     <form method="post" asp-page-handler="UpdateRole" class="d-flex flex-wrap align-items-center gap-2">
                                                         <input type="hidden" name="userId" value="@user.Id">
@@ -80,9 +111,27 @@
                                                     </form>
                                                 </td>
                                                 <td class="text-end">
-                                                    <droit-visible code="UTILISATEUR.CONSULTER">
-                                                        <a asp-controller="Utilisateurs" asp-action="Roles" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary">Gérer les rôles</a>
-                                                    </droit-visible>
+                                                    <div class="d-flex justify-content-end gap-2">
+                                                        @if (user.Statut != StatutUtilisateur.Actif)
+                                                        {
+                                                            <form method="post" asp-page-handler="UpdateStatut">
+                                                                <input type="hidden" name="userId" value="@user.Id">
+                                                                <input type="hidden" name="statut" value="@StatutUtilisateur.Actif">
+                                                                <button type="submit" class="btn btn-sm btn-success">Valider l'accès</button>
+                                                            </form>
+                                                        }
+                                                        else
+                                                        {
+                                                            <form method="post" asp-page-handler="UpdateStatut">
+                                                                <input type="hidden" name="userId" value="@user.Id">
+                                                                <input type="hidden" name="statut" value="@StatutUtilisateur.Inactif">
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">Désactiver</button>
+                                                            </form>
+                                                        }
+                                                        <droit-visible code="UTILISATEUR.CONSULTER">
+                                                            <a asp-controller="Utilisateurs" asp-action="Roles" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary">Rôles RBAC</a>
+                                                        </droit-visible>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         }

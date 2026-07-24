@@ -15,6 +15,11 @@ using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Overrides locaux non commites (ConnectionStrings, EmailSettings...). Charge apres
+// appsettings.{Environment}.json pour pouvoir tout ecraser, avant les variables
+// d'environnement/secrets utilisateur qui restent prioritaires.
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -26,7 +31,8 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<ApplicationRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager<ApplicationSignInManager>();
 
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));

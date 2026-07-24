@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Application.Common.Interfaces;
 using Domain.Entities;
+using Infrastructure.ExternalServices.Email;
 using Web.Data;
 
 namespace Web.Areas.Identity.Pages.Account;
@@ -131,6 +132,10 @@ public class RegisterModel : PageModel
         if (ModelState.IsValid)
         {
             var user = CreateUser();
+            // Inscription BtoC en autonomie : le compte reste "Modere" (en attente de
+            // validation admin) tant qu'un administrateur ne l'a pas active manuellement
+            // (voir ApplicationSignInManager.CanSignInAsync et Admin/Utilisateurs).
+            user.Statut = StatutUtilisateur.Modere;
 
             await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -154,6 +159,9 @@ public class RegisterModel : PageModel
                     values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                     protocol: Request.Scheme)!;
 
+                var nomUtilisateur = user.Prenom ?? Input.Email;
+                var corpsEmail = EmailTemplates.ConfirmationEmail(nomUtilisateur, callbackUrl);
+                await _emailSender.SendEmailAsync(Input.Email, "Confirmez votre adresse email — Challenges Factory", corpsEmail);
 
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {

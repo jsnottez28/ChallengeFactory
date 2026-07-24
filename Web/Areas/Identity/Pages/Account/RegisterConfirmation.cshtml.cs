@@ -54,7 +54,7 @@ public class RegisterConfirmationModel : PageModel
         var nomUtilisateur = user.Prenom ?? email;
         var corpsEmail = EmailTemplates.ConfirmationEmail(nomUtilisateur, confirmationUrl!);
 
-        await _sender.SendEmailAsync(email, "Confirmez votre adresse email — Challenge Factory", corpsEmail);
+        await _sender.SendEmailAsync(email, "Confirmez votre adresse email — Challenges Factory", corpsEmail);
 
         return Page();
     }

@@ -1,6 +1,6 @@
 # Documentation
 
-Ce dossier contient la documentation d'architecture, de configuration et d'exploitation de Challenge Factory, plateforme d'apprentissage en ligne.
+Ce dossier contient la documentation d'architecture, de configuration et d'exploitation de Challenges Factory, plateforme d'apprentissage en ligne.
 
 Fichiers :
 - ARCHITECTURE.md — Aperçu de l'architecture et remarques d'audit

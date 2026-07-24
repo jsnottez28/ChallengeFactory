@@ -8,7 +8,7 @@ Résumé technique
 
 Points d'attention (audit rapide)
 
-- Le socle applicatif (comptes utilisateur via Identity, RBAC Droits/Permissions/GroupesDroit, acceptation des documents légaux CGU/PPD) est réutilisé tel quel pour Challenge Factory ; seuls le contenu et l'habillage (branding, pages publiques) ont été adaptés à une plateforme d'apprentissage.
+- Le socle applicatif (comptes utilisateur via Identity, RBAC Droits/Permissions/GroupesDroit, acceptation des documents légaux CGU/PPD) est réutilisé tel quel pour Challenges Factory ; seuls le contenu et l'habillage (branding, pages publiques) ont été adaptés à une plateforme d'apprentissage.
 
 - Chaîne de connexion par défaut dans `Web/appsettings.json` utilise `(localdb)\\mssqllocaldb` (LocalDB), ce qui fonctionne sous Windows mais pas sur macOS.
   - Sur macOS, il faut utiliser une alternative : SQL Server dans Docker, PostgreSQL, SQLite pour le développement, ou une base distante (Azure SQL).
