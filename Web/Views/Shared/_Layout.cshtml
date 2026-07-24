@@ -44,30 +44,10 @@
                             <nav class="tdmenu__nav tdmenu-2 tdmenu-4 mr-90 d-none d-xl-flex">
                                 <div class="tdmenu__navbar-wrap tdmenu__main-menu">
                                     <ul class="navigation">
-                                        <li class="active menu-item-has-children">
-                                            <a asp-controller="Home" asp-action="Index">Accueil</a>
-                                            <ul class="sub-menu">
-                                                <li><a href="#">Qui sommes nous ?</a></li>
-                                                <li><a href="#">La plateforme</a></li>
-                                                <li><a href="#">Les formateurs</a></li>
-                                                <li><a href="#">Catalogue de formations</a></li>
-                                                <li><a href="#">Parcours certifiants</a></li>
-                                                <li><a href="#">Ateliers pratiques</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="menu-item-has-children"><a asp-controller="Home" asp-action="Index">Formateurs</a>
-                                            <ul class="sub-menu">
-                                                <li><a href="#">Nos formateurs</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="menu-item-has-children"><a asp-controller="Home" asp-action="Index">Pages</a>
-                                            <ul class="sub-menu">
-                                                <li><a href="#">Faq</a></li>
-                                                <li><a href="#">Tarifs et services</a></li>
-                                                <li><a href="#">Rejoindre la plateforme</a></li>
-                                                <li><a href="#">Contact</a></li>
-                                            </ul>
-                                        </li>
+                                        <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+                                        <li><a href="#">La méthode</a></li>
+                                        <li><a href="#">À propos</a></li>
+                                        <li><a href="#">Contact</a></li>
                                     </ul>
                                 </div>
                             </nav>
@@ -127,9 +107,7 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="td-footer-bottom-social text-right mb-30">
-                                <span><a href="#"><i class="fa-brands fa-linkedin"></i></a></span>
-                                <span><a href="#"><i class="fa-brands fa-instagram"></i></a></span>
-                                <span><a href="#"><i class="fa-brands fa-whatsapp"></i></a></span>
+                                <span><a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a></span>
                             </div>
                         </div>
                     </div>
@@ -139,44 +117,38 @@
             <div class="td-footer-main pt-65 pb-45">
                 <div class="container">
                     <div class="row mb-30">
-                        <div class="col-lg-3 col-md-5">
+                        <div class="col-lg-4 col-md-5">
                             <div class="td-footer-widget td-footer-4-widget mb-40">
-                                <h3 class="td-footer-title mb-20">Contact</h3>
-                                <p class="text mb-10">Challenges Factory <br>Plateforme d'apprentissage en ligne</p>
-                                <a class="number mb-10 d-inline-block" href="tel:+123(55)90067990">+33  01 40 62 16 40 </a>
+                                <h3 class="td-footer-title mb-20">Challenges Factory</h3>
+                                <p class="text mb-10">Nous transformons le savoir passif en compétence active.</p>
                                 <a class="email" href="mailto:contact@challenges-factory.fr">contact@challenges-factory.fr</a>
                             </div>
                         </div>
-                        <div class="col-lg-5 col-md-7">
-                            <div class="td-footer-widget td-footer-4-widget space ml-90 mb-40">
-                                <h3 class="td-footer-title mb-20">Liens rapides </h3>
-                                <div class="row">
-                                    <div class="col-lg-6 col-md-6 col-sm-6">
-                                        <div class="td-footer-links">
-                                            <ul>
-                                                <li><a href="#">La plateforme</a></li>
-                                                <li><a href="#">Nous rejoindre</a></li>
-                                                <li><a href="#">Formateurs</a></li>
-                                                <li><a href="#">Catalogue</a></li>
-                                                <li><a href="#">Partenaires</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6 col-md-6 col-sm-6">
-                                        <div class="td-footer-links">
-                                            <ul>
-                                                <li><a href="#">Actualités</a></li>
-                                                <li><a href="#">Nos formations</a></li>
-                                                <li><a href="#">Contactez nous</a></li>
-                                                <li><a href="/cgu">Conditions générales d'utilisation</a></li>
-                                                <li><a href="/confidentialite">Politique de protection des données</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
+                        <div class="col-lg-4 col-md-3">
+                            <div class="td-footer-widget td-footer-4-widget mb-40">
+                                <h3 class="td-footer-title mb-20">Entreprise</h3>
+                                <div class="td-footer-links">
+                                    <ul>
+                                        <li><a href="#">À propos</a></li>
+                                        <li><a href="#">La méthode CBL</a></li>
+                                        <li><a href="#">Blog &amp; Ressources</a></li>
+                                        <li><a href="#">Contact</a></li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
-                        
+                        <div class="col-lg-4 col-md-4">
+                            <div class="td-footer-widget td-footer-4-widget mb-40">
+                                <h3 class="td-footer-title mb-20">Contact</h3>
+                                <div class="td-footer-links">
+                                    <ul>
+                                        <li><a href="/cgu">CGU</a></li>
+                                        <li><a href="/confidentialite">Politique de confidentialité</a></li>
+                                        <li><a href="#">Certification Qualiopi</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
