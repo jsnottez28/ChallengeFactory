@@ -131,6 +131,9 @@
                                                         <droit-visible code="UTILISATEUR.CONSULTER">
                                                             <a asp-controller="Utilisateurs" asp-action="Roles" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary">Rôles RBAC</a>
                                                         </droit-visible>
+                                                        <droit-visible code="CARTE.CONSULTER">
+                                                            <a asp-controller="Utilisateurs" asp-action="Cartes" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary">Cartes</a>
+                                                        </droit-visible>
                                                     </div>
                                                 </td>
                                             </tr>

@@ -503,3 +503,142 @@ body:has(.meeting-report-full-height) .footer-wrapper {
         position: static;
     }
 }
+
+/* ===== Carte de Competences - composant flip (recto Theorie / verso Defi) ===== */
+.carte-flip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.carte-flip {
+    perspective: 1800px;
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 3 / 4.3;
+    cursor: pointer;
+    outline: none;
+}
+
+.carte-flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.carte-flip.is-flipped .carte-flip-inner {
+    transform: rotateY(180deg);
+}
+
+.carte-flip:focus-visible .carte-flip-inner {
+    box-shadow: 0 0 0 0.2rem rgba(255, 122, 26, 0.5);
+    border-radius: 1rem;
+}
+
+.carte-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 1rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0.5rem 1.5rem rgba(17, 17, 17, 0.14);
+    background: #fff;
+    border: 1px solid rgba(17, 17, 17, 0.06);
+}
+
+.carte-face-verso {
+    transform: rotateY(180deg);
+}
+
+.carte-face-header {
+    background: linear-gradient(135deg, #ff7a1a, #ff9d4d);
+    color: #fff;
+    padding: 0.9rem 1.1rem;
+    flex-shrink: 0;
+}
+
+.carte-face-header .carte-code {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+.carte-face-header h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0.15rem 0 0;
+    color: #fff;
+}
+
+.carte-face-image {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.carte-face-body {
+    padding: 0.9rem 1.1rem;
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.carte-face-body h4 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #ff7a1a;
+    font-weight: 700;
+    margin: 0.75rem 0 0.35rem;
+}
+
+.carte-face-body h4:first-child {
+    margin-top: 0;
+}
+
+.carte-face-body ul,
+.carte-face-body ol {
+    padding-left: 1.1rem;
+    margin-bottom: 0;
+}
+
+.carte-face-body li {
+    margin-bottom: 0.25rem;
+}
+
+.carte-face-citation {
+    border-left: 3px solid #ff9d4d;
+    padding-left: 0.75rem;
+    font-style: italic;
+    color: #555;
+    margin: 0.75rem 0 0;
+}
+
+.carte-face-video-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+    font-weight: 600;
+    color: #ff7a1a;
+    text-decoration: none;
+}
+
+.carte-face-video-link:hover {
+    text-decoration: underline;
+}
+
+.carte-flip-hint {
+    text-align: center;
+    font-size: 0.72rem;
+    color: #999;
+    padding: 0.4rem 0;
+    border-top: 1px solid rgba(17, 17, 17, 0.06);
+    flex-shrink: 0;
+}

@@ -20,6 +20,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RoleGroupeDroit> RoleGroupesDroit { get; set; }
     public DbSet<DocumentLegal> DocumentsLegaux { get; set; }
     public DbSet<AcceptationDocumentLegal> AcceptationsDocumentsLegaux { get; set; }
+    public DbSet<Badge> Badges { get; set; }
+    public DbSet<CarteCompetence> CartesCompetences { get; set; }
+    public DbSet<CarteAttribution> CarteAttributions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -74,6 +77,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         ConfigureDroitsEtPermissions(builder);
         ConfigureDocumentsLegaux(builder);
+        ConfigureCartesCompetences(builder);
     }
 
     private static void ConfigureDroitsEtPermissions(ModelBuilder builder)
@@ -170,6 +174,49 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(a => a.DocumentLegal)
             .WithMany()
             .HasForeignKey(a => a.DocumentLegalId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigureCartesCompetences(ModelBuilder builder)
+    {
+        builder.Entity<Badge>()
+            .HasIndex(b => b.BadgeCode)
+            .IsUnique();
+
+        builder.Entity<CarteCompetence>()
+            .HasIndex(c => c.Code)
+            .IsUnique();
+
+        builder.Entity<CarteCompetence>()
+            .HasOne(c => c.Badge)
+            .WithMany()
+            .HasForeignKey(c => c.BadgeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<CarteAttribution>()
+            .HasIndex(a => new { a.CarteCompetenceId, a.UtilisateurId })
+            .IsUnique();
+
+        builder.Entity<CarteAttribution>()
+            .HasOne(a => a.CarteCompetence)
+            .WithMany()
+            .HasForeignKey(a => a.CarteCompetenceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CarteAttribution>()
+            .HasOne(a => a.Utilisateur)
+            .WithMany()
+            .HasForeignKey(a => a.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict (et non Cascade) : evite le conflit "multiple cascade paths" sur SQL
+        // Server puisque CarteAttribution a deja un chemin de cascade vers ApplicationUser
+        // via UtilisateurId. Supprimer le compte de l'attributeur ne doit de toute facon
+        // pas effacer l'historique d'attribution.
+        builder.Entity<CarteAttribution>()
+            .HasOne(a => a.AttribuePar)
+            .WithMany()
+            .HasForeignKey(a => a.AttribueParId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

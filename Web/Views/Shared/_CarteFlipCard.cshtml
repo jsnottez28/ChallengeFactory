@@ -1,0 +1,132 @@
+@model Domain.Entities.CarteCompetence
+@using Web.Extensions
+@{
+    var idUnique = "carte-flip-" + Model.Id + "-" + Guid.NewGuid().ToString("N")[..8];
+    var aDesEtapesOuTips = new[] { Model.Etape1, Model.Etape2, Model.Etape3, Model.Etape4, Model.Etape5 }.Any(v => !string.IsNullOrWhiteSpace(v))
+        || new[] { Model.Tip1, Model.Tip2, Model.Tip3, Model.Tip4, Model.Tip5 }.Any(v => !string.IsNullOrWhiteSpace(v));
+}
+
+<div class="carte-flip" id="@idUnique" tabindex="0" role="button" aria-label="Retourner la carte @Model.Code pour voir l'autre face">
+    <div class="carte-flip-inner">
+        <!-- Recto : face Theorie -->
+        <div class="carte-face carte-face-recto">
+            <div class="carte-face-header">
+                <div class="carte-code">@Model.Code · @Model.Niveau.Libelle()</div>
+                <h3>@Model.TitreTheorie</h3>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ImageCarteA))
+            {
+                <img src="~/uploads/cartes/@Model.ImageCarteA" alt="Illustration de la carte @Model.Code" class="carte-face-image" onerror="this.remove();">
+            }
+
+            <div class="carte-face-body">
+                @{
+                    var objectifs = new[] { Model.Objectif1, Model.Objectif2, Model.Objectif3, Model.Objectif4 }
+                        .Where(o => !string.IsNullOrWhiteSpace(o)).ToList();
+                }
+                @if (objectifs.Count > 0)
+                {
+                    <h4>Objectifs pédagogiques</h4>
+                    <ul>
+                        @foreach (var objectif in objectifs)
+                        {
+                            <li>@objectif</li>
+                        }
+                    </ul>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Citation))
+                {
+                    <p class="carte-face-citation">
+                        « @Model.Citation »
+                        @if (!string.IsNullOrWhiteSpace(Model.AuteurCitation))
+                        {
+                            <span class="d-block text-end small">— @Model.AuteurCitation</span>
+                        }
+                    </p>
+                }
+            </div>
+
+            <div class="carte-flip-hint">Cliquez pour voir le défi →</div>
+        </div>
+
+        <!-- Verso : face Defi -->
+        <div class="carte-face carte-face-verso">
+            <div class="carte-face-header">
+                <div class="carte-code">Défi terrain</div>
+                <h3>@(string.IsNullOrWhiteSpace(Model.TitreDefi) ? Model.TitreTheorie : Model.TitreDefi)</h3>
+            </div>
+
+            <div class="carte-face-body">
+                @if (!string.IsNullOrWhiteSpace(Model.ContextePro) || !string.IsNullOrWhiteSpace(Model.ContextePerso))
+                {
+                    <h4>Contexte</h4>
+                    @if (!string.IsNullOrWhiteSpace(Model.ContextePro))
+                    {
+                        <p class="mb-1"><strong>Pro :</strong> @Model.ContextePro</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ContextePerso))
+                    {
+                        <p class="mb-0"><strong>Perso :</strong> @Model.ContextePerso</p>
+                    }
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.TonDefi))
+                {
+                    <h4>Ton du défi</h4>
+                    <p class="mb-0">@Model.TonDefi</p>
+                }
+
+                @{
+                    var etapes = new[] { Model.Etape1, Model.Etape2, Model.Etape3, Model.Etape4, Model.Etape5 }
+                        .Where(e => !string.IsNullOrWhiteSpace(e)).ToList();
+                }
+                @if (etapes.Count > 0)
+                {
+                    <h4>Étapes</h4>
+                    <ol>
+                        @foreach (var etape in etapes)
+                        {
+                            <li>@etape</li>
+                        }
+                    </ol>
+                }
+
+                @{
+                    var tips = new[] { Model.Tip1, Model.Tip2, Model.Tip3, Model.Tip4, Model.Tip5 }
+                        .Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
+                }
+                @if (tips.Count > 0)
+                {
+                    <h4>Hacks</h4>
+                    <ul>
+                        @foreach (var tip in tips)
+                        {
+                            <li>@tip</li>
+                        }
+                    </ul>
+                }
+
+                @if (!aDesEtapesOuTips && string.IsNullOrWhiteSpace(Model.ContextePro) && string.IsNullOrWhiteSpace(Model.ContextePerso) && string.IsNullOrWhiteSpace(Model.TonDefi))
+                {
+                    <p class="text-muted mb-0">Face Défi non renseignée pour cette carte.</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.CitationHumour))
+                {
+                    <p class="carte-face-citation">« @Model.CitationHumour »</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.LienVideo))
+                {
+                    <a href="@Model.LienVideo" target="_blank" rel="noopener noreferrer" class="carte-face-video-link">
+                        <i class="fi fi-rr-play-circle"></i> Voir la vidéo
+                    </a>
+                }
+            </div>
+
+            <div class="carte-flip-hint">← Cliquez pour revenir à la théorie</div>
+        </div>
+    </div>
+</div>

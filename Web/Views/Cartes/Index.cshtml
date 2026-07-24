@@ -1,0 +1,139 @@
+@model List<Domain.Entities.CarteCompetence>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Web.Extensions
+@{
+    ViewData["Title"] = "Cartes de Compétences";
+    var recherche = ViewData["Recherche"] as string;
+    var niveauSelectionne = ViewData["Niveau"] as Domain.Entities.NiveauCarte?;
+    var page = (int)(ViewData["Page"] ?? 1);
+    var nombrePages = (int)(ViewData["NombrePages"] ?? 1);
+    var badges = ViewData["Badges"] as List<SelectListItem> ?? [];
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Cartes de Compétences</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Cartes de Compétences</h1>
+            </div>
+            <div class="d-flex gap-2">
+                <droit-visible code="CARTE.CREER">
+                    <a asp-controller="Cartes" asp-action="Import" class="btn btn-outline-secondary">Importer un .xlsx</a>
+                    <a asp-controller="Cartes" asp-action="Create" class="btn btn-primary">Ajouter une carte</a>
+                </droit-visible>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <form method="get" asp-controller="Cartes" asp-action="Index" class="row g-3 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Recherche (code ou titre)</label>
+                        <input type="text" name="recherche" value="@recherche" class="form-control" placeholder="MAN-C23, Recadrage...">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Niveau</label>
+                        <select name="niveau" class="form-select">
+                            <option value="">Tous</option>
+                            @foreach (var valeur in Enum.GetValues<Domain.Entities.NiveauCarte>())
+                            {
+                                <option value="@valeur" selected="@(niveauSelectionne == valeur)">@valeur.Libelle()</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Badge</label>
+                        <select name="badgeId" asp-items="badges" class="form-select">
+                            <option value="">Tous</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-outline-primary w-100">Filtrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Code</th>
+                                <th scope="col">Titre (Théorie)</th>
+                                <th scope="col">Niveau</th>
+                                <th scope="col">Badge</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-muted text-center py-4">Aucune carte ne correspond à ces critères.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var carte in Model)
+                                {
+                                    <tr>
+                                        <td><code>@carte.Code</code></td>
+                                        <td class="fw-semibold">@carte.TitreTheorie</td>
+                                        <td><span class="badge text-bg-light">@carte.Niveau.Libelle()</span></td>
+                                        <td class="text-muted">@(carte.Badge?.BadgeNom ?? "-")</td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <a asp-controller="Cartes" asp-action="Details" asp-route-id="@carte.Id" class="btn btn-sm btn-outline-secondary">Voir</a>
+                                                <droit-visible code="CARTE.MODIFIER">
+                                                    <a asp-controller="Cartes" asp-action="Edit" asp-route-id="@carte.Id" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                                </droit-visible>
+                                                <droit-visible code="CARTE.SUPPRIMER">
+                                                    <form method="post" asp-controller="Cartes" asp-action="Delete" asp-route-id="@carte.Id" onsubmit="return confirm('Supprimer cette carte ?');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                                    </form>
+                                                </droit-visible>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (nombrePages > 1)
+                {
+                    <nav aria-label="Pagination" class="mt-4">
+                        <ul class="pagination justify-content-center mb-0">
+                            @for (var p = 1; p <= nombrePages; p++)
+                            {
+                                <li class="page-item @(p == page ? "active" : "")">
+                                    <a class="page-link" asp-controller="Cartes" asp-action="Index" asp-route-page="@p" asp-route-recherche="@recherche" asp-route-niveau="@niveauSelectionne">@p</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    </div>
+</section>

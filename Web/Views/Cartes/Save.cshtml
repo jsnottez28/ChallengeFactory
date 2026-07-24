@@ -1,0 +1,211 @@
+@model Web.Controllers.CartesController.CarteCompetenceFormModel
+@using Web.Extensions
+@{
+    var estModification = Model.Id.HasValue;
+    ViewData["Title"] = estModification ? "Modifier une carte de compétences" : "Ajouter une carte de compétences";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cartes" asp-action="Index">Cartes de Compétences</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            <a asp-controller="Cartes" asp-action="Index" class="btn btn-outline-secondary">Retour aux cartes</a>
+        </div>
+
+        <form method="post" asp-controller="Cartes" asp-action="@(estModification ? "Edit" : "Create")" asp-route-id="@Model.Id" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ImageCarteAActuelle">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-1">Identité de la carte</h2>
+                    <p class="text-muted mb-0">Seuls le code, le titre (Théorie) et le niveau sont obligatoires.</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Code" class="form-label"></label>
+                            <input asp-for="Code" class="form-control" autocomplete="off" placeholder="MAN-C23">
+                            <span asp-validation-for="Code" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Niveau" class="form-label"></label>
+                            <select asp-for="Niveau" class="form-select">
+                                @foreach (var valeur in Enum.GetValues<Domain.Entities.NiveauCarte>())
+                                {
+                                    <option value="@valeur">@valeur.Libelle()</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Niveau" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="BadgeId" class="form-label"></label>
+                            <select asp-for="BadgeId" asp-items="Model.Badges" class="form-select">
+                                <option value="">Aucun</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-0">Face Théorie</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="TitreTheorie" class="form-label"></label>
+                            <input asp-for="TitreTheorie" class="form-control">
+                            <span asp-validation-for="TitreTheorie" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Objectif1" class="form-label"></label>
+                            <input asp-for="Objectif1" class="form-control">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Objectif2" class="form-label"></label>
+                            <input asp-for="Objectif2" class="form-control">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Objectif3" class="form-label"></label>
+                            <input asp-for="Objectif3" class="form-control">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Objectif4" class="form-label"></label>
+                            <input asp-for="Objectif4" class="form-control">
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label asp-for="Citation" class="form-label"></label>
+                            <input asp-for="Citation" class="form-control">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="AuteurCitation" class="form-label"></label>
+                            <input asp-for="AuteurCitation" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="ImageCarteAFichier" class="form-label"></label>
+                            <input asp-for="ImageCarteAFichier" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif">
+                            <span asp-validation-for="ImageCarteAFichier" class="text-danger"></span>
+                            @if (!string.IsNullOrWhiteSpace(Model.ImageCarteAActuelle))
+                            {
+                                <div class="form-text">Image actuelle : @Model.ImageCarteAActuelle (uploader un nouveau fichier la remplace)</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-0">Face Défi</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="TitreDefi" class="form-label"></label>
+                            <input asp-for="TitreDefi" class="form-control">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ContextePro" class="form-label"></label>
+                            <textarea asp-for="ContextePro" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ContextePerso" class="form-label"></label>
+                            <textarea asp-for="ContextePerso" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="TonDefi" class="form-label"></label>
+                            <input asp-for="TonDefi" class="form-control">
+                        </div>
+
+                        @for (var i = 1; i <= 5; i++)
+                        {
+                            <div class="col-12 col-md-6">
+                                @if (i == 1)
+                                {
+                                    <label asp-for="Etape1" class="form-label"></label><input asp-for="Etape1" class="form-control">
+                                }
+                                else if (i == 2)
+                                {
+                                    <label asp-for="Etape2" class="form-label"></label><input asp-for="Etape2" class="form-control">
+                                }
+                                else if (i == 3)
+                                {
+                                    <label asp-for="Etape3" class="form-label"></label><input asp-for="Etape3" class="form-control">
+                                }
+                                else if (i == 4)
+                                {
+                                    <label asp-for="Etape4" class="form-label"></label><input asp-for="Etape4" class="form-control">
+                                }
+                                else
+                                {
+                                    <label asp-for="Etape5" class="form-label"></label><input asp-for="Etape5" class="form-control">
+                                }
+                            </div>
+                        }
+
+                        @for (var i = 1; i <= 5; i++)
+                        {
+                            <div class="col-12 col-md-6">
+                                @if (i == 1)
+                                {
+                                    <label asp-for="Tip1" class="form-label"></label><input asp-for="Tip1" class="form-control">
+                                }
+                                else if (i == 2)
+                                {
+                                    <label asp-for="Tip2" class="form-label"></label><input asp-for="Tip2" class="form-control">
+                                }
+                                else if (i == 3)
+                                {
+                                    <label asp-for="Tip3" class="form-label"></label><input asp-for="Tip3" class="form-control">
+                                }
+                                else if (i == 4)
+                                {
+                                    <label asp-for="Tip4" class="form-label"></label><input asp-for="Tip4" class="form-control">
+                                }
+                                else
+                                {
+                                    <label asp-for="Tip5" class="form-label"></label><input asp-for="Tip5" class="form-control">
+                                }
+                            </div>
+                        }
+
+                        <div class="col-12 col-md-8">
+                            <label asp-for="CitationHumour" class="form-label"></label>
+                            <input asp-for="CitationHumour" class="form-control">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="LienVideo" class="form-label"></label>
+                            <input asp-for="LienVideo" class="form-control" placeholder="https://...">
+                            <span asp-validation-for="LienVideo" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="Cartes" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">@(estModification ? "Enregistrer" : "Créer la carte")</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

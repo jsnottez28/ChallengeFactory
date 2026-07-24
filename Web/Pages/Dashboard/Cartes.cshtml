@@ -1,0 +1,49 @@
+@page
+@model Web.Pages.Dashboard.CartesModel
+@using Web.Extensions
+@{
+    ViewData["Title"] = "Mes cartes de compétences";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Mes cartes de compétences</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Mon espace</p>
+                <h1 class="h3 mb-0">Mes cartes de compétences</h1>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @if (Model.MesCartes.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucune carte ne vous a encore été attribuée. Votre Coach ou Tuteur vous en attribuera au fil de votre parcours.</p>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var carte in Model.MesCartes)
+                        {
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <div class="border rounded p-3 h-100 d-flex flex-column">
+                                    <span class="badge text-bg-light mb-2 align-self-start">@carte.Niveau.Libelle()</span>
+                                    <h3 class="h6 mb-1">@carte.TitreTheorie</h3>
+                                    <p class="text-muted small mb-3">@carte.Code @(carte.Badge is not null ? $"· {carte.Badge.BadgeNom}" : "")</p>
+                                    <a asp-page="/Dashboard/CarteDetail" asp-route-id="@carte.Id" class="btn btn-outline-primary mt-auto">Explorer la carte</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

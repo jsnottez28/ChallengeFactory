@@ -60,6 +60,8 @@ builder.Services.AddScoped<IGroupeDroitService, GroupeDroitService>();
 builder.Services.AddScoped<IDroitService, DroitService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IDocumentLegalService, DocumentLegalService>();
+builder.Services.AddScoped<ICarteCompetenceService, CarteCompetenceService>();
+builder.Services.AddScoped<ICarteApprenantService, CarteApprenantService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IClaimsTransformation, DroitsClaimsTransformation>();

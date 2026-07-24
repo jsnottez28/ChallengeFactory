@@ -109,6 +109,7 @@
                         <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Mes informations</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/Inscriptions">Mes inscriptions</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/Badges">Mes badges</a></li>
+                        <li><a class="dropdown-item" asp-page="/Dashboard/Cartes">Mes cartes de compétences</a></li>
                     </ul>
                 </li>
 
@@ -127,6 +128,9 @@
                         </droit-visible>
                         <droit-visible code="DOCUMENTLEGAL.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="DocumentsLegaux" asp-action="Index">Documents légaux (CGU/PPD)</a></li>
+                        </droit-visible>
+                        <droit-visible code="CARTE.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Cartes" asp-action="Index">Cartes de Compétences</a></li>
                         </droit-visible>
                         <li><a class="dropdown-item" asp-page="/Admin/Parametrage">Parametrage</a></li>
                         <li><hr class="dropdown-divider"></li>

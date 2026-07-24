@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Importer des Cartes de Compétences";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cartes" asp-action="Index">Cartes de Compétences</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Importer</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Importer des Cartes de Compétences</h1>
+            </div>
+            <a asp-controller="Cartes" asp-action="Index" class="btn btn-outline-secondary">Retour aux cartes</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <form method="post" asp-controller="Cartes" asp-action="Import" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <label class="form-label">Fichier .xlsx (feuilles "badges" et "cartes")</label>
+                                <input type="file" name="fichier" class="form-control" accept=".xlsx" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Lancer l'import</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">À savoir</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <ul class="mb-0 ps-3">
+                            <li>Les cartes sont mises à jour par correspondance sur le champ <code>code</code> (les badges sur <code>badge_code</code>).</li>
+                            <li>Une carte déjà en base et absente du fichier n'est <strong>jamais supprimée</strong>.</li>
+                            <li>L'import ne modifie jamais les attributions existantes.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,137 @@
+@model Domain.Entities.CarteCompetence
+@using Application.Common.Interfaces
+@using Web.Extensions
+@{
+    ViewData["Title"] = $"Carte {Model.Code}";
+    var attributions = ViewData["Attributions"] as List<CarteAttributionInfo> ?? [];
+    var utilisateurs = ViewData["Utilisateurs"] as List<(string Id, string NomComplet)> ?? [];
+    var attributionsActives = attributions.Where(a => a.EstActif).ToList();
+    var utilisateursDejaAttribues = attributionsActives.Select(a => a.UtilisateurId).ToHashSet();
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cartes" asp-action="Index">Cartes de Compétences</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Code</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@Model.TitreTheorie <span class="text-muted fs-6">(@Model.Code)</span></h1>
+            </div>
+            <div class="d-flex gap-2">
+                <droit-visible code="CARTE.MODIFIER">
+                    <a asp-controller="Cartes" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Modifier</a>
+                </droit-visible>
+                <a asp-controller="Cartes" asp-action="Index" class="btn btn-outline-secondary">Retour</a>
+            </div>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-5">
+                <partial name="_CarteFlipCard" model="Model" />
+            </div>
+
+            <div class="col-12 col-lg-7">
+                <droit-visible code="CARTE.MODIFIER">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-1">Attribuer cette carte</h2>
+                            <p class="text-muted mb-0">Sélectionnez un ou plusieurs apprenants. L'attribution est un acte de pilotage pédagogique, jamais publiée publiquement.</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <form method="post" asp-controller="Cartes" asp-action="AttribuerDepuisCarte" asp-route-id="@Model.Id">
+                                @Html.AntiForgeryToken()
+                                <div class="mb-3" style="max-height: 220px; overflow-y: auto;">
+                                    @if (utilisateurs.Count == 0)
+                                    {
+                                        <p class="text-muted mb-0">Aucun utilisateur disponible.</p>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var utilisateur in utilisateurs)
+                                        {
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="utilisateurIds" value="@utilisateur.Id" id="user-@utilisateur.Id" checked="@utilisateursDejaAttribues.Contains(utilisateur.Id)">
+                                                <label class="form-check-label" for="user-@utilisateur.Id">@utilisateur.NomComplet</label>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contexte (optionnel)</label>
+                                    <input type="text" name="contexte" class="form-control" placeholder="Ex : Défi conflit d'équipe - Cohorte Juillet 2026">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Enregistrer l'attribution</button>
+                            </form>
+                        </div>
+                    </div>
+                </droit-visible>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Apprenants attribués (@attributionsActives.Count)</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (attributionsActives.Count == 0)
+                        {
+                            <p class="text-muted mb-0">Cette carte n'est attribuée à personne pour le moment.</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Apprenant</th>
+                                            <th scope="col">Attribué par</th>
+                                            <th scope="col">Le</th>
+                                            <th scope="col">Contexte</th>
+                                            <droit-visible code="CARTE.MODIFIER"><th scope="col" class="text-end">Actions</th></droit-visible>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var attribution in attributionsActives)
+                                        {
+                                            <tr>
+                                                <td>@attribution.UtilisateurNomComplet</td>
+                                                <td class="text-muted">@attribution.AttribueParNomComplet</td>
+                                                <td class="text-muted">@attribution.AttribueLe.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                                                <td class="text-muted">@(attribution.Contexte ?? "-")</td>
+                                                <droit-visible code="CARTE.MODIFIER">
+                                                    <td class="text-end">
+                                                        <form method="post" asp-controller="Cartes" asp-action="Desattribuer" asp-route-attributionId="@attribution.Id" asp-route-carteId="@Model.Id" onsubmit="return confirm('Retirer cette attribution ?');">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Désattribuer</button>
+                                                        </form>
+                                                    </td>
+                                                </droit-visible>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/carte-flip.js"></script>
+}
