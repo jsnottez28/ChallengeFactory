@@ -1,0 +1,41 @@
+@use '../utils' as *;
+
+/*=============================
+    	10. feature scss
+===============================*/
+
+.td-feature{
+    &-3{
+        &-icon{
+            color: var(--td-common-white);
+            font-size: 60px;
+        }
+        &-title{
+            font-weight: 600;
+            font-size: 20px;
+            line-height: 26px;
+            color: var(--td-common-white);
+        }
+        &-text{
+            font-family: var(--td-ff-poppins);
+            line-height: 26px;
+            color: #fff;
+        }
+        &-wrap{
+            @media #{$xl,$md,$sm,$xs} {
+                margin-right: 0;
+            }
+        }
+    }
+    &-4{
+        &-wrap{
+            @media #{$md,$sm,$xs} {
+                & p{
+                    & br{
+                        display: none;
+                    }
+                }
+            } 
+        }
+    }
+}

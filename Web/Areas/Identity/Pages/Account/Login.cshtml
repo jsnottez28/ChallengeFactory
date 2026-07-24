@@ -1,0 +1,63 @@
+@page
+@model LoginModel
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Se connecter";
+}
+
+<section class="login-page pt-80 pb-80">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm p-4">
+                    <div class="mb-4">
+                        <h2 class="td-section-title">Se connecter</h2>
+                        <p class="text-muted">Connectez-vous pour accéder à votre espace membre.</p>
+                    </div>
+                    <form id="account" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                            <label asp-for="Input.Email">Email</label>
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                            <label asp-for="Input.Password">Mot de passe</label>
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" asp-for="Input.RememberMe" />
+                            <label class="form-check-label" asp-for="Input.RememberMe">Se souvenir de moi</label>
+                        </div>
+                        <button id="login-submit" type="submit" class="w-100 btn btn-primary btn-lg">Se connecter</button>
+                        <div class="mt-4">
+                            <p class="mb-1"><a id="forgot-password" asp-page="./ForgotPassword">Mot de passe oublié ?</a></p>
+                            <p class="mb-0"><a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">S'inscrire</a></p>
+                            <p><a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Renvoyer la confirmation par email</a></p>
+                        </div>
+                    </form>
+                </div>
+                <div class="mt-4 text-center">
+                    <h5>Connexion externe</h5>
+                    @{ if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                       {
+                            <p class="text-muted">Aucun service externe de connexion n'est configuré.</p>
+                       }
+                       else
+                       {
+                           <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="d-flex gap-2 flex-wrap justify-content-center">
+                               @foreach (var provider in Model.ExternalLogins!)
+                               {
+                                   <button type="submit" class="btn btn-outline-secondary" name="provider" value="@provider.Name">@provider.DisplayName</button>
+                               }
+                           </form>
+                       }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    <partial name="_ValidationScriptsPartial" />
+}

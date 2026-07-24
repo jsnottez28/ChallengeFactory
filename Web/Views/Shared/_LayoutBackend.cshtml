@@ -1,0 +1,296 @@
+@using System.Security.Claims
+@using Application.Common.Interfaces
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using Web.Data
+@using Web.Extensions
+@using Web.Security
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext DbContext
+@inject IDocumentLegalService DocumentLegalService
+@{
+    var nomsRoles = User.Claims
+        .Where(claim => claim.Type == ClaimTypes.Role)
+        .Select(claim => claim.Value)
+        .ToList();
+
+    var estSuperAdministrateur = User.HasClaim(DroitsClaimsTransformation.ClaimType, DroitsClaimsTransformation.ClaimTous);
+
+    var sansScope = false;
+    var documentsEnAttente = new List<Domain.Entities.TypeDocumentLegal>();
+    if (SignInManager.IsSignedIn(User))
+    {
+        var currentUserId = UserManager.GetUserId(User);
+        sansScope = !await DbContext.Scopes.AnyAsync(scope => scope.ApplicationUserId == currentUserId && scope.EstActif);
+
+        // Si un type bloquant restait ici, le middleware aurait deja redirige avant d'atteindre
+        // ce layout : ce qui subsiste est necessairement du "non bloquant" (cf. RG-51).
+        if (currentUserId is not null)
+        {
+            documentsEnAttente = await DocumentLegalService.GetTypesEnAttenteAsync(currentUserId);
+        }
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- begin::FNCRR Meta Basic -->
+  <meta charset="utf-8">
+  <meta name="theme-color" content="#5955D1">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="LayoutDrop">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <!-- end::NexLink Meta Basic -->
+
+
+
+  <!-- begin:: Website Page Title -->
+  <title>@ViewData["Title"] - FNCRR</title>
+  <!-- end:: Website Page Title -->
+
+  <!-- begin::NexLink Mobile Specific -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- end:: Mobile Specific -->
+
+  <!-- begin::NexLink Favicon Tags -->
+  <link rel="icon" type="image/png" href="~/assets-backoffice/images/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="~/assets-backoffice/images/apple-touch-icon.png">
+  <!-- end:: Favicon Tags -->
+
+  <!-- begin:: Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <!-- end:: Google Fonts -->
+
+  <!-- begin:: Required Stylesheet -->
+  <link rel="stylesheet" href="~/assets-backoffice/libs/flaticon/css/all/all.css">
+  <link rel="stylesheet" href="~/assets-backoffice/libs/lucide/lucide.css">
+  <link rel="stylesheet" href="~/assets-backoffice/libs/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="~/assets-backoffice/libs/simplebar/simplebar.css">
+  <link rel="stylesheet" href="~/assets-backoffice/libs/node-waves/waves.css">
+  <link rel="stylesheet" href="~/assets-backoffice/libs/bootstrap-select/css/bootstrap-select.min.css">
+  <link rel="stylesheet" href="~/assets-backoffice/libs/flatpickr/flatpickr.min.css">
+  <!-- end:: Required Stylesheet -->
+
+  <!-- begin:: CSS Stylesheet -->
+  <link rel="stylesheet" href="~/assets-backoffice/libs/datatables/datatables.min.css">
+  <link rel="stylesheet" href="~/assets-backoffice/css/styles.css">
+  <link rel="stylesheet" href="~/assets-backoffice/css/style-added.css" asp-append-version="true">
+  <!-- end:: CSS Stylesheet -->
+
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg bg-body border-bottom sticky-top px-3 py-2 backend-navbar">
+        <a class="navbar-brand d-flex align-items-center me-4 p-0" asp-page="/Dashboard/Index" aria-label="FNCCR">
+            <img src="~/logos/logo-header-fnccr.svg" alt="FNCRR | Dashboard" width="48" height="34">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#backendNavbar" aria-controls="backendNavbar" aria-expanded="false" aria-label="Afficher le menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="backendNavbar">
+            <ul class="navbar-nav align-items-lg-center gap-lg-3 me-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fi fi-rr-house-blank me-1"></i> Mon espace
+                    </a>
+                    <ul class="dropdown-menu shadow-sm">
+                        <li><a class="dropdown-item" asp-page="/Dashboard/Index">Tableau de bord</a></li>
+                        <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Mes informations</a></li>
+                        <li><a class="dropdown-item" asp-page="/Dashboard/Inscriptions">Mes inscriptions</a></li>
+                        <li><a class="dropdown-item" asp-page="/Dashboard/Badges">Mes badges</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fi fi-rr-apps me-1"></i> Admin
+                    </a>
+                    <ul class="dropdown-menu shadow-sm">
+                        <li><a class="dropdown-item" asp-page="/Admin/Index">Administration</a></li>
+                        <li><a class="dropdown-item" asp-page="/Admin/Utilisateurs">Utilisateurs</a></li>
+                        <droit-visible code="ORGANISATION.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Organisations" asp-action="Index">Organisations</a></li>
+                        </droit-visible>
+                        <droit-visible code="SCOPE.CONSULTER">
+                            <li><a class="dropdown-item" asp-page="/Admin/Perimetres">Périmètres d'accès</a></li>
+                        </droit-visible>
+                        <droit-visible code="DOCUMENTLEGAL.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="DocumentsLegaux" asp-action="Index">Documents légaux (CGU/PPD)</a></li>
+                        </droit-visible>
+                        <li><a class="dropdown-item" asp-page="/Admin/Parametrage">Parametrage</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Droits et permissions (RBAC)</h6></li>
+                        <droit-visible code="RESSOURCE.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Ressources" asp-action="Index">Ressources</a></li>
+                        </droit-visible>
+                        <droit-visible code="TYPEACTION.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="TypesAction" asp-action="Index">Types d'action</a></li>
+                        </droit-visible>
+                        <droit-visible code="GROUPEDROIT.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="GroupesDroit" asp-action="Index">Groupes de droits</a></li>
+                        </droit-visible>
+                        <droit-visible code="DROIT.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Droits" asp-action="Index">Droits</a></li>
+                        </droit-visible>
+                        <droit-visible code="ROLE.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Roles" asp-action="Index">Roles</a></li>
+                        </droit-visible>
+                        <droit-visible code="PERMISSION.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Permissions" asp-action="Index">Permissions</a></li>
+                        </droit-visible>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3 ms-lg-auto">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    @if (estSuperAdministrateur)
+                    {
+                        <span class="badge text-bg-danger" title="Ce compte contourne toute verification de droit/role.">Super administrateur</span>
+                    }
+                    @if (sansScope)
+                    {
+                        <span class="badge text-bg-warning" title="Aucun perimetre (Scope) associe a ce compte : visibilite sur toutes les organisations.">Toutes les organisations</span>
+                    }
+                }
+
+                <a href="javascript:void(0);" class="theme-btn">
+                    <svg class="icon-light" width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14.1663 10.5002C14.1663 12.8013 12.3008 14.6668 9.99967 14.6668C7.69849 14.6668 5.83301 12.8013 5.83301 10.5002C5.83301 8.19898 7.69849 6.3335 9.99967 6.3335C12.3008 6.3335 14.1663 8.19898 14.1663 10.5002Z" fill="var(--bs-heading-color)" />
+                    </svg>
+                    <div class="theme-toggle"></div>
+                    <svg class="icon-dark" width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path opacity="0.5" d="M10.0003 18.8332C14.6027 18.8332 18.3337 15.1022 18.3337 10.4998C18.3337 10.1143 17.7557 10.0505 17.5563 10.3805C16.6077 11.9503 14.8849 12.9998 12.917 12.9998C9.92541 12.9998 7.50032 10.5748 7.50032 7.58317C7.50032 5.61521 8.54982 3.89238 10.1197 2.9438C10.4497 2.7444 10.3859 2.1665 10.0003 2.1665C5.39795 2.1665 1.66699 5.89746 1.66699 10.4998C1.66699 15.1022 5.39795 18.8332 10.0003 18.8332Z" fill="var(--bs-heading-color)" />
+                    </svg>
+                </a>
+
+                <div class="dropdown">
+                    <button type="button" class="btn btn-icon btn-action-gray rounded-circle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+                        <i class="fi fi-rr-bell fs-5"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-sm w-300px">
+                        <h6 class="dropdown-header">Notifications</h6>
+                        <div class="dropdown-item-text text-muted">Aucune notification pour le moment.</div>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button type="button" class="btn dropdown-toggle d-flex align-items-center gap-2 border-0 bg-transparent p-0" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        <span class="text-end d-none d-md-block">
+                            <span class="fw-bold text-dark email-truncate d-block">
+                                @if (SignInManager.IsSignedIn(User))
+                                {
+                                    <span class="text-muted">@User.Identity?.Name</span>
+                                }
+                            </span>
+                            <small class="text-body d-block lh-sm">
+                                @if (SignInManager.IsSignedIn(User))
+                                {
+                                    @(nomsRoles.Count > 0 ? string.Join(", ", nomsRoles) : "Aucun role")
+                                }
+                            </small>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Profil</a></li>
+                        <li><a class="dropdown-item" asp-page="/Dashboard/Preferences">Preferences</a></li>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="m-0">
+                                    <button type="submit" class="dropdown-item text-danger">Log Out</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="content-area p-4">
+        @if (documentsEnAttente.Count > 0)
+        {
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                De nouvelles conditions sont disponibles :
+                @string.Join(", ", documentsEnAttente.Select(type => type.Libelle()))
+                — <a href="/Compte/AccepterDocuments">consultez-les et acceptez-les</a>.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="content-footer border-top bg-body text-center py-3">
+        <p class="mb-0 text-muted">© 2026 FNCRR. Tous droits réservés.</p>
+    </footer>
+
+    <script src="~/assets-backoffice/libs/global/global.min.js"></script>
+    <script src="~/assets-backoffice/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets-backoffice/libs/simplebar/simplebar.min.js"></script>
+    <script src="~/assets-backoffice/libs/node-waves/waves.js"></script>
+
+    <!-- begin::NexLink Page Scripts -->
+    <script src="~/assets-backoffice/libs/sortable/Sortable.min.js"></script>
+    <script src="~/assets-backoffice/libs/chartjs/chart.js"></script>
+    <script src="~/assets-backoffice/libs/flatpickr/flatpickr.min.js"></script>
+    <script src="~/assets-backoffice/libs/apexcharts/apexcharts.min.js"></script>
+    <script src="~/assets-backoffice/libs/datatables/datatables.min.js"></script>
+    <script src="~/assets-backoffice/js/dashboard/dashboard.js"></script>
+    <script src="~/assets-backoffice/js/plugins/todolist.js"></script>
+    <script src="~/assets-backoffice/js/appSettings.js"></script>
+    <script src="~/assets-backoffice/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropdownToggles = document.querySelectorAll('#backendNavbar [data-bs-toggle="dropdown"]');
+
+            dropdownToggles.forEach(function (toggle) {
+                if (window.bootstrap?.Dropdown) {
+                    const dropdown = bootstrap.Dropdown.getOrCreateInstance(toggle, {
+                        autoClose: toggle.dataset.bsAutoClose || true
+                    });
+
+                    toggle.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        dropdown.toggle();
+                    });
+
+                    return;
+                }
+
+                toggle.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const menu = toggle.parentElement?.querySelector('.dropdown-menu');
+                    if (!menu) {
+                        return;
+                    }
+
+                    document.querySelectorAll('#backendNavbar .dropdown-menu.show').forEach(function (openMenu) {
+                        if (openMenu !== menu) {
+                            openMenu.classList.remove('show');
+                        }
+                    });
+
+                    menu.classList.toggle('show');
+                });
+            });
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+
+</html>

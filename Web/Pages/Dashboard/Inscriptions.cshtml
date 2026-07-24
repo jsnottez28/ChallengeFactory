@@ -1,0 +1,68 @@
+@page
+@{
+    ViewData["Title"] = "Mes inscriptions";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Mes inscriptions</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Mon espace</p>
+                <h1 class="h3 mb-0">Mes inscriptions</h1>
+            </div>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-1">Inscriptions</h2>
+                        <p class="text-muted mb-0">Cette page accueillera la liste des inscriptions de l'utilisateur.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Événement</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Statut</th>
+                                        <th scope="col" class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">Aucune inscription à afficher pour le moment.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Aide</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-0">Les inscriptions pourront être reliées aux événements, congrès ou réservations de la plateforme.</p>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <div class="d-grid gap-2">
+                            <a asp-page="/Dashboard/Index" class="btn btn-outline-secondary">Retour au tableau de bord</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

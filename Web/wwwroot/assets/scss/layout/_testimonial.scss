@@ -1,0 +1,174 @@
+@use '../utils' as *;
+
+/*=============================
+    	22. testimonial
+===============================*/
+
+.td-testimonial{
+    &-3{
+        &-ratings{
+            & span{
+                font-size: 20px;
+                color: #ffb600;
+            }
+        }
+        &-wrap{
+            padding-left: 282px;
+            margin-right: 120px;
+            @media #{$x3l,$xxl} {
+                padding-left: 130px;
+            }
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                padding-left: 50px;
+            }
+            @media #{$xs} {
+                padding-left: 20px;
+                margin-right: 20px;
+            }
+            & p{
+                font-family: var(--td-ff-poppins);
+                font-weight: 500;
+                line-height: 26px;
+                text-transform: capitalize;
+                color: var(--td-common-white);
+            }
+        }
+        &-qoute{
+            position: absolute;
+            bottom: 224px;
+            right: 0;      
+        }
+        &-avatar{
+            display: flex;
+            align-items: center;
+            &-thumb{
+                & img{
+                    border-radius: 50%;
+                }
+            }
+            & .names{
+                font-family: var(--td-ff-poppins);
+                font-weight: 600;
+                color: var(--td-common-white);
+                margin-bottom: 0;
+                line-height: 1;
+            }
+            & .td-position{
+                font-family: var(--td-ff-poppins);
+                font-size: 14px;
+                text-transform: capitalize;
+                color: var(--td-common-white);
+                line-height: 1;
+            }
+        }
+        &-video{
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 150px 0;
+        }
+        &-navigation{
+            position: absolute;
+            bottom: 24%;
+            right: 0;
+            z-index: 2;
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                bottom: 17%;
+            }
+            & span{
+                width: 36px;
+                height: 36px;
+                text-align: center;
+                line-height: 36px;
+                border-radius: 100px;
+                background: var(--td-common-white);
+                color: var(--td-theme-secondary);
+                transition: all .4s ease;
+                &:hover{
+                    color: var(--td-common-white);
+                    background: var(--td-theme-secondary);
+                }
+            }
+        }
+    }
+    &-4{
+        &-rating{
+            display: flex;
+            gap: 5px;
+            & span{
+                color: var(--td-common-yellow);
+            }
+        }
+        &-item{
+            border: 1px solid #e5e5e5;
+            border-radius: 24px;
+            padding: 45px 50px 50px 50px;
+            margin-left: 2px;
+            margin-bottom: 1px;
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                padding: 25px 25px 25px 25px;
+            }
+            & .text{
+                font-family: var(--td-ff-poppins);
+                font-weight: 400;
+                font-size: 16px;
+                line-height: 187%;
+                text-transform: capitalize;
+                color: var(--tp-grey-1);
+            }
+        }
+        &-avatar{
+            & img{
+                border-radius: 100px;
+                flex: 0 0 auto;
+            }
+        }
+        &-content{
+            & h5{
+                font-weight: 600;
+                font-size: 16px;
+                text-transform: capitalize;
+                margin-bottom: 0;
+            }
+            & span{
+                font-family: var(--td-ff-poppins);
+                font-weight: 400;
+                font-size: 14px;
+                text-transform: capitalize;
+                color: var(--tp-grey-1);
+            }
+        }
+        &-qoute{
+            position: absolute;
+            bottom: 50px;
+            right: 40px;
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                bottom: 30px;
+                right: 20px;
+            }
+            @media #{$md,$xs} {
+                bottom: auto;
+                top: 17px;
+            }
+        }
+        &-navigation{
+            gap: 5px;
+            & span{
+                width: 50px;
+                height: 50px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 10px;
+                color: var(--td-theme-primary);
+                background: #efecff;
+                transition: all .4s ease;
+                &:hover{
+                    color: var(--td-common-white);
+                    background: var(--td-theme-primary);
+                }
+            }
+        }
+    }
+}

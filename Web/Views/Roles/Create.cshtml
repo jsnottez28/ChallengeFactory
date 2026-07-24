@@ -1,0 +1,58 @@
+@model Web.Controllers.RolesController.RoleFormModel
+@{
+    ViewData["Title"] = "Ajouter un role";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Roles" asp-action="Index">Roles</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Ajouter un role</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Ajouter un role</h1>
+            </div>
+            <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Retour aux roles</a>
+        </div>
+
+        <form method="post" asp-controller="Roles" asp-action="Create">
+            @Html.AntiForgeryToken()
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" autocomplete="off" placeholder="Organisateur">
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Creer le role</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,58 @@
+@use '../utils' as *;
+
+/*=============================
+    	24. tickets
+===============================*/
+
+.td-tickets{
+    &-details{
+        & span{
+            font-weight: 600;
+            font-size: 22px;
+            text-transform: capitalize;
+            color: var(--td-common-black);
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        & p{
+            font-family: var(--td-ff-poppins);
+            font-size: 18px;
+            color: var(--td-grey-1);
+        }
+    }
+    &-details{
+        border: 1.50px solid #000;
+        padding: 55px 80px 40px 60px;
+        border-radius: 20px;
+        background: var(--td-common-white);
+        @media #{$md,$sm,$xs} {
+			text-align: center;
+		}
+        @media #{$xs} {
+            padding: 30px 30px 30px 30px;
+		}
+    }
+    &-item{
+        margin-top: -1px;
+        @media #{$md,$sm,$xs} {
+			margin-bottom: 30px;
+		}
+    }
+    &-time{
+        border: 1.50px solid #000;
+        padding: 55px 10px 47px 10px;
+        margin-left: -1px;
+        border-radius: 20px;
+        background: var(--td-common-white);
+        @media #{$xl,$lg,$md,$sm,$xs} {
+			padding: 66px 10px 62px 10px;
+		}
+        & .price{
+            display: block;
+            font-weight: 700;
+            font-size: 24px;
+            text-transform: capitalize;
+            color: var(--td-common-black);
+        }
+    }
+}

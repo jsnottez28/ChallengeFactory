@@ -1,0 +1,130 @@
+@page
+@model EnableAuthenticatorModel
+@{
+    Layout = "/Views/Shared/_LayoutBackend.cshtml";
+    ViewData["Title"] = "Configurer l'application MFA";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-area="" asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-area="" asp-page="/Dashboard/Preferences">Préférences</a></li>
+                <li class="breadcrumb-item"><a asp-page="./TwoFactorAuthentication">Authentification MFA</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Configurer l'application</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Compte et sécurité</p>
+                <h1 class="h3 mb-0">Configurer l'application MFA</h1>
+            </div>
+        </div>
+
+        <partial name="_StatusMessage" for="StatusMessage" />
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <form id="send-code" method="post" class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-1">Application d'authentification</h2>
+                        <p class="text-muted mb-0">Scanner le QR code ou saisir la clé manuellement, puis renseigner le code de vérification.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                        <div class="vstack gap-4">
+                            <div>
+                                <h3 class="h6 mb-2">1. Installer une application compatible</h3>
+                                <p class="text-muted mb-0">
+                                    Utiliser une application comme Microsoft Authenticator ou Google Authenticator sur mobile.
+                                </p>
+                            </div>
+
+                            <div>
+                                <h3 class="h6 mb-2">2. Scanner le QR code</h3>
+                                <p class="text-muted mb-3">
+                                    Scanner le QR code ou entrer la clé suivante dans l'application. Les espaces et la casse ne sont pas pris en compte.
+                                </p>
+
+                                <div class="row g-3 align-items-start">
+                                    <div class="col-12 col-md-5">
+                                        <div class="border rounded d-flex align-items-center justify-content-center p-4" style="min-height: 150px;">
+                                            <div id="qrCode"></div>
+                                            <div id="qrCodeData" data-url="@Model.AuthenticatorUri"></div>
+                                            <span class="text-muted small">QR code</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-7">
+                                        <label class="form-label">Clé manuelle</label>
+                                        <div class="border rounded bg-light p-3">
+                                            <code class="text-break">@Model.SharedKey</code>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="h6 mb-2">3. Vérifier le code</h3>
+                                <p class="text-muted mb-3">Saisir le code généré par l'application pour finaliser l'activation.</p>
+
+                                <label asp-for="Input.Code" class="form-label">Code de vérification</label>
+                                <input asp-for="Input.Code" class="form-control" autocomplete="off" placeholder="Exemple : 123456" />
+                                <span asp-validation-for="Input.Code" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <div class="d-flex flex-wrap justify-content-end gap-2">
+                            <a asp-page="./TwoFactorAuthentication" class="btn btn-outline-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">Vérifier et activer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Actions de sécurité</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-3">Navigation Identity existante pour le compte utilisateur.</p>
+                        <div class="list-group list-group-flush">
+                            <a asp-page="./Index" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Profile</span>
+                                <span class="text-muted small">/Identity/Account/Manage</span>
+                            </a>
+                            <a asp-page="./Email" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Email</span>
+                                <span class="text-muted small">/Identity/Account/Manage/Email</span>
+                            </a>
+                            <a asp-page="./ChangePassword" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Password</span>
+                                <span class="text-muted small">/Identity/Account/Manage/ChangePassword</span>
+                            </a>
+                            <a asp-page="./PersonalData" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Personal data</span>
+                                <span class="text-muted small">/Identity/Account/Manage/PersonalData</span>
+                            </a>
+                            <a asp-page="./TwoFactorAuthentication" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">MFA</span>
+                                <span class="text-muted small">/Identity/Account/Manage/TwoFactorAuthentication</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <a asp-page="./TwoFactorAuthentication" class="btn btn-outline-secondary w-100">Retour au MFA</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

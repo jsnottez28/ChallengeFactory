@@ -1,0 +1,308 @@
+@page
+@model UtilisateurCreateModel
+@{
+    ViewData["Title"] = "Ajouter un utilisateur";
+    var isIdentityStep = Model.Step == 1;
+    var isCustomStep = Model.Step == 2;
+    var isRecapStep = Model.Step == 3;
+    var stepTitle = isIdentityStep
+        ? "Informations Identity"
+        : isCustomStep
+            ? "Informations personnalisées"
+            : "Récapitulatif";
+    var stepDescription = isIdentityStep
+        ? "Champs standards de la table AspNetUsers."
+        : isCustomStep
+            ? "Champs ajoutés par le modèle ApplicationUser."
+            : "Vérifier les informations avant création de l'utilisateur.";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Utilisateurs">Utilisateurs</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Ajouter un utilisateur</li>
+            </ol>
+        </nav>
+
+        @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Ajouter un utilisateur</h1>
+            </div>
+            <a asp-page="/Admin/Utilisateurs" class="btn btn-outline-secondary">Retour aux utilisateurs</a>
+        </div>
+
+        <form method="post">
+            <input asp-for="Step" type="hidden">
+
+            @if (isIdentityStep)
+            {
+                <input asp-for="Input.Prenom" type="hidden">
+                <input asp-for="Input.Nom" type="hidden">
+                <input asp-for="Input.Structure" type="hidden">
+                <input asp-for="Input.CodeAdherent" type="hidden">
+            }
+            else if (isCustomStep)
+            {
+                <input asp-for="Input.UserName" type="hidden">
+                <input asp-for="Input.Email" type="hidden">
+                <input asp-for="Input.PhoneNumber" type="hidden">
+                <input asp-for="Input.Password" type="hidden">
+                <input asp-for="Input.RoleName" type="hidden">
+                <input asp-for="Input.EmailConfirmed" type="hidden">
+                <input asp-for="Input.LockoutEnabled" type="hidden">
+                <input asp-for="Input.SendInvitation" type="hidden">
+            }
+            else
+            {
+                <input asp-for="Input.UserName" type="hidden">
+                <input asp-for="Input.Email" type="hidden">
+                <input asp-for="Input.PhoneNumber" type="hidden">
+                <input asp-for="Input.Password" type="hidden">
+                <input asp-for="Input.RoleName" type="hidden">
+                <input asp-for="Input.EmailConfirmed" type="hidden">
+                <input asp-for="Input.LockoutEnabled" type="hidden">
+                <input asp-for="Input.SendInvitation" type="hidden">
+                <input asp-for="Input.Prenom" type="hidden">
+                <input asp-for="Input.Nom" type="hidden">
+                <input asp-for="Input.Structure" type="hidden">
+                <input asp-for="Input.CodeAdherent" type="hidden">
+            }
+
+            <div class="row g-4 align-items-start">
+                <div class="col-12 col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div>
+                                    <h2 class="h5 mb-1">@stepTitle</h2>
+                                    <p class="text-muted mb-0">@stepDescription</p>
+                                </div>
+                                <span class="badge text-bg-light">Étape @Model.Step / 3</span>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                            @if (isIdentityStep)
+                            {
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.UserName" class="form-label"></label>
+                                        <input asp-for="Input.UserName" class="form-control" autocomplete="username">
+                                        <span asp-validation-for="Input.UserName" class="text-danger"></span>
+                                        <div class="form-text">Peut être laissé vide : l'email pourra servir d'identifiant.</div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.Email" class="form-label"></label>
+                                        <input asp-for="Input.Email" class="form-control" autocomplete="email">
+                                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                                        <input asp-for="Input.PhoneNumber" class="form-control" autocomplete="tel">
+                                        <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.RoleName" class="form-label"></label>
+                                        <select asp-for="Input.RoleName" class="form-select">
+                                            <option value="">Aucun rôle</option>
+                                            @foreach (var role in Model.Roles)
+                                            {
+                                                <option value="@role">@role</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="Input.RoleName" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.Password" class="form-label"></label>
+                                        <input asp-for="Input.Password" class="form-control" autocomplete="new-password">
+                                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="row g-3">
+                                            <div class="col-12 col-md-4">
+                                                <div class="form-check form-switch">
+                                                    <input asp-for="Input.EmailConfirmed" class="form-check-input" role="switch">
+                                                    <label asp-for="Input.EmailConfirmed" class="form-check-label"></label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-md-4">
+                                                <div class="form-check form-switch">
+                                                    <input asp-for="Input.LockoutEnabled" class="form-check-input" role="switch">
+                                                    <label asp-for="Input.LockoutEnabled" class="form-check-label"></label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-md-4">
+                                                <div class="form-check form-switch">
+                                                    <input asp-for="Input.SendInvitation" class="form-check-input" role="switch">
+                                                    <label asp-for="Input.SendInvitation" class="form-check-label"></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else if (isCustomStep)
+                            {
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.Prenom" class="form-label"></label>
+                                        <input asp-for="Input.Prenom" class="form-control" autocomplete="given-name">
+                                        <span asp-validation-for="Input.Prenom" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.Nom" class="form-label"></label>
+                                        <input asp-for="Input.Nom" class="form-control" autocomplete="family-name">
+                                        <span asp-validation-for="Input.Nom" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.Structure" class="form-label"></label>
+                                        <input asp-for="Input.Structure" class="form-control" autocomplete="organization">
+                                        <span asp-validation-for="Input.Structure" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Input.CodeAdherent" class="form-label"></label>
+                                        <input asp-for="Input.CodeAdherent" class="form-control">
+                                        <span asp-validation-for="Input.CodeAdherent" class="text-danger"></span>
+                                    </div>
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6">
+                                        <h3 class="h6 mb-3">Identity</h3>
+                                        <dl class="row mb-0">
+                                            <dt class="col-5 text-muted">Nom utilisateur</dt>
+                                            <dd class="col-7">@(Model.Input.UserName ?? "-")</dd>
+                                            <dt class="col-5 text-muted">Email</dt>
+                                            <dd class="col-7">@Model.Input.Email</dd>
+                                            <dt class="col-5 text-muted">Téléphone</dt>
+                                            <dd class="col-7">@(Model.Input.PhoneNumber ?? "-")</dd>
+                                            <dt class="col-5 text-muted">Rôle</dt>
+                                            <dd class="col-7">@(Model.Input.RoleName ?? "Aucun rôle")</dd>
+                                            <dt class="col-5 text-muted">Email confirmé</dt>
+                                            <dd class="col-7">@(Model.Input.EmailConfirmed ? "Oui" : "Non")</dd>
+                                            <dt class="col-5 text-muted">Invitation</dt>
+                                            <dd class="col-7">@(Model.Input.SendInvitation ? "Oui" : "Non")</dd>
+                                        </dl>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <h3 class="h6 mb-3">Informations personnalisées</h3>
+                                        <dl class="row mb-0">
+                                            <dt class="col-5 text-muted">Prénom</dt>
+                                            <dd class="col-7">@(Model.Input.Prenom ?? "-")</dd>
+                                            <dt class="col-5 text-muted">Nom</dt>
+                                            <dd class="col-7">@(Model.Input.Nom ?? "-")</dd>
+                                            <dt class="col-5 text-muted">Structure</dt>
+                                            <dd class="col-7">@(Model.Input.Structure ?? "-")</dd>
+                                            <dt class="col-5 text-muted">Code adhérent</dt>
+                                            <dd class="col-7">@(Model.Input.CodeAdherent ?? "-")</dd>
+                                            <dt class="col-5 text-muted">Gratuités restantes</dt>
+                                        </dl>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-flex flex-wrap justify-content-between gap-2">
+                                <div>
+                                    @if (!isIdentityStep)
+                                    {
+                                        <button type="submit" name="submitAction" value="previous" class="btn btn-outline-secondary" formnovalidate>Retour</button>
+                                    }
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a asp-page="/Admin/Utilisateurs" class="btn btn-outline-secondary">Annuler</a>
+                                    @if (!isRecapStep)
+                                    {
+                                        <button type="submit" name="submitAction" value="next" class="btn btn-primary">Continuer</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" name="submitAction" value="create" class="btn btn-primary">Créer l'utilisateur</button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm backend-side-card">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Création</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            <ol class="list-group list-group-numbered list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-start px-0 @(isIdentityStep ? "fw-semibold" : "")">
+                                    <span>Informations Identity</span>
+                                    @if (!isIdentityStep)
+                                    {
+                                        <span class="badge text-bg-success">OK</span>
+                                    }
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start px-0 @(!isIdentityStep ? "fw-semibold" : "")">
+                                    <span>Informations personnalisées</span>
+                                    @if (isRecapStep)
+                                    {
+                                        <span class="badge text-bg-success">OK</span>
+                                    }
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start px-0 @(isRecapStep ? "fw-semibold" : "")">
+                                    <span>Récapitulatif</span>
+                                </li>
+                            </ol>
+                            @if (isRecapStep)
+                            {
+                                <p class="text-muted mt-3 mb-0">S'il existe un code adhérent : rechercher l'organisation et prévoir une validation d'affectation.</p>
+                                <p class="text-muted mt-3 mb-0">Si une organisation/structure est entrée : vérifier si une organisation existe déjà dans la base.</p>
+                                <p class="text-muted mt-3 mb-0">Pour les gratuités, à voir si elles sont attachées à un utilisateur ou à une organisation.</p>
+                                <p class="text-muted mt-3 mb-0">Connecter le wizard à <code>UserManager.CreateAsync</code>, puis affecter le rôle choisi.</p>
+                            }
+                            else
+                            {
+                                <p class="text-muted mt-3 mb-0">Le développeur pourra connecter ce wizard à <code>UserManager.CreateAsync</code>, puis affecter le rôle choisi.</p>
+                            }
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-grid gap-2">
+                                <a asp-page="/Admin/Roles" class="btn btn-outline-secondary">Gérer les rôles</a>
+                                <a asp-page="/Admin/Permissions" class="btn btn-outline-secondary">Gérer les périmètres</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

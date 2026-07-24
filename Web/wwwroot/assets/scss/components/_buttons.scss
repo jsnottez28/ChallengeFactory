@@ -1,0 +1,64 @@
+@use '../utils' as *;
+
+/*=============================
+	04. Button
+===============================*/
+
+.td-btn{
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	color: var(--td-common-white);
+	background: var(--td-theme-secondary);
+	line-height: 1;
+    display: inline-block;
+	border-radius: 100px;
+	padding: 18px 28px;
+    &:hover{
+        color: var(--td-common-white);
+    }
+	&-3{
+		&-border{
+			background: transparent;
+			border: 1px solid var(--td-common-white);
+			border-radius: 8px;
+		}
+		&-squre{
+			background:  var(--td-theme-secondary);
+			border-radius: 8px;
+		}
+	}
+	&-square{
+		object-fit: cover;
+		clip-path: polygon(0 0, 90% 0%, 100% 28%, 100% 80%, 100% 100%, 11% 100%, 0% 72%, 0% 20%);
+		font-weight: 600;
+		font-size: 16px;
+		line-height: 1;
+		color: var(--td-common-white);
+		background: var(--td-theme-secondary);
+		padding: 17px 25px;
+		border-radius: 5px 22px 5px 22px;
+		display: inline-block;
+		transition: all .4s ease;
+		&-xl{
+			padding: 22px 34px;
+			box-shadow: 0 6px 15px 0 rgba(0, 0, 0, 0.25);
+			clip-path: polygon(0 0, 91% 0%, 100% 28%, 100% 80%, 100% 100%, 9% 100%, 0% 72%, 0% 20%);
+		}
+		&:hover{
+			background: var(--td-theme-primary);
+			color: var(--td-common-white);
+		}
+	}
+	&-green{
+		background: var(--td-theme-primary);
+	}
+	&-white{
+		background: var(--td-common-white);
+		border-radius: 6px;
+		color: var(--td-common-black);
+		&:hover{
+			color: var(--td-common-black);
+		}
+	}
+}

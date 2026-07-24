@@ -1,0 +1,226 @@
+@use '../utils' as *;
+
+/*=============================
+    	18. price
+===============================*/
+
+.td-pricing{
+    &-2{
+        &-price{
+            padding: 29px 52px;
+            background: #e22ca0;
+            border-radius: 20px;
+            display: inline-block;
+            & .subtitle{
+                font-weight: 500;
+                font-size: 16px;
+                text-transform: capitalize;
+                color: var(--td-common-white);
+                display: block;
+            }
+            & .price{
+                font-weight: 800;
+                font-size: 30px;
+                color: var(--td-common-white);
+            }
+        }
+        &-feature{
+            & ul{
+                & li{
+                    font-family: var(--td-ff-poppins);
+                    font-weight: 500;
+                    font-size: 18px;
+                    color: var(--td-common-white);
+                    display: flex;
+                    &:not(:last-child){
+                        margin-bottom: 17px;
+                    }
+                    & svg{
+                        margin-right: 5px;
+                        transform: translateY(-1px);
+                    }
+                }
+            }
+        }
+        &-item{
+            padding: 60px 20px 78px 92px;
+            @media #{$xl,$md,$xs} {
+                padding: 60px 40px 78px 40px;
+                text-align: center;
+            }
+            & .td-btn-square{
+                background: var(--td-common-white);
+                color: var(--td-common-black);
+                padding: 22px 30px;
+                box-shadow: 0 6px 15px 0 rgba(0, 0, 0, 0.25);
+                clip-path: polygon(0 0, 93% 0%, 100% 28%, 100% 80%, 100% 100%, 7% 100%, 0% 72%, 0% 20%);
+                &:hover{
+                    background: var(--td-theme-primary);
+                    color: var(--td-common-white);
+                }
+            }
+        }
+    }
+    &-3{
+        &-item{
+            border-radius: 50px 8px;
+            background: var(--td-common-white);
+            & .td-btn-3-squre{
+                margin-left: 22px;
+                @media #{$xl,$lg,$md,$sm,$xs} {
+                    margin-left: 0;
+                }
+            }
+            & .td-pricing-2-feature ul li {
+                color: var(--td-common-black);
+            }
+            & .td-pricing-2-price {
+                background: none;
+                border-radius: 0;
+                padding-top: 15px;
+            }
+            & .td-pricing-2-price .subtitle {
+                color: var(--td-common-black);
+            }
+            & .td-pricing-2-price .price {
+                color: var(--td-common-black);
+            }
+        }
+    }
+    &-4{
+        &-price{
+            border-bottom: 1px solid #d4d4d4;
+            & .subtitle{
+                font-weight: 600;
+                font-size: 20px;
+                text-transform: uppercase;
+                color: var(--td-common-black);
+                margin-bottom: 20px;
+                display: inline-block;
+            }
+            & .price{
+                font-weight: 700;
+                font-size: 36px;
+                text-transform: capitalize;
+                display: flex;
+                align-items: self-start;
+                line-height: .9;
+                & span{
+                    font-weight: 500;
+                    font-size: 24px;
+                    margin-right: 5px;
+                }
+            }
+            & .text{
+                font-family: var(--td-ff-poppins);
+                font-weight: 500;
+                font-size: 16px;
+                line-height: 175%;
+                text-transform: capitalize;
+                color: var(--td-grey-1);
+            }
+        }
+        &-item{
+            background: var(--td-common-white);
+            padding: 55px 50px 55px 50px;
+            border-radius: 30px;
+            @media #{$md,$sm,$xs} {
+                padding: 55px 40px 55px 40px;
+            }
+        }
+        &-feature{
+            & ul{
+                & li{
+                    color: var(--td-grey-1);
+                }
+            }
+        }
+        &-shape{
+            position: absolute;
+            top: 200px;
+            left: 8%;
+            z-index: -1;
+            &-2{
+                position: absolute;
+                top: 265px;
+                right: 10%;
+                z-index: -1;
+                @media #{$xl,$lg,$md,$sm,$xs} {
+                    right: 2%;
+                }
+            }
+            &-3{
+                position: absolute;
+                bottom: -40px;
+                right: 10%;
+                z-index: -1;
+            }
+        }
+    }
+    &-5{
+        &-title{
+            &-wrap{
+                position: sticky;
+                top: 100px;
+            }
+        }
+        &-item{
+            padding: 52px 50px 37px 50px;
+            position: sticky;
+            top: 100px;
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                padding: 30px 25px 17px 24px;
+            }
+            & .td-pricing-4-price {
+                border-bottom: none;
+                border-right: 1px solid #d4d4d4;
+                margin-right: -20px;
+                padding-right: 20px;
+                @media #{$md,$sm,$xs} {
+                    border-right: 0;
+                }
+            }
+            & .td-pricing-2-feature {
+                @media #{$md,$sm,$xs} {
+                    margin-left: 0;
+                }
+            }
+        }
+        &-area{
+            @media #{$xs} {
+                overflow: hidden;
+            }
+        }
+    }
+    &-6{
+        &-item{
+            padding: 60px 60px 70px 60px;
+            border-radius: 30px;
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                padding: 40px 40px 40px 40px;
+            }
+            & .td-pricing-2-price {
+                padding: 0;
+                padding-bottom: 0;
+            }
+            & p{
+                font-family: var(--td-ff-poppins);
+                font-weight: 600;
+                font-size: 18px;
+                line-height: 144%;
+                text-transform: capitalize;
+                color: var(--td-common-black);
+            }
+            & .subtitle {
+               font-weight: 400
+            }
+            & .td-pricing-2-feature ul li {
+                font-weight: 400;
+                color: #444;
+            }
+            & .td-btn-3-squre {
+                margin-left: 0;
+            }
+        }
+    }
+}

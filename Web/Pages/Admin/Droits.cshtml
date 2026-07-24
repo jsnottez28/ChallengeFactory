@@ -1,0 +1,98 @@
+@page
+@model DroitsModel
+@{
+    ViewData["Title"] = "Droits";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Droits</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Droits</h1>
+            </div>
+            <a asp-page="/Admin/DroitCreate" class="btn btn-primary">Ajouter un droit</a>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Catalogue des droits</h2>
+                        <p class="text-muted mb-4">Les droits sont les claims associées aux rôles dans <code>AspNetRoleClaims</code>.</p>
+
+                        @if (Model.Droits.Count == 0)
+                        {
+                            <div class="border rounded p-4 text-center">
+                                <h3 class="h6 mb-2">Aucun droit implémenté</h3>
+                                <p class="text-muted mb-3">Ajoutez une première claim de rôle pour commencer à composer les permissions.</p>
+                                <a asp-page="/Admin/DroitCreate" class="btn btn-outline-primary">Ajouter un droit</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Type</th>
+                                            <th scope="col">Valeur</th>
+                                            <th scope="col">Rôle</th>
+                                            <th scope="col" class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var droit in Model.Droits)
+                                        {
+                                            <tr>
+                                                <td class="fw-semibold"><code>@droit.ClaimType</code></td>
+                                                <td><code>@droit.ClaimValue</code></td>
+                                                <td class="text-muted">@droit.RoleName</td>
+                                                <td class="text-end">
+                                                    <a asp-page="/Admin/DroitEdit" asp-route-id="@droit.Id" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Principe</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-0">Un droit est une claim. Les périmètres limitent ensuite les organisations accessibles par utilisateur.</p>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <div class="d-grid gap-2">
+                            <a asp-page="/Admin/DroitCreate" class="btn btn-outline-primary">Ajouter un droit</a>
+                            <a asp-page="/Admin/Permissions" class="btn btn-outline-secondary">Gérer les périmètres</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,139 @@
+@model List<Web.Data.Entities.Organisation>
+@{
+    ViewData["Title"] = "Organisations";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Organisations</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Organisations</h1>
+            </div>
+            <droit-visible code="ORGANISATION.CREER">
+                <a asp-controller="Organisations" asp-action="Create" class="btn btn-primary">Creer une organisation</a>
+            </droit-visible>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Liste des organisations</h2>
+                        <p class="text-muted mb-4">Organisations rattachees a la plateforme, issues de la base de donnees.</p>
+
+                        @if (Model.Count > 0)
+                        {
+                            <div class="mb-3">
+                                <label for="organisationFilter" class="form-label visually-hidden">Filtrer les organisations</label>
+                                <input type="search" id="organisationFilter" class="form-control" placeholder="Filtrer par nom, code adhérent ou ville...">
+                            </div>
+                        }
+
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Organisation</th>
+                                        <th scope="col">Code adhérent</th>
+                                        <th scope="col">Ville</th>
+                                        <th scope="col">Statut</th>
+                                        <th scope="col" class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="organisationsTableBody">
+                                    @if (Model.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-muted text-center py-4">Aucune organisation enregistree pour le moment.</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var organisation in Model)
+                                        {
+                                            <tr data-searchable>
+                                                <td class="fw-semibold">@organisation.RaisonSociale</td>
+                                                <td>@organisation.CodeAdherent</td>
+                                                <td>@(organisation.Ville ?? "-")</td>
+                                                <td>
+                                                    @if (organisation.EstActif)
+                                                    {
+                                                        <span class="badge text-bg-success">Active</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge text-bg-light">Inactive</span>
+                                                    }
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="d-inline-flex gap-2">
+                                                        <droit-visible code="ORGANISATION.MODIFIER">
+                                                            <a asp-controller="Organisations" asp-action="Edit" asp-route-id="@organisation.Id" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                                            <form method="post" asp-controller="Organisations" asp-action="ToggleActive" asp-route-id="@organisation.Id">
+                                                                @if (organisation.EstActif)
+                                                                {
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Desactiver</button>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <button type="submit" class="btn btn-sm btn-outline-success">Activer</button>
+                                                                }
+                                                            </form>
+                                                        </droit-visible>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        <tr id="organisationsNoResults" class="d-none">
+                                            <td colspan="5" class="text-muted text-center py-4">Aucune organisation ne correspond a ce filtre.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Actions rapides</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-0">Les organisations pourront ensuite etre rattachees a des utilisateurs, congres ou droits d'administration.</p>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <div class="d-grid gap-2">
+                            <droit-visible code="ORGANISATION.CREER">
+                                <a asp-controller="Organisations" asp-action="Create" class="btn btn-outline-primary">Creer une organisation</a>
+                            </droit-visible>
+                            <button type="button" class="btn btn-outline-secondary" disabled>Importer des organisations</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/admin-organisations-list.js"></script>
+}

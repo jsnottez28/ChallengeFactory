@@ -1,0 +1,49 @@
+@page
+@using Web.Extensions
+@model AccepterDocumentsModel
+@{
+    ViewData["Title"] = "Nouvelles conditions à accepter";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Compte</p>
+                <h1 class="h3 mb-0">Nouvelles conditions à accepter</h1>
+            </div>
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            @foreach (var document in Model.Documents)
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-1">@document.Type.Libelle()</h2>
+                        <p class="text-muted mb-0">Version @document.Version — en vigueur depuis le @document.DateEffective.ToLocalTime().ToString("dd/MM/yyyy")</p>
+                    </div>
+                    <div class="card-body p-4" style="max-height: 400px; overflow-y: auto;">
+                        @Html.Raw(document.ContenuHtml)
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="typesAcceptes" value="@document.Type" id="accepte-@document.Type">
+                            <label class="form-check-label" for="accepte-@document.Type">
+                                J'ai lu et j'accepte @(document.Type.Libelle()) — version @document.Version
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Confirmer</button>
+            </div>
+        </form>
+    </div>
+</section>

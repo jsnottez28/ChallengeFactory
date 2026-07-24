@@ -1,0 +1,26 @@
+@page
+@model ConfirmEmailModel
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Confirmation d'email";
+}
+
+<section class="auth-page pt-80 pb-80">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 text-center">
+                    <div class="mb-4">
+                        <h2 class="td-section-title">Confirmation d'email</h2>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <partial name="_StatusMessage" model="Model.StatusMessage" />
+                    </div>
+                    <div class="mt-4">
+                        <a asp-page="./Login" class="btn btn-primary btn-lg w-100">Retour à la connexion</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

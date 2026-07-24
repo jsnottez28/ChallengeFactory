@@ -1,0 +1,119 @@
+@page
+@{
+    ViewData["Title"] = "Administration";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Administration</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Paramétrage de la plateforme</h1>
+            </div>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Pages d'administration</h2>
+                        <p class="mb-4">Cet espace regroupe les pages d'administration et de paramétrage de la plateforme.</p>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <a asp-page="/Admin/Utilisateurs" class="d-block h-100 text-decoration-none border rounded p-3">
+                                    <span class="fw-semibold text-dark mb-1 d-block">Utilisateurs</span>
+                                    <span class="text-muted small">Administration des comptes et des rôles utilisateurs.</span>
+                                </a>
+                            </div>
+                            <droit-visible code="ROLE.CONSULTER">
+                                <div class="col-12 col-md-6">
+                                    <a asp-controller="Roles" asp-action="Index" class="d-block h-100 text-decoration-none border rounded p-3">
+                                        <span class="fw-semibold text-dark mb-1 d-block">Rôles</span>
+                                        <span class="text-muted small">Gestion des ensembles de droits.</span>
+                                    </a>
+                                </div>
+                            </droit-visible>
+                            <droit-visible code="DROIT.CONSULTER">
+                                <div class="col-12 col-md-6">
+                                    <a asp-controller="Droits" asp-action="Index" class="d-block h-100 text-decoration-none border rounded p-3">
+                                        <span class="fw-semibold text-dark mb-1 d-block">Droits</span>
+                                        <span class="text-muted small">Catalogue des actions autorisables.</span>
+                                    </a>
+                                </div>
+                            </droit-visible>
+                            <droit-visible code="PERMISSION.CONSULTER">
+                                <div class="col-12 col-md-6">
+                                    <a asp-controller="Permissions" asp-action="Index" class="d-block h-100 text-decoration-none border rounded p-3">
+                                        <span class="fw-semibold text-dark mb-1 d-block">Permissions</span>
+                                        <span class="text-muted small">Association des droits aux rôles.</span>
+                                    </a>
+                                </div>
+                            </droit-visible>
+                            <droit-visible code="ORGANISATION.CONSULTER">
+                                <div class="col-12 col-md-6">
+                                    <a asp-controller="Organisations" asp-action="Index" class="d-block h-100 text-decoration-none border rounded p-3">
+                                        <span class="fw-semibold text-dark mb-1 d-block">Organisations</span>
+                                        <span class="text-muted small">Création et gestion des organisations.</span>
+                                    </a>
+                                </div>
+                            </droit-visible>
+                            <droit-visible code="SCOPE.CONSULTER">
+                                <div class="col-12 col-md-6">
+                                    <a asp-page="/Admin/Perimetres" class="d-block h-100 text-decoration-none border rounded p-3">
+                                        <span class="fw-semibold text-dark mb-1 d-block">Périmètres d'accès</span>
+                                        <span class="text-muted small">Scopes utilisateurs par organisation.</span>
+                                    </a>
+                                </div>
+                            </droit-visible>
+                            <droit-visible code="DOCUMENTLEGAL.CONSULTER">
+                                <div class="col-12 col-md-6">
+                                    <a asp-controller="DocumentsLegaux" asp-action="Index" class="d-block h-100 text-decoration-none border rounded p-3">
+                                        <span class="fw-semibold text-dark mb-1 d-block">Documents légaux</span>
+                                        <span class="text-muted small">CGU et politique de protection des données.</span>
+                                    </a>
+                                </div>
+                            </droit-visible>
+                            <div class="col-12 col-md-6">
+                                <a asp-page="/Admin/Parametrage" class="d-block h-100 text-decoration-none border rounded p-3">
+                                    <span class="fw-semibold text-dark mb-1 d-block">Paramétrage</span>
+                                    <span class="text-muted small">Configuration générale de la plateforme.</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Actions rapides</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-page="/Admin/Utilisateurs" class="btn btn-outline-primary">Voir les utilisateurs</a>
+                            <droit-visible code="ROLE.CONSULTER">
+                                <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Gérer les rôles</a>
+                            </droit-visible>
+                            <droit-visible code="PERMISSION.CONSULTER">
+                                <a asp-controller="Permissions" asp-action="Index" class="btn btn-outline-secondary">Associer les droits</a>
+                            </droit-visible>
+                            <droit-visible code="ORGANISATION.CREER">
+                                <a asp-controller="Organisations" asp-action="Create" class="btn btn-outline-secondary">Créer une organisation</a>
+                            </droit-visible>
+                            <droit-visible code="SCOPE.CONSULTER">
+                                <a asp-page="/Admin/Perimetres" class="btn btn-outline-secondary">Gérer les périmètres</a>
+                            </droit-visible>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

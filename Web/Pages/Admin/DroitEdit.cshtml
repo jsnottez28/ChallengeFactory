@@ -1,0 +1,119 @@
+@page
+@model DroitEditModel
+@{
+    ViewData["Title"] = "Modifier un droit";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Droits">Droits</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Modifier un droit</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Modifier un droit</h1>
+            </div>
+            <a asp-page="/Admin/Droits" class="btn btn-outline-secondary">Retour aux droits</a>
+        </div>
+
+        <form method="post">
+            <input asp-for="Input.Id" type="hidden">
+
+            <div class="row g-4 align-items-start">
+                <div class="col-12 col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-1">Claim de rôle</h2>
+                            <p class="text-muted mb-0">La modification met à jour une ligne de <code>AspNetRoleClaims</code>.</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Input.RoleId" class="form-label"></label>
+                                    <select asp-for="Input.RoleId" asp-items="Model.Roles" class="form-select">
+                                        <option value="">Sélectionner un rôle</option>
+                                    </select>
+                                    <span asp-validation-for="Input.RoleId" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Input.ClaimType" class="form-label"></label>
+                                    <input asp-for="Input.ClaimType" class="form-control" autocomplete="off">
+                                    <span asp-validation-for="Input.ClaimType" class="text-danger"></span>
+                                    <div class="form-text">Valeur recommandée : <code>permission</code>.</div>
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Input.Resource" class="form-label"></label>
+                                    <select asp-for="Input.Resource" class="form-select">
+                                        <option value="">Sélectionner une ressource</option>
+                                        @foreach (var resource in Model.Resources)
+                                        {
+                                            <option value="@resource.Code">@resource.Label</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="Input.Resource" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Input.Action" class="form-label"></label>
+                                    <select asp-for="Input.Action" class="form-select">
+                                        <option value="">Sélectionner une action</option>
+                                        @foreach (var action in Model.Actions)
+                                        {
+                                            <option value="@action.Code">@action.Label</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="Input.Action" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="Input.ClaimValue" class="form-label"></label>
+                                    <input asp-for="Input.ClaimValue" class="form-control" autocomplete="off" placeholder="congress.create">
+                                    <span asp-validation-for="Input.ClaimValue" class="text-danger"></span>
+                                    <div class="form-text">Peut être remplacé avec <code>ressource.action</code> si la valeur est vide.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                                <a asp-page="/Admin/Droits" class="btn btn-outline-secondary">Annuler</a>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm backend-side-card">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Droits et périmètres</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-0">Ce droit sera pris en compte par les rôles qui portent cette claim.</p>
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-grid gap-2">
+                                <a asp-page="/Admin/Roles" class="btn btn-outline-secondary">Voir les rôles</a>
+                                <a asp-page="/Admin/Permissions" class="btn btn-outline-secondary">Gérer les périmètres</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

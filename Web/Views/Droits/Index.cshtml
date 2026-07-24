@@ -1,0 +1,120 @@
+@using Domain.Entities
+@model List<Droit>
+@{
+    ViewData["Title"] = "Droits";
+    var ressources = (List<Ressource>)ViewBag.Ressources;
+    var groupes = (List<GroupeDroit>)ViewBag.Groupes;
+    int? ressourceId = ViewBag.RessourceId;
+    int? groupeDroitId = ViewBag.GroupeDroitId;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Droits</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Droits</h1>
+            </div>
+            <droit-visible code="DROIT.CREER">
+                <a asp-controller="Droits" asp-action="Create" class="btn btn-primary">Ajouter un droit</a>
+            </droit-visible>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Catalogue des droits</h2>
+                <p class="text-muted mb-4">Un droit associe une ressource et un type d'action, et peut appartenir a un groupe. Il existe independamment de tout role.</p>
+
+                <form method="get" asp-controller="Droits" asp-action="Index" class="row g-3 align-items-end mb-4">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Filtrer par ressource</label>
+                        <select name="ressourceId" class="form-select" onchange="this.form.submit()">
+                            <option value="">Toutes les ressources</option>
+                            @foreach (var ressource in ressources)
+                            {
+                                <option value="@ressource.Id" selected="@(ressourceId == ressource.Id)">@ressource.Libelle</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Filtrer par groupe</label>
+                        <select name="groupeDroitId" class="form-select" onchange="this.form.submit()">
+                            <option value="">Tous les groupes</option>
+                            @foreach (var groupe in groupes)
+                            {
+                                <option value="@groupe.Id" selected="@(groupeDroitId == groupe.Id)">@groupe.Libelle</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <a asp-controller="Droits" asp-action="Index" class="btn btn-outline-secondary">Reinitialiser les filtres</a>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Code</th>
+                                <th scope="col">Libelle</th>
+                                <th scope="col">Ressource</th>
+                                <th scope="col">Type d'action</th>
+                                <th scope="col">Groupe</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-muted text-center py-4">Aucun droit ne correspond a ces criteres.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var droit in Model)
+                                {
+                                    <tr>
+                                        <td><code>@droit.Code</code></td>
+                                        <td class="fw-semibold">@droit.Libelle</td>
+                                        <td>@droit.Ressource.Libelle</td>
+                                        <td>@droit.TypeAction.Libelle</td>
+                                        <td>@(droit.GroupeDroit?.Libelle ?? "-")</td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <droit-visible code="DROIT.MODIFIER">
+                                                    <a asp-controller="Droits" asp-action="Edit" asp-route-id="@droit.Id" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                                </droit-visible>
+                                                <droit-visible code="DROIT.SUPPRIMER">
+                                                    <form method="post" asp-controller="Droits" asp-action="Delete" asp-route-id="@droit.Id" onsubmit="return confirm('Supprimer ce droit ?');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                                    </form>
+                                                </droit-visible>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

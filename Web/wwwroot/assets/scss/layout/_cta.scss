@@ -1,0 +1,101 @@
+@use '../utils' as *;
+
+/*=============================
+    	08. cta
+===============================*/
+
+
+.td-cta{
+    &-2{
+        &-subtitle{
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--td-common-white);
+        }
+        &-title{
+            font-weight: 600;
+            font-size: 32px;
+            color: var(--td-common-white);
+            @media #{$xs} {
+                font-size: 28px;
+            }
+        }
+        &-wrap{
+            padding: 65px 70px 46px 70px;
+            @media #{$xl,$lg,$md,$sm} {
+                border-radius: 12px;
+            }
+            @media #{$xs} {
+                padding: 30px 10px 16px 10px;
+                border-radius: 10px;
+            }
+        }
+        &-form{
+            & .td-input{
+                width: 100%;
+                font-family: var(--td-ff-poppins);
+                font-weight: 400;
+                font-size: 15px;
+                text-transform: lowercase;
+                color: #787878;
+                height: 56px;
+                border-radius: 100px;
+                border: 1px solid transparent;
+                background: var(--td-common-white);
+                &:focus{
+                    border-color: var(--td-theme-primary);
+                }
+                @include td-placeholder{
+                    font-family: var(--td-ff-poppins);
+                    font-weight: 400;
+                    font-size: 15px;
+                    text-transform: lowercase;
+                    color: #787878;
+                }
+            }
+            & .cta-btn{
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                right: 6px;
+                font-family: var(--td-ff-poppins);
+                font-weight: 600;
+                font-size: 15px;
+                text-transform: uppercase;
+                color: var(--td-common-white);
+                background: var(--td-theme-primary);
+                display: inline-block;
+                padding: 8px 27px;
+                border-radius: 100px;
+                &:hover{
+                    background: var(--td-theme-secondary);
+                }
+            }
+        }
+    }
+    &-6{
+        &-area{
+            top: -105px;
+            position: absolute;
+            width: 100%;
+            @media #{$xs} {
+                position: inherit;
+            }
+        }
+        &-wrap{
+            background: var(--td-theme-secondary);
+            border-radius: 30px;
+            @media #{$lg,$md,$sm,$xs} {
+                padding: 45px 40px 26px 40px;
+            }
+            @media #{$xs} {
+                padding: 45px 20px 26px 20px;
+            }
+            & .td-cta-2-title {
+                @media #{$xl,$lg,$md,$sm,$xs} {
+                    font-size: 28px;
+                }
+            }
+        }
+    }
+}

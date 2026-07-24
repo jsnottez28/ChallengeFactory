@@ -1,0 +1,70 @@
+@using Web.Extensions
+@model Web.Controllers.DocumentsLegauxController.DocumentLegalFormModel
+@{
+    ViewData["Title"] = $"Publier une nouvelle version - {Model.Type.Libelle()}";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="DocumentsLegaux" asp-action="Index">Documents légaux</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            <a asp-controller="DocumentsLegaux" asp-action="Index" class="btn btn-outline-secondary">Retour</a>
+        </div>
+
+        <form method="post" asp-controller="DocumentsLegaux" asp-action="Create" asp-route-type="@Model.Type">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Type" />
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <p class="text-muted">
+                        Publier cette version depubliera automatiquement la version actuelle et invitera (ou obligera,
+                        selon le moment de connexion) les comptes a reaccepter — voir RG-50/RG-51.
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Version" class="form-label"></label>
+                            <input asp-for="Version" class="form-control" autocomplete="off" placeholder="2026-07">
+                            <span asp-validation-for="Version" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label asp-for="DateEffective" class="form-label"></label>
+                            <input asp-for="DateEffective" type="datetime-local" class="form-control">
+                            <span asp-validation-for="DateEffective" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Contenu" class="form-label"></label>
+                            <textarea asp-for="Contenu" class="form-control" rows="18" placeholder="# Titre&#10;&#10;Contenu en *Markdown*..."></textarea>
+                            <span asp-validation-for="Contenu" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="DocumentsLegaux" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Publier</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,101 @@
+@page
+@model DeletePersonalDataModel
+@{
+    Layout = "/Views/Shared/_LayoutBackend.cshtml";
+    ViewData["Title"] = "Supprimer le compte";
+    ViewData["ActivePage"] = ManageNavPages.PersonalData;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-area="" asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-area="" asp-page="/Dashboard/Preferences">Préférences</a></li>
+                <li class="breadcrumb-item"><a asp-page="./PersonalData">Données personnelles</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Supprimer le compte</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Compte et sécurité</p>
+                <h1 class="h3 mb-0">Supprimer le compte</h1>
+            </div>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <form id="delete-user" method="post" class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-1 text-danger">Confirmation de suppression</h2>
+                        <p class="text-muted mb-0">Cette action supprime définitivement le compte utilisateur et les données personnelles associées.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                        <div class="alert alert-danger" role="alert">
+                            <strong>Action irréversible.</strong>
+                            Une fois le compte supprimé, il ne pourra pas être récupéré depuis cette interface.
+                        </div>
+
+                        @if (Model.RequirePassword)
+                        {
+                            <div class="mt-4">
+                                <label asp-for="Input.Password" class="form-label">Mot de passe actuel</label>
+                                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Mot de passe actuel" />
+                                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <div class="d-flex flex-wrap justify-content-end gap-2">
+                            <a asp-page="./PersonalData" class="btn btn-outline-secondary">Annuler</a>
+                            <button class="btn btn-danger" type="submit">Supprimer définitivement le compte</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Actions de sécurité</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-3">Navigation Identity existante pour le compte utilisateur.</p>
+                        <div class="list-group list-group-flush">
+                            <a asp-page="./Index" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Profile</span>
+                                <span class="text-muted small">/Identity/Account/Manage</span>
+                            </a>
+                            <a asp-page="./Email" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Email</span>
+                                <span class="text-muted small">/Identity/Account/Manage/Email</span>
+                            </a>
+                            <a asp-page="./ChangePassword" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Password</span>
+                                <span class="text-muted small">/Identity/Account/Manage/ChangePassword</span>
+                            </a>
+                            <a asp-page="./PersonalData" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Personal data</span>
+                                <span class="text-muted small">/Identity/Account/Manage/PersonalData</span>
+                            </a>
+                            <a asp-page="./TwoFactorAuthentication" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">MFA</span>
+                                <span class="text-muted small">/Identity/Account/Manage/TwoFactorAuthentication</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <a asp-page="./PersonalData" class="btn btn-outline-secondary w-100">Retour aux données personnelles</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

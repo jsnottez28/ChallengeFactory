@@ -1,0 +1,91 @@
+@model List<Web.Data.ApplicationRole>
+@{
+    ViewData["Title"] = "Roles";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Roles</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Roles</h1>
+            </div>
+            <droit-visible code="ROLE.CREER">
+                <a asp-controller="Roles" asp-action="Create" class="btn btn-primary">Ajouter un role</a>
+            </droit-visible>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Roles Identity</h2>
+                <p class="text-muted mb-4">Chaque role peut recevoir des droits individuels et/ou des groupes de droits depuis l'ecran Permissions.</p>
+
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Nom</th>
+                                <th scope="col">Description</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-muted text-center py-4">Aucun role enregistre pour le moment.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var role in Model)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@role.Name</td>
+                                        <td class="text-muted">
+                                            <droit-visible code="ROLE.MODIFIER">
+                                                <form method="post" asp-controller="Roles" asp-action="Rename" asp-route-id="@role.Id" class="d-flex gap-2 align-items-center">
+                                                    <input type="hidden" name="name" value="@role.Name">
+                                                    <input type="text" name="description" value="@role.Description" class="form-control form-control-sm" placeholder="Description">
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Enregistrer</button>
+                                                </form>
+                                            </droit-visible>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <droit-visible code="PERMISSION.CONSULTER">
+                                                    <a asp-controller="Permissions" asp-action="Role" asp-route-roleId="@role.Id" class="btn btn-sm btn-outline-primary">Permissions</a>
+                                                </droit-visible>
+                                                <droit-visible code="ROLE.SUPPRIMER">
+                                                    <form method="post" asp-controller="Roles" asp-action="Delete" asp-route-id="@role.Id" onsubmit="return confirm('Supprimer ce role ?');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                                    </form>
+                                                </droit-visible>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

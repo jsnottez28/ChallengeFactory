@@ -1,0 +1,140 @@
+@model Application.Common.Interfaces.RolePermissions
+@{
+    ViewData["Title"] = $"Permissions - {Model.RoleName}";
+    var droitsParRessource = Model.Droits
+        .GroupBy(droit => droit.Droit.Ressource)
+        .OrderBy(groupe => groupe.Key.Libelle);
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Permissions" asp-action="Index">Permissions</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.RoleName</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Permissions — @Model.RoleName</h1>
+            </div>
+            <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Retour aux roles</a>
+        </div>
+
+        <form method="post" asp-controller="Permissions" asp-action="Role" asp-route-roleId="@Model.RoleId" id="formPermissions">
+            @Html.AntiForgeryToken()
+            <div class="row g-4 align-items-start">
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Groupes de droits</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            @if (Model.Groupes.Count == 0)
+                            {
+                                <p class="text-muted mb-0">Aucun groupe de droits n'existe pour le moment.</p>
+                            }
+                            else
+                            {
+                                @foreach (var groupeStatut in Model.Groupes)
+                                {
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox"
+                                               class="form-check-input js-groupe-checkbox"
+                                               name="groupeDroitIds"
+                                               value="@groupeStatut.GroupeDroit.Id"
+                                               id="groupe-@groupeStatut.GroupeDroit.Id"
+                                               data-groupe-id="@groupeStatut.GroupeDroit.Id"
+                                               checked="@groupeStatut.EstCoche">
+                                        <label class="form-check-label" for="groupe-@groupeStatut.GroupeDroit.Id">
+                                            @groupeStatut.GroupeDroit.Libelle
+                                            <span class="text-muted small">(@groupeStatut.GroupeDroit.Droits.Count droit(s))</span>
+                                        </label>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Droits individuels</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            @if (!droitsParRessource.Any())
+                            {
+                                <p class="text-muted mb-0">Aucun droit n'existe pour le moment.</p>
+                            }
+                            else
+                            {
+                                @foreach (var groupeParRessource in droitsParRessource)
+                                {
+                                    <div class="d-flex align-items-center justify-content-between mt-3 mb-2">
+                                        <h3 class="h6 text-uppercase text-muted mb-0">@groupeParRessource.Key.Libelle</h3>
+                                        <div class="form-check mb-0">
+                                            <input type="checkbox"
+                                                   class="form-check-input js-ressource-checkbox"
+                                                   id="ressource-@groupeParRessource.Key.Id"
+                                                   data-ressource-id="@groupeParRessource.Key.Id">
+                                            <label class="form-check-label small text-muted" for="ressource-@groupeParRessource.Key.Id">Tout selectionner</label>
+                                        </div>
+                                    </div>
+                                    @foreach (var droitStatut in groupeParRessource.OrderBy(d => d.Droit.TypeAction.Libelle))
+                                    {
+                                        var droit = droitStatut.Droit;
+                                        var tooltip = droitStatut.EstIncluViaGroupe ? $"Inclus via le groupe {droitStatut.NomGroupeInclus}" : null;
+                                        <div class="form-check mb-2" title="@tooltip">
+                                            <input type="checkbox"
+                                                   class="form-check-input js-droit-checkbox"
+                                                   name="droitIds"
+                                                   value="@droit.Id"
+                                                   id="droit-@droit.Id"
+                                                   data-groupe-id="@(droit.GroupeDroitId?.ToString() ?? "")"
+                                                   data-ressource-id="@droit.RessourceId"
+                                                   data-direct-checked="@droitStatut.EstCocheDirectement.ToString().ToLowerInvariant()"
+                                                   checked="@(droitStatut.EstCocheDirectement || droitStatut.EstIncluViaGroupe)"
+                                                   disabled="@droitStatut.EstIncluViaGroupe">
+                                            <label class="form-check-label" for="droit-@droit.Id">
+                                                @droit.Libelle
+                                                <span class="text-muted small">(<code>@droit.Code</code>)</span>
+                                                @if (droitStatut.EstIncluViaGroupe)
+                                                {
+                                                    <span class="badge text-bg-light">Inclus via @droitStatut.NomGroupeInclus</span>
+                                                }
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                            }
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                                <droit-visible code="PERMISSION.MODIFIER">
+                                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                </droit-visible>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/admin-permissions.js"></script>
+}

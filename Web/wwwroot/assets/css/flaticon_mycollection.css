@@ -1,0 +1,110 @@
+/*!
+*    ______ _       _   _
+*    |  ____| |     | | (_)
+*    | |__  | | __ _| |_ _  ___ ___  _ __
+*    |  __| | |/ _` | __| |/ __/ _ \| '_ \
+*    | |    | | (_| | |_| | (_| (_) | | | |
+*    |_|    |_|\__,_|\__|_|\___\___/|_| |_|
+*
+*         https://www.flaticon.com
+*/
+
+@font-face {
+    font-family: "flaticon_mycollection";
+    src: url("../fonts/flaticon_mycollection.woff2?4a2b4ee8d8d7688e46970a8132a81306") format("woff2"),
+url("../fonts/flaticon_mycollection.woff?4a2b4ee8d8d7688e46970a8132a81306") format("woff"),
+url("../fonts/flaticon_mycollection.eot?4a2b4ee8d8d7688e46970a8132a81306#iefix") format("embedded-opentype"),
+url("../fonts/flaticon_mycollection.ttf?4a2b4ee8d8d7688e46970a8132a81306") format("truetype"),
+url("../fonts/flaticon_mycollection.svg?4a2b4ee8d8d7688e46970a8132a81306#flaticon_mycollection") format("svg")
+}
+
+i[class^="flaticon-"]:before, i[class*=" flaticon-"]:before {
+    font-family: flaticon_mycollection !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.flaticon-speaker:before {
+    content: "\f101";
+}
+.flaticon-fastfood:before {
+    content: "\f102";
+}
+.flaticon-deal:before {
+    content: "\f103";
+}
+.flaticon-teamwork:before {
+    content: "\f104";
+}
+.flaticon-megaphone:before {
+    content: "\f105";
+}
+.flaticon-announcement:before {
+    content: "\f106";
+}
+.flaticon-request:before {
+    content: "\f107";
+}
+.flaticon-teamwork-1:before {
+    content: "\f108";
+}
+.flaticon-teamwork-2:before {
+    content: "\f109";
+}
+.flaticon-surprise:before {
+    content: "\f10a";
+}
+.flaticon-search:before {
+    content: "\f10b";
+}
+.flaticon-shopping-cart:before {
+    content: "\f10c";
+}
+.flaticon-puzzle:before {
+    content: "\f10d";
+}
+.flaticon-handshake:before {
+    content: "\f10e";
+}
+.flaticon-meeting:before {
+    content: "\f10f";
+}
+.flaticon-share:before {
+    content: "\f110";
+}
+.flaticon-up-right-arrow:before {
+    content: "\f111";
+}
+.flaticon-up-right-arrow-1:before {
+    content: "\f112";
+}
+.flaticon-calendar:before {
+    content: "\f113";
+}
+.flaticon-chat-box:before {
+    content: "\f114";
+}
+.flaticon-gps:before {
+    content: "\f115";
+}
+.flaticon-account:before {
+    content: "\f116";
+}
+.flaticon-time:before {
+    content: "\f117";
+}
+.flaticon-phone:before {
+    content: "\f118";
+}
+.flaticon-mail:before {
+    content: "\f119";
+}
+.flaticon-plus:before {
+    content: "\f11a";
+}
+

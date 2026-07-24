@@ -1,0 +1,61 @@
+@page
+@{
+    ViewData["Title"] = "Paramétrage";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Paramétrage</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Paramétrage de la plateforme</h1>
+            </div>
+            <button type="button" class="btn btn-primary">Enregistrer</button>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Réglages généraux</h2>
+                        <p class="mb-4">Cette page accueillera les réglages généraux de la plateforme.</p>
+
+                        <form class="row g-3">
+                            <div class="col-12">
+                                <label for="platformName" class="form-label">Nom de la plateforme</label>
+                                <input type="text" class="form-control" id="platformName" value="FNCRR">
+                            </div>
+                            <div class="col-12">
+                                <label for="supportEmail" class="form-label">Email de support</label>
+                                <input type="email" class="form-control" id="supportEmail" placeholder="support@example.com">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="notificationsEnabled" checked>
+                                    <label class="form-check-label" for="notificationsEnabled">Activer les notifications utilisateur</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Aide</h2>
+                        <p class="text-muted mb-0">Ce panneau peut servir à expliquer les réglages, afficher un historique ou proposer des actions secondaires.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

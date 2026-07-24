@@ -1,0 +1,48 @@
+@use '../utils' as *;
+
+/*=============================
+    	26. video
+===============================*/
+
+
+.td-video-play {
+    height: 66px;
+    width: 66px;
+    display: inline-block;
+    background: var(--td-common-white);
+    border-radius: 50%;
+    text-align: center;
+    line-height: 66px;
+    color: var(--td-common-black);
+    &:hover{
+        color: var(--td-common-black);
+    }
+}
+.td-pulse-border{
+	border-radius: 50%;
+	z-index: 1;
+    position: relative;
+	&::after,
+	&::before{
+		position: absolute;
+		content: '';
+		left: 50%;
+		top: 50%;
+		@include transform(translate(-50%, -50%));
+		width: 120%;
+		height: 120%;
+		border-radius: 50%;
+		border: 1px solid rgba($color: #fff, $alpha: .4);
+		animation: borderanimate2 2s linear infinite;
+		animation-delay: 0s;
+		-webkit-animation-delay: 0s;
+		animation-delay: 0s;
+        z-index: -1;
+        @include td-transition();
+		z-index: -1;
+	}
+
+	&::before{
+		animation-delay: .7s;
+	}
+}

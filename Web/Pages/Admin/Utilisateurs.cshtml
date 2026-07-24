@@ -1,0 +1,115 @@
+@page
+@model UtilisateursModel
+@{
+    ViewData["Title"] = "Utilisateurs";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Utilisateurs</li>
+            </ol>
+        </nav>
+
+        @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Utilisateurs</h1>
+            </div>
+            <a asp-page="/Admin/UtilisateurCreate" class="btn btn-primary">Ajouter un utilisateur</a>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                            <div>
+                                <h2 class="h5 mb-1">Liste des utilisateurs</h2>
+                                <p class="text-muted mb-0">Vue d'ensemble des comptes de la plateforme.</p>
+                            </div>
+                            <span class="badge text-bg-light">@Model.Users.Count utilisateur(s)</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Nom</th>
+                                        <th scope="col">Email</th>
+                                        <th scope="col">Rôle</th>
+                                        <th scope="col" class="text-end">Rôles (RBAC)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Users.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">Aucun utilisateur trouvé.</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        foreach (var user in Model.Users)
+                                        {
+                                            <tr>
+                                                <td class="fw-semibold">@user.DisplayName</td>
+                                                <td>@user.Email</td>
+                                                <td>
+                                                    <form method="post" asp-page-handler="UpdateRole" class="d-flex flex-wrap align-items-center gap-2">
+                                                        <input type="hidden" name="userId" value="@user.Id">
+                                                        <select name="roleName" class="form-select form-select-sm w-auto" aria-label="Rôle de @user.DisplayName">
+                                                            <option value="">Aucun rôle</option>
+                                                            @foreach (var role in Model.Roles)
+                                                            {
+                                                                <option value="@role" selected="@(role == user.RoleName)">@role</option>
+                                                            }
+                                                        </select>
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary">Enregistrer</button>
+                                                    </form>
+                                                </td>
+                                                <td class="text-end">
+                                                    <droit-visible code="UTILISATEUR.CONSULTER">
+                                                        <a asp-controller="Utilisateurs" asp-action="Roles" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary">Gérer les rôles</a>
+                                                    </droit-visible>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Actions rapides</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-page="/Admin/UtilisateurCreate" class="btn btn-outline-primary">Ajouter un utilisateur</a>
+                            <droit-visible code="ROLE.CONSULTER">
+                                <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Gérer les rôles</a>
+                            </droit-visible>
+                            <droit-visible code="PERMISSION.CONSULTER">
+                                <a asp-controller="Permissions" asp-action="Index" class="btn btn-outline-secondary">Associer les droits</a>
+                            </droit-visible>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

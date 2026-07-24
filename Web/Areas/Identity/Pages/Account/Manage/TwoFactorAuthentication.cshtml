@@ -1,0 +1,176 @@
+@page
+@using Microsoft.AspNetCore.Http.Features
+@model TwoFactorAuthenticationModel
+@{
+    Layout = "/Views/Shared/_LayoutBackend.cshtml";
+    ViewData["Title"] = "Authentification MFA";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+@{
+    var consentFeature = HttpContext.Features.Get<ITrackingConsentFeature>();
+    var canTrack = consentFeature?.CanTrack ?? true;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-area="" asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-area="" asp-page="/Dashboard/Preferences">Préférences</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Authentification MFA</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Compte et sécurité</p>
+                <h1 class="h3 mb-0">Authentification MFA</h1>
+            </div>
+        </div>
+
+        <partial name="_StatusMessage" for="StatusMessage" />
+
+        @if (!canTrack)
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>Les cookies de suivi ne sont pas autorisés.</strong>
+                <p class="mb-0">Il faut accepter la politique de confidentialité avant d'activer l'authentification en deux étapes.</p>
+            </div>
+        }
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div>
+                                <h2 class="h5 mb-1">Protection du compte</h2>
+                                <p class="text-muted mb-0">Configurer une application d'authentification pour renforcer la sécurité du compte.</p>
+                            </div>
+                            @if (Model.Is2faEnabled)
+                            {
+                                <span class="badge text-bg-success">MFA actif</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">MFA inactif</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <p class="text-muted mb-1">Application</p>
+                                    <h3 class="h6 mb-2">Application d'authentification</h3>
+                                    <p class="text-muted mb-0">Utiliser une application compatible pour générer un code temporaire à chaque connexion sensible.</p>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <p class="text-muted mb-1">Codes de secours</p>
+                                    <h3 class="h6 mb-2">@Model.RecoveryCodesLeft code(s) disponible(s)</h3>
+                                    <p class="text-muted mb-0">Ces codes permettent de récupérer l'accès si l'application MFA n'est plus disponible.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (Model.Is2faEnabled)
+                        {
+                            if (Model.RecoveryCodesLeft == 0)
+                            {
+                                <div class="alert alert-danger mt-4" role="alert">
+                                    <strong>Aucun code de récupération disponible.</strong>
+                                    <p class="mb-0">Générer un nouveau jeu de codes avant d'utiliser une connexion avec code de récupération.</p>
+                                </div>
+                            }
+                            else if (Model.RecoveryCodesLeft == 1)
+                            {
+                                <div class="alert alert-danger mt-4" role="alert">
+                                    <strong>Il reste 1 code de récupération.</strong>
+                                    <p class="mb-0">Il est recommandé de générer un nouveau jeu de codes.</p>
+                                </div>
+                            }
+                            else if (Model.RecoveryCodesLeft <= 3)
+                            {
+                                <div class="alert alert-warning mt-4" role="alert">
+                                    <strong>Il reste @Model.RecoveryCodesLeft codes de récupération.</strong>
+                                    <p class="mb-0">Prévoir la génération d'un nouveau jeu de codes.</p>
+                                </div>
+                            }
+                        }
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <div class="d-flex flex-wrap justify-content-end gap-2">
+                            @if (canTrack)
+                            {
+                                if (!Model.HasAuthenticator)
+                                {
+                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">Ajouter une application MFA</a>
+                                }
+                                else
+                                {
+                                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-outline-secondary">Configurer l'application</a>
+                                    <a id="reset-authenticator" asp-page="./ResetAuthenticator" class="btn btn-outline-secondary">Réinitialiser l'application</a>
+                                }
+
+                                if (Model.Is2faEnabled)
+                                {
+                                    <a asp-page="./GenerateRecoveryCodes" class="btn btn-outline-secondary">Régénérer les codes</a>
+                                    <a asp-page="./Disable2fa" class="btn btn-outline-danger">Désactiver le MFA</a>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Actions de sécurité</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-3">Navigation Identity existante pour le compte utilisateur.</p>
+                        <div class="list-group list-group-flush">
+                            <a asp-page="./Index" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Profile</span>
+                                <span class="text-muted small">/Identity/Account/Manage</span>
+                            </a>
+                            <a asp-page="./Email" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Email</span>
+                                <span class="text-muted small">/Identity/Account/Manage/Email</span>
+                            </a>
+                            <a asp-page="./ChangePassword" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Password</span>
+                                <span class="text-muted small">/Identity/Account/Manage/ChangePassword</span>
+                            </a>
+                            <a asp-page="./PersonalData" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Personal data</span>
+                                <span class="text-muted small">/Identity/Account/Manage/PersonalData</span>
+                            </a>
+                            <a asp-page="./TwoFactorAuthentication" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">MFA</span>
+                                <span class="text-muted small">/Identity/Account/Manage/TwoFactorAuthentication</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        @if (Model.IsMachineRemembered)
+                        {
+                            <form method="post" class="mb-2">
+                                <button type="submit" class="btn btn-outline-secondary w-100">Oublier ce navigateur</button>
+                            </form>
+                        }
+                        <a asp-area="" asp-page="/Dashboard/Preferences" class="btn btn-outline-secondary w-100">Retour aux préférences</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

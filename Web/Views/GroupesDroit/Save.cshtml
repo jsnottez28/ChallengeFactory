@@ -1,0 +1,116 @@
+@model Web.Controllers.GroupesDroitController.GroupeDroitFormModel
+@{
+    var estModification = Model.Id.HasValue;
+    ViewData["Title"] = estModification ? "Modifier un groupe de droits" : "Creer un groupe de droits";
+    var groupe = ViewBag.Groupe as Domain.Entities.GroupeDroit;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="GroupesDroit" asp-action="Index">Groupes de droits</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            <a asp-controller="GroupesDroit" asp-action="Index" class="btn btn-outline-secondary">Retour aux groupes</a>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-7">
+                <form method="post" asp-controller="GroupesDroit" asp-action="@(estModification ? "Edit" : "Create")" asp-route-id="@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Informations du groupe</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Code" class="form-label"></label>
+                                    <input asp-for="Code" class="form-control" autocomplete="off">
+                                    <span asp-validation-for="Code" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Libelle" class="form-label"></label>
+                                    <input asp-for="Libelle" class="form-control" autocomplete="off">
+                                    <span asp-validation-for="Libelle" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="Description" class="form-label"></label>
+                                    <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                                <button type="submit" class="btn btn-primary">@(estModification ? "Enregistrer" : "Creer le groupe")</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Droits du groupe</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (groupe is null)
+                        {
+                            <p class="text-muted mb-0">Enregistrez d'abord le groupe pour pouvoir y rattacher des droits.</p>
+                        }
+                        else if (groupe.Droits.Count == 0)
+                        {
+                            <p class="text-muted mb-0">Aucun droit rattache a ce groupe pour le moment. Rattachez un droit depuis l'ecran <a asp-controller="Droits" asp-action="Index">Droits</a> (champ "Groupe").</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var droit in groupe.Droits)
+                                {
+                                    <li class="list-group-item px-0">
+                                        <div class="fw-semibold">@droit.Libelle</div>
+                                        <div class="text-muted small"><code>@droit.Code</code> — @droit.Ressource.Libelle / @droit.TypeAction.Libelle</div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                    @if (groupe is not null)
+                    {
+                        <div class="card-footer bg-white border-top p-4">
+                            <a asp-controller="Droits" asp-action="Index" asp-route-groupeDroitId="@groupe.Id" class="btn btn-outline-secondary w-100">Voir ces droits dans le catalogue</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

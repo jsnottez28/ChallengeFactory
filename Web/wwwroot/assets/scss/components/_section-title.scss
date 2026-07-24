@@ -1,0 +1,71 @@
+@use '../utils' as *;
+
+/*=============================
+	12. Section Title
+===============================*/
+.td-section{
+	&-subtitle{
+		font-family: var(--td-ff-poppins);
+		font-weight: 600;
+		font-size: 15px;
+		text-transform: uppercase;
+		color: var(--td-common-white);
+		box-shadow: 0 4px 0 0 #2b12c3;
+		display: inline-block;
+		background: var(--td-theme-primary);
+		border-radius: 40px;
+		padding: 6px 20px;
+		@media #{$xl,$lg,$md,$sm,$xs} {
+			& br{
+				display: none;
+			}
+		}
+		&-2{
+			color: var(--td-theme-primary);
+			background: #efecff;
+			box-shadow: none;
+			border-radius: 8px;
+			padding: 3px 20px;
+			display: inline-block;
+		}
+		&-3{
+			border: 1px solid #5033ff;
+			border-radius: 6px;
+		}
+	}
+	&-title{
+		font-weight: 600;
+		font-size: 36px;
+		line-height: 125%;
+		text-transform: capitalize;
+		color: #141418;
+		@media #{$xl,$lg,$md,$sm,$xs} {
+			& br{
+				display: none;
+			}
+		}
+		@media #{$sm,$xs} {
+			font-size: 30px;
+		}
+	}
+	&-text{
+		font-family: var(--td-ff-poppins);
+		font-size: 18px;
+		line-height: 28px;
+		@media #{$xl,$lg,$md,$sm,$xs} {
+			& br{
+				display: none;
+			}
+		}
+	}
+	&-4{
+		&-para{
+			font-weight: 500;
+			font-size: 18px;
+			line-height: 144%;
+			text-transform: capitalize;
+			color: var(--td-common-black);
+			font-family: var(--td-ff-poppins);
+		}
+	}
+}

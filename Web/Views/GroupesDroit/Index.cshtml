@@ -1,0 +1,87 @@
+@model List<Domain.Entities.GroupeDroit>
+@{
+    ViewData["Title"] = "Groupes de droits";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Groupes de droits</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Groupes de droits</h1>
+            </div>
+            <droit-visible code="GROUPEDROIT.CREER">
+                <a asp-controller="GroupesDroit" asp-action="Create" class="btn btn-primary">Creer un groupe</a>
+            </droit-visible>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Catalogue des groupes</h2>
+                <p class="text-muted mb-4">Un groupe rassemble plusieurs droits pour pouvoir les attribuer d'un coup a un role depuis l'ecran Permissions.</p>
+
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Code</th>
+                                <th scope="col">Libelle</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Droits</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-muted text-center py-4">Aucun groupe enregistre pour le moment.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var groupe in Model)
+                                {
+                                    <tr>
+                                        <td><code>@groupe.Code</code></td>
+                                        <td class="fw-semibold">@groupe.Libelle</td>
+                                        <td class="text-muted">@(groupe.Description ?? "-")</td>
+                                        <td>@groupe.Droits.Count</td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <droit-visible code="GROUPEDROIT.MODIFIER">
+                                                    <a asp-controller="GroupesDroit" asp-action="Edit" asp-route-id="@groupe.Id" class="btn btn-sm btn-outline-secondary">Gerer</a>
+                                                </droit-visible>
+                                                <droit-visible code="GROUPEDROIT.SUPPRIMER">
+                                                    <form method="post" asp-controller="GroupesDroit" asp-action="Delete" asp-route-id="@groupe.Id" onsubmit="return confirm('Supprimer ce groupe ? Les droits qu\'il contient ne seront pas supprimes, seulement detaches du groupe.');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                                    </form>
+                                                </droit-visible>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

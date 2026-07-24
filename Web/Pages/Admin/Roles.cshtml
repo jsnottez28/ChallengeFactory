@@ -1,0 +1,91 @@
+@page
+@model RolesModel
+@{
+    ViewData["Title"] = "Rôles";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Rôles</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Rôles et permissions</h1>
+            </div>
+            <a asp-page="/Admin/RoleCreate" class="btn btn-primary">Ajouter un rôle</a>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Gestion des rôles</h2>
+                        <p class="mb-4">Cette page accueillera la gestion des rôles et des permissions de la plateforme.</p>
+
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Rôle</th>
+                                        <th scope="col">Nom normalisé</th>
+                                        <th scope="col" class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Roles.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="3" class="text-muted">Aucun rôle créé pour le moment.</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var role in Model.Roles)
+                                        {
+                                            <tr>
+                                                <td class="fw-semibold">@role.Name</td>
+                                                <td class="text-muted">@role.NormalizedName</td>
+                                                <td class="text-end">
+                                                    <a asp-page="/Admin/RoleEdit" asp-route-id="@role.Id" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Informations</h2>
+                        <p class="text-muted mb-3">Les rôles portent les droits. Les périmètres définissent les organisations accessibles par utilisateur.</p>
+                        <div class="d-grid gap-2">
+                            <a asp-page="/Admin/RoleCreate" class="btn btn-outline-primary">Ajouter un rôle</a>
+                            <a asp-page="/Admin/Droits" class="btn btn-outline-secondary">Voir les droits</a>
+                            <a asp-page="/Admin/Permissions" class="btn btn-outline-secondary">Gérer les périmètres</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,64 @@
+@using Domain.Entities
+@using Web.Extensions
+@model Dictionary<TypeDocumentLegal, DocumentLegal?>
+@{
+    ViewData["Title"] = "Documents légaux";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Documents légaux</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Documents légaux</h1>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var (type, versionPubliee) in Model)
+            {
+                <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <h2 class="h5 mb-3">@type.Libelle()</h2>
+
+                            @if (versionPubliee is null)
+                            {
+                                <p class="text-muted mb-0">Aucune version publiée.</p>
+                            }
+                            else
+                            {
+                                <p class="mb-1"><span class="badge text-bg-success">Publiée</span> Version <code>@versionPubliee.Version</code></p>
+                                <p class="text-muted mb-0">En vigueur depuis le @versionPubliee.DateEffective.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                            }
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-flex flex-wrap gap-2">
+                                <droit-visible code="DOCUMENTLEGAL.CREER">
+                                    <a asp-controller="DocumentsLegaux" asp-action="Create" asp-route-type="@type" class="btn btn-primary">Publier une nouvelle version</a>
+                                </droit-visible>
+                                <a asp-controller="DocumentsLegaux" asp-action="Historique" asp-route-type="@type" class="btn btn-outline-secondary">Historique</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

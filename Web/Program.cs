@@ -1,0 +1,88 @@
+using Application.Common.Interfaces;
+using Infrastructure.ExternalServices.Email;
+using Infrastructure.Identity;
+using Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Web.Configuration;
+using Web.Data;
+using Web.Security;
+using Web.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+    options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<ApplicationRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+
+builder.Services.AddScoped<IEmailService>(sp =>
+{
+    var env = sp.GetRequiredService<IHostEnvironment>();
+    var settings = sp.GetRequiredService<IOptions<EmailSettings>>().Value;
+
+    if (env.IsDevelopment() && (settings.UseConsoleEmail || string.IsNullOrWhiteSpace(settings.SmtpHost)))
+    {
+        return new ConsoleEmailService();
+    }
+
+    return new SmtpEmailService(Options.Create(settings));
+});
+
+builder.Services.AddTransient<IEmailSender, IdentityEmailSender>();
+builder.Services.Configure<ExternalApiOptions>(
+    builder.Configuration.GetSection(ExternalApiOptions.SectionName));
+builder.Services.AddScoped<IOrganisationService, OrganisationService>();
+builder.Services.AddScoped<IRessourceService, RessourceService>();
+builder.Services.AddScoped<ITypeActionService, TypeActionService>();
+builder.Services.AddScoped<IGroupeDroitService, GroupeDroitService>();
+builder.Services.AddScoped<IDroitService, DroitService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IDocumentLegalService, DocumentLegalService>();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IClaimsTransformation, DroitsClaimsTransformation>();
+builder.Services.AddSingleton<IAuthorizationHandler, DroitAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, DroitPolicyProvider>();
+builder.Services.AddAuthorization();
+
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
+app.UseMiddleware<DocumentsLegauxMiddleware>();
+app.UseAuthorization();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
+app.Run();

@@ -1,0 +1,13 @@
+.fnccr-logo {
+    display: block;
+    height: 32px;
+    width: auto;
+}
+
+.navbar-brand {
+    padding: 0;
+}
+
+.navbar-brand img.fnccr-logo {
+    max-height: 36px;
+}

@@ -1,0 +1,106 @@
+@using Domain.Entities
+@model Web.Controllers.DroitsController.DroitFormModel
+@{
+    var estModification = Model.Id.HasValue;
+    ViewData["Title"] = estModification ? "Modifier un droit" : "Ajouter un droit";
+    var ressources = (List<Ressource>)ViewBag.Ressources;
+    var typesAction = (List<TypeAction>)ViewBag.TypesAction;
+    var groupes = (List<GroupeDroit>)ViewBag.Groupes;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Droits" asp-action="Index">Droits</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            <a asp-controller="Droits" asp-action="Index" class="btn btn-outline-secondary">Retour aux droits</a>
+        </div>
+
+        <form method="post" asp-controller="Droits" asp-action="@(estModification ? "Edit" : "Create")" asp-route-id="@Model.Id">
+            @Html.AntiForgeryToken()
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="RessourceId" class="form-label"></label>
+                            <select asp-for="RessourceId" class="form-select">
+                                <option value="">Selectionner une ressource</option>
+                                @foreach (var ressource in ressources)
+                                {
+                                    <option value="@ressource.Id">@ressource.Libelle</option>
+                                }
+                            </select>
+                            <span asp-validation-for="RessourceId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label asp-for="TypeActionId" class="form-label"></label>
+                            <select asp-for="TypeActionId" class="form-select">
+                                <option value="">Selectionner un type d'action</option>
+                                @foreach (var typeAction in typesAction)
+                                {
+                                    <option value="@typeAction.Id">@typeAction.Libelle</option>
+                                }
+                            </select>
+                            <span asp-validation-for="TypeActionId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label asp-for="GroupeDroitId" class="form-label"></label>
+                            <select asp-for="GroupeDroitId" class="form-select">
+                                <option value="">Aucun groupe</option>
+                                @foreach (var groupe in groupes)
+                                {
+                                    <option value="@groupe.Id">@groupe.Libelle</option>
+                                }
+                            </select>
+                            <span asp-validation-for="GroupeDroitId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Libelle" class="form-label"></label>
+                            <input asp-for="Libelle" class="form-control" autocomplete="off" placeholder="Peut creer une commande">
+                            <span asp-validation-for="Libelle" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Code" class="form-label"></label>
+                            <input asp-for="Code" class="form-control" autocomplete="off" placeholder="COMMANDE.CREER">
+                            <span asp-validation-for="Code" class="text-danger"></span>
+                            <div class="form-text">Laisser vide pour generer automatiquement "RESSOURCE.ACTION".</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="Droits" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">@(estModification ? "Enregistrer" : "Creer le droit")</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

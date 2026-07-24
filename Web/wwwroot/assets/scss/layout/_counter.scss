@@ -1,0 +1,83 @@
+@use '../utils' as *;
+
+/*=============================
+    	07. counter scss
+===============================*/
+
+
+.td-counter{
+    &-2{
+        &-wrap{
+            display: flex;
+            align-items: center;
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                margin-left: 0;
+            }
+        }
+        &-icon{
+            & i{
+                font-size: 70px;
+                color: #f248b4;
+            }
+        }
+        &-title{
+            font-weight: 700;
+            font-size: 64px;
+            text-transform: uppercase;
+            color: var(--td-common-black);
+            margin-bottom: 0;
+            line-height: 1;
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                font-size: 55px;
+            }
+        }
+        &-subtitle{
+            font-weight: 500;
+            font-size: 16px;
+            text-transform: capitalize;
+            color: var(--td-grey-1);
+            @media #{$xl,$lg,$md,$sm,$xs} {
+                font-size: 14px;
+            }
+        }
+    }
+    &-4{
+        &-wrap{
+            & .td-counter-2-icon i {
+                color: var(--td-common-white);
+            }
+            & .td-counter-2-title {
+                color: var(--td-common-white);
+            }
+            & .td-counter-2-subtitle {
+                color: var(--td-common-white);
+            }
+        }
+    }
+    &-5{
+        &-wrap{
+            & .td-counter-2-icon i {
+                font-size: 70px;
+                color: var(--td-theme-primary);
+                width: 114px;
+                height: 114px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 24px;
+                background: #f4f2ff;
+                @media #{$xl,$lg,$md,$sm,$xs} {
+                    font-size: 46px;
+                    width: 80px;
+                    height: 80px;
+                }
+            }
+            & .td-counter-2-title {
+                font-size: 40px;
+            }
+            & .td-counter-2-subtitle {
+                font-size: 14px;
+            }
+        }
+    }
+}

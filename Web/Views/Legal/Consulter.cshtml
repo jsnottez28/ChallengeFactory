@@ -1,0 +1,24 @@
+@using Web.Extensions
+@model Domain.Entities.DocumentLegal?
+@{
+    var type = ViewData["Title"] as string;
+    ViewData["Title"] = Model?.Type.Libelle() ?? "Document légal";
+}
+
+<section class="td-hero-4-spacing">
+    <div class="container">
+        <h1 class="h3 mb-4">@ViewData["Title"]</h1>
+
+        @if (Model is null)
+        {
+            <p class="text-muted">Ce document n'est pas encore disponible.</p>
+        }
+        else
+        {
+            <p class="text-muted">Version @Model.Version — en vigueur depuis le @Model.DateEffective.ToLocalTime().ToString("dd/MM/yyyy")</p>
+            <div>
+                @Html.Raw(Markdig.Markdown.ToHtml(Model.Contenu))
+            </div>
+        }
+    </div>
+</section>

@@ -1,0 +1,124 @@
+@page
+@model EmailModel
+@{
+    Layout = "/Views/Shared/_LayoutBackend.cshtml";
+    ViewData["Title"] = "Adresse email";
+    ViewData["ActivePage"] = ManageNavPages.Email;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-area="" asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-area="" asp-page="/Dashboard/Preferences">Préférences</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Adresse email</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Compte et sécurité</p>
+                <h1 class="h3 mb-0">Adresse email</h1>
+            </div>
+        </div>
+
+        <partial name="_StatusMessage" for="StatusMessage" />
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <form id="email-form" method="post" class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-1">Email de connexion</h2>
+                        <p class="text-muted mb-0">Consulter l'adresse email actuelle et demander une modification si nécessaire.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="Email" class="form-label">Adresse email actuelle</label>
+                                <div class="input-group">
+                                    <input asp-for="Email" class="form-control" placeholder="Adresse email actuelle" disabled />
+                                    @if (Model.IsEmailConfirmed)
+                                    {
+                                        <span class="input-group-text text-success">Confirmée</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="input-group-text text-warning">Non confirmée</span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (!Model.IsEmailConfirmed)
+                            {
+                                <div class="col-12">
+                                    <div class="alert alert-warning mb-0" role="alert">
+                                        Cette adresse email n'est pas encore confirmée. Un email de vérification peut être renvoyé.
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="col-12">
+                                <label asp-for="Input.NewEmail" class="form-label">Nouvelle adresse email</label>
+                                <input asp-for="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="nouvelle-adresse@example.com" />
+                                <span asp-validation-for="Input.NewEmail" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <div class="d-flex flex-wrap justify-content-end gap-2">
+                            <a asp-area="" asp-page="/Dashboard/Preferences" class="btn btn-outline-secondary">Annuler</a>
+                            @if (!Model.IsEmailConfirmed)
+                            {
+                                <button id="email-verification" type="submit" asp-page-handler="SendVerificationEmail" class="btn btn-outline-secondary">Renvoyer la vérification</button>
+                            }
+                            <button id="change-email-button" type="submit" asp-page-handler="ChangeEmail" class="btn btn-primary">Modifier l'email</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Actions de sécurité</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-3">Navigation Identity existante pour le compte utilisateur.</p>
+                        <div class="list-group list-group-flush">
+                            <a asp-page="./Index" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Profile</span>
+                                <span class="text-muted small">/Identity/Account/Manage</span>
+                            </a>
+                            <a asp-page="./Email" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Email</span>
+                                <span class="text-muted small">/Identity/Account/Manage/Email</span>
+                            </a>
+                            <a asp-page="./ChangePassword" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Password</span>
+                                <span class="text-muted small">/Identity/Account/Manage/ChangePassword</span>
+                            </a>
+                            <a asp-page="./PersonalData" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">Personal data</span>
+                                <span class="text-muted small">/Identity/Account/Manage/PersonalData</span>
+                            </a>
+                            <a asp-page="./TwoFactorAuthentication" class="list-group-item list-group-item-action px-0">
+                                <span class="fw-semibold d-block">MFA</span>
+                                <span class="text-muted small">/Identity/Account/Manage/TwoFactorAuthentication</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4">
+                        <a asp-area="" asp-page="/Dashboard/Preferences" class="btn btn-outline-secondary w-100">Retour aux préférences</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

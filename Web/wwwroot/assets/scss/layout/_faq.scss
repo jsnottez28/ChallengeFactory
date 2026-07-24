@@ -1,0 +1,114 @@
+
+@use '../utils' as *;
+
+/*=============================
+    	09. faq
+===============================*/
+
+.td-faq{
+    &-title{
+        font-weight: 600;
+        font-size: 30px;
+        line-height: 133%;
+        text-transform: capitalize;
+    }
+    &-para{
+        font-family: var(--td-ff-poppins);
+        line-height: 28px;
+        text-transform: capitalize;
+        color: var(--td-grey-1);
+    }
+    &-wrapper{
+        @media #{$lg,$md,$sm,$xs} {
+            margin: 0;
+        }
+        & .accordion {
+            border: none;
+        }
+        & .accordion-item {
+            border: none;
+        }
+        & .td-faq-details-para {
+            padding: 25px 0px 0px 0px;
+            & p{
+                font-family: var(--td-ff-poppins);
+                line-height: 28px;
+                color: #393a47;
+                margin-bottom: 4px;
+            }
+        }
+        & .accordion-button{
+            font-family: var(--td-ff-body);
+            font-weight: 500;
+            font-size: 20px;
+            text-transform: capitalize;
+            color: var(--td-common-black);
+            padding: 29px 0;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #d7d7d7;
+            border-radius: 0;
+            outline: none;
+            box-shadow: none;
+            &::after {
+                background-image: inherit;
+                border: 2px solid var(--td-theme-secondary);
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+            }
+            &:focus{
+                outline: none;
+                box-shadow: none;
+            }
+            &:not(.collapsed){
+                color: var(--td-theme-secondary);
+                &::after{
+                    @include transform(rotate(0deg));
+                }
+                & .accordion-btn{
+                    &::before{
+                        @include transform(translateX(-50%) rotate(90deg));
+                        color: var(--td-common-black);
+                    }
+                    &::after{
+                        color: var(--td-common-black);
+                    }
+                }
+            }
+            & .accordion-btn{
+                position: absolute;
+                top: 50%;
+                right: 9px;
+                transform: translateY(-50%);
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                &::after{
+                    position: absolute;
+                    content: '';
+                    width: 100%;
+                    height: 2px;
+                    left: 0;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background-color: var(--td-theme-secondary);
+                    border-radius: 2px;
+                    transition: all .4s ease;
+                }
+                &::before{
+                    position: absolute;
+                    content: "";
+                    width: 2px;
+                    height: 100%;
+                    left: 50%;
+                    top: 0;
+                    background-color: var(--td-theme-secondary);
+                    transform: translateX(-50%);
+                    border-radius: 2px;
+                    transition: all .4s ease;
+                }
+            }
+        }
+    }
+}

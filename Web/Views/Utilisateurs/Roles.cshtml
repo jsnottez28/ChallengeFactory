@@ -1,0 +1,71 @@
+@model Web.Controllers.UtilisateursController.UserRolesViewModel
+@{
+    ViewData["Title"] = $"Roles de {Model.DisplayName}";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Utilisateurs">Utilisateurs</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Roles de @Model.DisplayName</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Roles de @Model.DisplayName</h1>
+                <p class="text-muted mb-0">@Model.Email</p>
+            </div>
+            <a asp-page="/Admin/Utilisateurs" class="btn btn-outline-secondary">Retour aux utilisateurs</a>
+        </div>
+
+        <form method="post" asp-controller="Utilisateurs" asp-action="Roles" asp-route-userId="@Model.UserId">
+            @Html.AntiForgeryToken()
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-0">Roles attribues</h2>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.Roles.Count == 0)
+                    {
+                        <p class="text-muted mb-0">
+                            Aucun role n'existe pour le moment.
+                            <droit-visible code="ROLE.CREER">
+                                <a asp-controller="Roles" asp-action="Create">Creer un role</a>.
+                            </droit-visible>
+                        </p>
+                    }
+                    else
+                    {
+                        @foreach (var role in Model.Roles)
+                        {
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="roleNames" value="@role.RoleName" id="role-@role.RoleId" checked="@role.EstCoche">
+                                <label class="form-check-label" for="role-@role.RoleId">@role.RoleName</label>
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <droit-visible code="UTILISATEUR.MODIFIER">
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </droit-visible>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>

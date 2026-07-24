@@ -1,0 +1,46 @@
+@use '../utils' as *;
+
+/*=========================
+      03. Breadcrumb
+===========================*/
+
+.td-breadcrumb{
+      &-title{
+            font-weight: 700;
+            font-size: 40px;
+            text-transform: capitalize;
+            color: var(--td-common-white);
+            @media #{$xs} {
+                  font-size: 30px;
+            }
+      }
+      &-spacing{
+            padding-top: 210px;
+            padding-bottom: 120px;
+            @media #{$sm,$xs} {
+                  padding-top: 130px;
+                  padding-bottom: 100px;
+            }
+      }
+      &-list{
+            & ul{
+                  display: flex;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  & li{
+                        font-family: var(--td-ff-poppins);
+                        font-weight: 500;
+                        color: #cbcbcb;
+                        margin-right: 12px;
+                        &.pages{
+                              color: var(--td-theme-secondary);
+                        }
+                        & a{
+                              &:hover{
+                                    color: var(--td-theme-secondary);
+                              }
+                        }
+                  }
+            }
+      }
+}

@@ -1,0 +1,127 @@
+@model Web.Controllers.OrganisationsController.OrganisationFormModel
+@{
+    var estModification = Model.Id.HasValue;
+    ViewData["Title"] = estModification ? "Modifier une organisation" : "Creer une organisation";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Organisations" asp-action="Index">Organisations</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            <a asp-controller="Organisations" asp-action="Index" class="btn btn-outline-secondary">Retour aux organisations</a>
+        </div>
+
+        <form method="post" asp-controller="Organisations" asp-action="@(estModification ? "Edit" : "Create")" asp-route-id="@Model.Id">
+            @Html.AntiForgeryToken()
+            <div class="row g-4 align-items-start">
+                <div class="col-12 col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-1">Informations de l'organisation</h2>
+                            <p class="text-muted mb-0">Ces informations sont issues du referentiel des organisations (import Eudonet).</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="RaisonSociale" class="form-label"></label>
+                                    <input asp-for="RaisonSociale" class="form-control" autocomplete="organization">
+                                    <span asp-validation-for="RaisonSociale" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="CodeAdherent" class="form-label"></label>
+                                    <input asp-for="CodeAdherent" class="form-control" autocomplete="off">
+                                    <span asp-validation-for="CodeAdherent" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="Adresse1" class="form-label"></label>
+                                    <input asp-for="Adresse1" class="form-control" autocomplete="address-line1">
+                                    <span asp-validation-for="Adresse1" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="Adresse2" class="form-label"></label>
+                                    <input asp-for="Adresse2" class="form-control" autocomplete="address-line2">
+                                    <span asp-validation-for="Adresse2" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12 col-md-4">
+                                    <label asp-for="CodePostal" class="form-label"></label>
+                                    <input asp-for="CodePostal" class="form-control" autocomplete="postal-code" inputmode="numeric" maxlength="5" id="organisationCodePostal">
+                                    <span asp-validation-for="CodePostal" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12 col-md-8">
+                                    <label asp-for="Ville" class="form-label"></label>
+                                    <input asp-for="Ville" class="form-control" autocomplete="address-level2" list="organisationVillesSuggestions" id="organisationVille">
+                                    <datalist id="organisationVillesSuggestions"></datalist>
+                                    <span asp-validation-for="Ville" class="text-danger"></span>
+                                    <div id="organisationVilleWarning" class="form-text text-warning d-none">Cette ville ne correspond pas au code postal saisi.</div>
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="TelephoneStandard" class="form-label"></label>
+                                    <input asp-for="TelephoneStandard" class="form-control" autocomplete="tel">
+                                    <span asp-validation-for="TelephoneStandard" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-12 col-md-6 d-flex align-items-end">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="EstActif" class="form-check-input" role="switch">
+                                        <label asp-for="EstActif" class="form-check-label"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                                <a asp-controller="Organisations" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                                <button type="submit" class="btn btn-primary">@(estModification ? "Enregistrer les modifications" : "Creer l'organisation")</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm backend-side-card">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Organisation</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-0">Une organisation pourra ensuite etre associee a des utilisateurs, des evenements ou des droits selon le modele retenu.</p>
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <div class="d-grid gap-2">
+                                <a asp-page="/Admin/Utilisateurs" class="btn btn-outline-secondary">Voir les utilisateurs</a>
+                                <a asp-controller="Permissions" asp-action="Index" class="btn btn-outline-secondary">Voir les permissions</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        window.OrganisationFormConfig = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { geoCommunesApiUrl = (string)ViewBag.GeoCommunesApiUrl }));
+    </script>
+    <script src="~/js/admin-organisation-form.js"></script>
+}

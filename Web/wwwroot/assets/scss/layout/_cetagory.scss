@@ -1,0 +1,63 @@
+@use '../utils' as *;
+
+/*=============================
+    	02. cetagory
+===============================*/
+
+.td-cetagory{
+    &-thumb{
+        overflow: hidden;
+        border-radius: 30px;
+        & img{
+            border-radius: 30px;
+            transition: all .4s ease;
+            width: 100%;
+        }
+    }
+    &-tittle{
+        font-weight: 600;
+        font-size: 20px;
+        text-transform: capitalize;
+    }
+    &-subtittle{
+        font-family: var(--td-ff-poppins);
+        font-weight: 500;
+        font-size: 15px;
+        text-transform: capitalize;
+        color: var(--td-grey-1);
+    }
+    &-item{
+        &:hover{
+            & .td-cetagory-thumb{
+                & img{
+                    transform: scale(1.1);
+                }
+            }
+        }
+    }
+    &-btn{
+        & a{
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: var(--td-common-white);
+            border: 1px solid #d5d5d5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--td-theme-primary);
+        }
+    }
+    &-content{
+        position: absolute;
+        bottom: 30px;
+        left: 30px;
+        right: 30px;
+        background: var(--td-common-white);
+        padding: 30px 33px 30px 40px;
+        border-radius: 20px;
+        @media #{$xl,$md,$sm,$xs} {
+            padding: 15px 18px 15px 20px;
+        }
+    }
+}
