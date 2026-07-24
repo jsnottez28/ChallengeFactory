@@ -13,6 +13,10 @@
             <div class="carte-face-header">
                 <div class="carte-code">@Model.Code · @Model.Niveau.Libelle()</div>
                 <h3>@Model.TitreTheorie</h3>
+                @if (Model.Badge is not null)
+                {
+                    <span class="carte-face-badge">@Model.Badge.BadgeNom</span>
+                }
             </div>
 
             @if (!string.IsNullOrWhiteSpace(Model.ImageCarteA))
