@@ -107,4 +107,23 @@ public static class EmailTemplates
                 Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
             </p>
             """);
+
+    public static string MessageContact(string nom, string email, string message)
+    {
+        var nomSecurise = System.Net.WebUtility.HtmlEncode(nom);
+        var emailSecurise = System.Net.WebUtility.HtmlEncode(email);
+        var messageSecurise = System.Net.WebUtility.HtmlEncode(message);
+
+        return BaseTemplate("Nouveau message de contact", $"""
+            <h2 style="color:#003189;font-size:20px;margin:0 0 16px;">
+                Nouveau message depuis le site
+            </h2>
+            <p style="color:#444444;font-size:15px;line-height:1.6;margin:0 0 8px;">
+                <strong>De :</strong> {nomSecurise} ({emailSecurise})
+            </p>
+            <p style="color:#444444;font-size:15px;line-height:1.6;margin:16px 0;white-space:pre-line;">
+                {messageSecurise}
+            </p>
+            """);
+    }
 }
