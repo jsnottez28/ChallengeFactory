@@ -1,310 +1,233 @@
-﻿@{
+@{
     ViewData["Title"] = "Accueil";
 }
 
-        <!-- td-hero-area-start -->
-        <div class="td-hero-area grey-bg-2 td-hero-4-spacing p-relative fix z-index-1">
-            <div class="td-hero-4-blur"></div>
-            <div class="td-hero-4-blur td-hero-4-blur-2"></div>
-            <span class="td-hero-4-shape-3 rotate-infinite-2 d-none d-xl-block">
-                <svg width="230" height="230" viewBox="0 0 230 230" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M44.5538 22.5702L85.3263 2.71494L111 55.4359L130.128 -0.00470124L173.006 14.7962L153.874 70.2278L206.595 44.5538L226.45 85.3263L173.729 111L229.17 130.128L214.378 173.002L158.937 153.874L184.611 206.595L143.839 226.45L118.165 173.729L99.0465 229.166L56.1636 214.378L75.2912 158.937L22.5702 184.611L2.71493 143.839L55.4359 118.165L-0.000331598 99.0465L14.7962 56.1592L70.2278 75.2912L44.5538 22.5702Z" fill="#E1E1E6" />
-                </svg>
-            </span>
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-xl-6 col-lg-6">
-                        <div class="td-hero-4-slider-wrap p-relative mr-45 mb-40">
-                            <span class="td-hero-4-shape">
-                                <svg width="196" height="119" viewBox="0 0 196 119" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M65.1481 106.405C74.4348 123.739 78.7957 141.19 77.9399 153.947C66.8458 147.592 54.7336 134.294 45.4469 116.959C36.1602 99.6247 31.7993 82.1739 32.6551 69.4174C43.7492 75.7719 55.8615 89.0702 65.1481 106.405ZM179.886 44.9361C195.414 73.9199 197.172 103.221 183.813 110.378C179.18 112.86 173.333 112.352 167.024 109.418C168.494 95.7088 164.223 77.0204 154.36 58.6111C144.498 40.2018 131.311 26.2894 119.078 19.9218C120.13 13.0441 122.942 7.8974 127.58 5.4124C140.939 -1.74427 164.359 15.9523 179.886 44.9361ZM163.995 107.844C152.901 101.49 140.789 88.1917 131.502 70.8571C122.215 53.5225 117.854 36.0717 118.71 23.3152C129.804 29.6697 141.916 42.9679 151.203 60.3025C160.49 77.6372 164.851 95.088 163.995 107.844ZM183.043 43.2447C199.388 73.7542 200.395 105.049 185.293 113.14C180.031 115.959 173.512 115.589 166.554 112.622C165.17 120.057 161.867 125.69 156.604 128.509C151.342 131.328 144.823 130.958 137.866 127.992C136.481 135.427 133.178 141.059 127.916 143.879C122.653 146.698 116.134 146.327 109.177 143.361C107.793 150.796 104.489 156.429 99.2269 159.248C93.9648 162.067 87.4454 161.697 80.4884 158.73C79.1039 166.166 75.8005 171.798 70.5383 174.617C55.4366 182.708 29.9402 164.533 13.5953 134.023C-2.74955 103.514 -3.73914 72.2095 11.3625 64.1191C16.6247 61.3 23.144 61.6702 30.1011 64.6367C31.4856 57.2014 34.789 51.5688 40.0512 48.7497C45.3134 45.9306 51.8327 46.3008 58.7898 49.2673C60.1743 41.832 63.4777 36.1994 68.7399 33.3803C74.0021 30.5612 80.5214 30.9314 87.4785 33.8979C88.8518 26.4685 92.1553 20.836 97.4174 18.0169C102.68 15.1977 109.199 15.568 116.156 18.5345C117.535 11.1021 120.838 5.46956 126.101 2.65045C141.202 -5.43997 166.699 12.7351 183.043 43.2447ZM163.627 111.238C151.399 104.867 138.207 90.9579 128.345 72.5485C118.482 54.1392 114.205 35.4538 115.681 21.7416C109.372 18.8076 103.53 18.2968 98.8915 20.7818C94.253 23.2668 91.4418 28.4135 90.3892 35.2912C102.617 41.6618 115.809 55.5712 125.672 73.9805C135.534 92.3898 139.811 111.075 138.335 124.787C144.644 127.721 150.486 128.232 155.125 125.747C159.763 123.262 162.574 118.116 163.627 111.238ZM135.312 123.211C124.218 116.856 112.105 103.558 102.819 86.2235C93.5321 68.8889 89.1711 51.4381 90.0269 38.6816C101.121 45.0361 113.233 58.3343 122.52 75.669C131.807 93.0036 136.168 110.454 135.312 123.211ZM134.944 126.604C122.716 120.234 109.524 106.324 99.6614 87.915C89.799 69.5056 85.522 50.8202 86.998 37.108C80.6891 34.174 74.8469 33.6632 70.2084 36.1482C65.5699 38.6332 62.7587 43.7799 61.7061 50.6576C73.934 57.0282 87.1261 70.9376 96.9886 89.3469C106.851 107.756 111.128 126.442 109.652 140.154C115.961 143.088 121.803 143.599 126.442 141.114C131.08 138.629 133.891 133.482 134.944 126.604ZM106.629 138.577C95.5345 132.223 83.4223 118.925 74.1356 101.59C64.8489 84.2553 60.488 66.8045 61.3438 54.048C72.4379 60.4025 84.5501 73.7008 93.8368 91.0354C103.123 108.37 107.484 125.821 106.629 138.577ZM106.261 141.971C94.0328 135.6 80.8407 121.691 70.9783 103.281C61.1159 84.872 56.8388 66.1866 58.3149 52.4744C52.006 49.5405 46.1638 49.0296 41.5253 51.5146C36.8868 53.9996 34.0755 59.1463 33.023 66.024C45.2509 72.3946 58.443 86.304 68.3054 104.713C78.1679 123.123 82.4449 141.808 80.9688 155.52C87.2778 158.454 93.1199 158.965 97.7584 156.48C102.397 153.995 105.208 148.848 106.261 141.971ZM77.5776 157.337C76.5251 164.215 73.7138 169.361 69.0753 171.846C55.7166 179.003 32.2969 161.307 16.7694 132.323C1.24185 103.339 -0.51656 74.0377 12.8422 66.881C17.4751 64.399 23.3229 64.9069 29.6318 67.8408C28.1613 81.55 32.4327 100.238 42.2952 118.648C52.1576 137.057 65.3442 150.969 77.5776 157.337Z" fill="white" />
-                                </svg>
-                            </span>
-                            <span class="td-hero-4-shape-2 up-down">
-                                <svg width="101" height="101" viewBox="0 0 101 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M50.6288 27.7889V50.601H50.5407C48.6751 50.601 46.8335 50.4889 45.0159 50.2887C19.9618 47.5022 0.472656 26.2515 0.472656 0.444824H23.2847C23.2847 15.5541 35.5275 27.7889 50.6288 27.7889Z" fill="#F248B4" />
-                                    <path d="M50.6288 77.6328V100.445C22.9324 100.445 0.472656 77.9931 0.472656 50.2887H23.2847C23.2847 65.398 35.5275 77.6328 50.6288 77.6328Z" fill="#F248B4" />
-                                    <path d="M100.697 27.7889V50.601H100.609C98.7431 50.601 96.9015 50.4889 95.0839 50.2887C70.0299 47.5022 50.5407 26.2515 50.5407 0.444824H73.3528C73.3528 15.5541 85.5956 27.7889 100.697 27.7889Z" fill="#F248B4" />
-                                    <path d="M100.697 77.6328V100.445C73.0005 100.445 50.5407 77.9931 50.5407 50.2887H73.3528C73.3528 65.398 85.5956 77.6328 100.697 77.6328Z" fill="#F248B4" />
-                                </svg>
-                            </span>
-                            <div class="swiper-container td-hero-4-zoom">
-                                <div class="swiper-wrapper p-relative">
-                                    <div class="swiper-slide">
-                                        <div class="td-hero-4-thumb">
-                                            <img class="w-100" src="~/images/reserve-biologique-615.png" alt="">
-                                            @* <img class="w-100" src="~/assets/img/hero/hero-4/thumb.jpg" alt=""> *@
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="td-hero-4-thumb">
-                                            <img class="w-100" src="~/assets/img/hero/hero-4/thumb-2.jpg" alt="">
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="td-hero-4-thumb">
-                                            <img class="w-100" src="~/assets/img/hero/hero-4/thumb-3.jpg" alt="">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-xl-8 col-lg-10">
+                <span class="cf-badge">Le Strava des Soft Skills</span>
+                <h1 class="cf-h1 mb-4">
+                    Vous n'apprenez pas en regardant.<br>
+                    Vous apprenez en <span class="cf-accent">faisant</span>.
+                </h1>
+                <p class="cf-lead mb-4" style="max-width:560px;">
+                    Sur Challenges Factory, pas de vidéos à consommer ni de QCM à cocher. Vous rejoignez une
+                    <strong>Cohorte</strong>, vous relevez des <strong>Défis</strong> sur le terrain, et vous
+                    validez vos compétences par la <strong>Preuve</strong> — pas par le hasard d'un quiz.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mb-2">
+                    <a class="cf-btn cf-btn-primary" asp-area="Identity" asp-page="/Account/Register">
+                        Créer mon compte gratuitement →
+                    </a>
+                    <a class="cf-btn cf-btn-outline" href="#comment-ca-marche">Découvrir la méthode</a>
+                </div>
+
+                <div class="cf-hero-proof">
+                    <div>
+                        <div class="cf-hero-proof-num">75%</div>
+                        <div class="cf-hero-proof-label">de rétention en plus qu'une formation classique</div>
                     </div>
-                    <div class="col-xl-6 col-lg-6">
-                        <div class="td-hero-4-content mb-40">
-                            <span class="td-hero-4-subtittle">Bienvenue sur Challenge Factory !</span>
-                            <h2 class="td-hero-2-title td-hero-4-tittle wow td-animetion-left" data-wow-duration="1.5s" data-wow-delay="0.2s">apprendre <br>en  <br> pratiquant</h2>
-                            <div class="td-hero-4-border mb-35"></div>
-                            <span class="td-hero-4-dates mb-10 d-inline-block wow td-animetion-left" data-wow-duration="1.5s" data-wow-delay="0.4s">Formations, challenges et parcours certifiants</span>
-                            <p class="td-hero-4-para mb-30 wow td-animetion-left" data-wow-duration="1.5s" data-wow-delay="0.5s">Une plateforme d'apprentissage en ligne pour monter en compétences <br> à votre rythme, où que vous soyez.</p>
-                            <a class="td-btn td-btn-3-squre mb-15 td-left-right text3 mr-25 wow td-animetion-left" data-wow-duration="1.5s" data-wow-delay="0.6s" asp-area="Identity" asp-page="/Account/Register">
-                                <span class="mr10 td-text d-inline-block mr-5">Commencer maintenant</span>
-                            </a>
-                        </div>
+                    <div>
+                        <div class="cf-hero-proof-num">8</div>
+                        <div class="cf-hero-proof-label">semaines pour ancrer une compétence, preuves à l'appui</div>
+                    </div>
+                    <div>
+                        <div class="cf-hero-proof-num">0</div>
+                        <div class="cf-hero-proof-label">QCM comme validateur — uniquement des preuves d'action</div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- td-hero-area-end -->
+    </div>
+</section>
+<!-- /hero -->
 
-        <!-- td-text-slider-area-start -->
-        <div class="td-text-slider-area td-text-slider-spacing">
-            <div class="container-fluid">
-                <div class="row">
-                   <div class="swiper-container td-text-slider-active">
-                      <div class="swiper-wrapper slide-transtion">
-                         <div class="swiper-slide">
-                            <div class="td-text-slider-item">
-                               <h3 class="text">Formations</h3>
-                               <img src="~/assets/img/text/round.png" alt="round">
-                            </div>
-                         </div>
-                         <div class="swiper-slide">
-                            <div class="td-text-slider-item">
-                               <h3 class="text">S'inscrire</h3>
-                               <img src="~/assets/img/text/round.png" alt="round">
-                            </div>
-                         </div>
-                         <div class="swiper-slide">
-                            <div class="td-text-slider-item">
-                               <h3 class="text">+60 Challenges</h3>
-                               <img src="~/assets/img/text/round.png" alt="round">
-                            </div>
-                         </div>
-                         <div class="swiper-slide">
-                            <div class="td-text-slider-item">
-                               <h3 class="text">Accès illimité</h3>
-                               <img src="~/assets/img/text/round.png" alt="round">
-                            </div>
-                         </div>
-                         <div class="swiper-slide">
-                            <div class="td-text-slider-item">
-                                <h3 class="text">Badges &amp; certificats</h3>
-                               <img src="~/assets/img/text/round.png" alt="round">
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
+<!-- le constat -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Le constat</span>
+            <h2 class="cf-h2 mb-3">Le problème n'est pas votre motivation.<br>C'est la méthode.</h2>
         </div>
-        <!-- td-text-slider-area-end -->
-
-        <!-- td-about-area-start -->
-        <div class="td-about-area pt-130 pb-100">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-xl-6 col-lg-10">
-                        <div class="td-about-4-content mb-15 wow fadeInLeft" data-wow-duration="1.5s" data-wow-delay="0.3s">
-                            <span class="td-section-subtitle td-section-subtitle-2 mb-20">À propos de Challenge Factory</span>
-                            <h2 class="td-section-title mb-15">Apprendre <br>autrement</h2>
-                            <p class="td-section-4-para mb-30">Challenge Factory associe formations, ateliers pratiques et challenges pour offrir une expérience d'apprentissage cohérente et engageante.</p>
-                            <div class="td-about-3-clients td-about-5-clients">
-                                <div class="row">
-                                    <div class="col-lg-6 col-md-6 col-sm-6">
-                                        <div class="items mb-30 d-flex align-items-center">
-                                            <span class="mb-10 icon mr-25">
-                                                <i class="flaticon-meeting"></i>
-                                            </span>
-                                            <h5 class="title">Formations</h5>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6 col-md-6 col-sm-6">
-                                        <div class="items mb-30 d-flex align-items-center">
-                                            <span class="mb-10 icon mr-25">
-                                                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M23.04 31.3472V36.96C23.04 38.6368 21.68 40 20 40C18.32 40 16.96 38.6368 16.96 36.96V31.3472L20 26.0832L23.04 31.3472Z" fill="currentColor" />
-                                                    <path d="M23.04 3.04V8.6528L20 13.9168L16.96 8.6528V3.04C16.96 1.3632 18.32 0 20 0C20.8384 0 21.6 0.3392 22.1504 0.8896C22.7008 1.44 23.04 2.2016 23.04 3.04Z" fill="currentColor" />
-                                                    <path d="M16.96 8.6528V14.7328L11.6896 11.6896L8.8864 6.8352C8.048 5.3792 8.544 3.52 10 2.6784C10.48 2.4032 11.0016 2.272 11.5168 2.272C12.5696 2.272 13.5904 2.816 14.1536 3.792L16.96 8.6528Z" fill="currentColor" />
-                                                    <path d="M30 37.3216C28.544 38.16 26.6848 37.6608 25.8464 36.208L23.04 31.3472V25.2672L28.3104 28.3104L31.1136 33.1648C31.952 34.6208 31.456 36.48 30 37.3216Z" fill="currentColor" />
-                                                    <path d="M14.7328 16.96H8.6528L3.792 14.1536C2.3392 13.3152 1.84 11.456 2.6784 10C3.2416 9.024 4.2656 8.48 5.3152 8.48C5.8336 8.48 6.3552 8.6112 6.8352 8.8864L11.6896 11.6896L14.7328 16.96Z" fill="currentColor" />
-                                                    <path d="M37.3216 30C36.48 31.456 34.6208 31.952 33.1648 31.1136L28.3104 28.3104L25.2672 23.04H31.3472L36.208 25.8464C37.6608 26.6848 38.16 28.544 37.3216 30Z" fill="currentColor" />
-                                                    <path d="M13.9168 20L8.6528 23.04H3.04C1.3632 23.04 0 21.68 0 20C0 19.1616 0.3392 18.4 0.8896 17.8496C1.44 17.2992 2.2016 16.96 3.04 16.96H8.6528L13.9168 20Z" fill="currentColor" />
-                                                    <path d="M40 20C40 21.68 38.6368 23.04 36.96 23.04H31.3472L26.0832 20L31.3472 16.96H36.96C38.6368 16.96 40 18.32 40 20Z" fill="currentColor" />
-                                                    <path d="M14.7328 23.04L11.6896 28.3104L6.8352 31.1136C5.3792 31.952 3.52 31.456 2.6784 30C2.4032 29.52 2.272 28.9984 2.272 28.4832C2.272 27.4304 2.816 26.4096 3.792 25.8464L8.6528 23.04H14.7328Z" fill="currentColor" />
-                                                    <path d="M36.208 14.1536L31.3472 16.96H25.2672L28.3104 11.6896L33.1648 8.8864C34.6208 8.048 36.48 8.544 37.3216 10C38.16 11.456 37.6608 13.3152 36.208 14.1536Z" fill="currentColor" />
-                                                    <path d="M16.96 25.2672V31.3472L14.1536 36.208C13.3152 37.6608 11.456 38.16 10 37.3216C9.024 36.7584 8.48 35.7344 8.48 34.6848C8.48 34.1664 8.6112 33.6448 8.8864 33.1648L11.6896 28.3104L16.96 25.2672Z" fill="currentColor" />
-                                                    <path d="M31.1136 6.8352L28.3104 11.6896L23.04 14.7328V8.6528L25.8464 3.792C26.6848 2.3392 28.544 1.84 30 2.6784C31.456 3.52 31.952 5.3792 31.1136 6.8352Z" fill="currentColor" />
-                                                </svg>
-                                            </span>
-                                            <h5 class="title">Challenges pratiques</h5>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6 col-md-6 col-sm-6">
-                                        <div class="items mb-30 d-flex align-items-center">
-                                            <span class="mb-10 icon mr-25">
-                                                <i class="flaticon-handshake"></i>
-                                            </span>
-                                            <h5 class="title">Badges &amp; certificats</h5>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6 col-md-6 col-sm-6">
-                                        <div class="items mb-30 d-flex align-items-center">
-                                            <span class="mb-10 icon mr-25">
-                                                <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M17.5672 17.5C27.202 17.458 35 8.75 35 8.75C35 8.75 27.202 0.042 17.5672 0H17.5C7.8344 0 0 8.75 0 8.75C0 8.75 7.8344 17.5 17.5 17.5C7.8344 17.5 0 26.25 0 26.25C0 26.25 7.8344 35 17.5 35H17.5672C27.202 34.958 35 26.25 35 26.25C35 26.25 27.202 17.542 17.5672 17.5ZM11.914 8.8648C11.914 5.7792 14.4144 3.2788 17.5 3.2788C17.5224 3.2788 17.5448 3.2788 17.5672 3.2816C20.622 3.3152 23.086 5.8016 23.086 8.8648C23.086 11.928 20.622 14.4116 17.5672 14.4452C17.5448 14.448 17.5224 14.448 17.5 14.448C14.4144 14.448 11.914 11.9476 11.914 8.8648ZM17.5672 31.962C17.5448 31.9648 17.5224 31.9648 17.5 31.9648C14.4144 31.9648 11.914 29.4644 11.914 26.3816C11.914 23.2988 14.4144 20.7956 17.5 20.7956C17.5224 20.7956 17.5448 20.7956 17.5672 20.7984C20.622 20.832 23.086 23.3184 23.086 26.3816C23.086 29.4448 20.622 31.9284 17.5672 31.962Z" fill="currentColor" />
-                                                </svg>
-                                            </span>
-                                            <h5 class="title">Communauté d'apprenants</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="td-about-3-btn mt-10 d-flex align-items-center">
-                                <a class="td-btn td-btn-3-squre mb-15 td-left-right text3 mr-25" href="about.html">
-                                    <span class="mr10 td-text d-inline-block mr-5">En savoir plus ?</span>
-                                    <span class="td-arrow-angle">
-                                        <svg class="td-arrow-svg-top-right" width="13" height="14" viewBox="0 0 13 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M0.943836 13.5C0.685616 13.5 0.45411 13.4021 0.276027 13.224C0.0979452 13.0459 0 12.8055 0 12.5562C0 12.3068 0.0979452 12.0664 0.276027 11.8884L9.76781 2.38767H2.02123C1.49589 2.38767 1.0774 1.96027 1.0774 1.44384C1.0774 0.927397 1.50479 0.5 2.03014 0.5H12.0562C12.1274 0.5 12.1986 0.508904 12.2788 0.526712L12.4034 0.562329L12.537 0.633562C12.5637 0.65137 12.5993 0.678082 12.626 0.69589C12.6973 0.749315 12.7507 0.80274 12.7952 0.856164C12.8219 0.891781 12.8575 0.927397 12.8842 0.989726L12.9555 1.1411L12.9822 1.22123C13 1.29247 13.0089 1.3726 13.0089 1.44384V11.4699C13.0089 11.9952 12.5815 12.4137 12.0651 12.4137C11.5486 12.4137 11.1212 11.9863 11.1212 11.4699V3.72329L1.62055 13.224C1.44247 13.4021 1.20205 13.5 0.943836 13.5Z" fill="white" />
-                                            <path d="M0.943836 13.5C0.685616 13.5 0.45411 13.4021 0.276027 13.224C0.0979452 13.0459 0 12.8055 0 12.5562C0 12.3068 0.0979452 12.0664 0.276027 11.8884L9.76781 2.38767H2.02123C1.49589 2.38767 1.0774 1.96027 1.0774 1.44384C1.0774 0.927397 1.50479 0.5 2.03014 0.5H12.0562C12.1274 0.5 12.1986 0.508904 12.2788 0.526712L12.4034 0.562329L12.537 0.633562C12.5637 0.65137 12.5993 0.678082 12.626 0.69589C12.6973 0.749315 12.7507 0.80274 12.7952 0.856164C12.8219 0.891781 12.8575 0.927397 12.8842 0.989726L12.9555 1.1411L12.9822 1.22123C13 1.29247 13.0089 1.3726 13.0089 1.44384V11.4699C13.0089 11.9952 12.5815 12.4137 12.0651 12.4137C11.5486 12.4137 11.1212 11.9863 11.1212 11.4699V3.72329L1.62055 13.224C1.44247 13.4021 1.20205 13.5 0.943836 13.5Z" fill="white" />
-                                        </svg>
-                                    </span>
-                                </a>
-                                <div class="td-about-3-number mb-15 d-flex align-items-center">
-                                    <span class="call-icon mr-10">
-                                        <svg width="21" height="22" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M19.9637 15.6422V18.4523C19.9648 18.7132 19.9114 18.9714 19.8068 19.2104C19.7023 19.4494 19.5491 19.664 19.3568 19.8404C19.1646 20.0167 18.9377 20.151 18.6905 20.2346C18.4434 20.3181 18.1816 20.3492 17.9217 20.3257C15.0394 20.0125 12.2707 19.0276 9.83806 17.45C7.57484 16.0119 5.65603 14.0931 4.21788 11.8299C2.63485 9.38622 1.64969 6.60403 1.34223 3.70871C1.31882 3.44969 1.3496 3.18862 1.43262 2.94214C1.51563 2.69567 1.64906 2.46917 1.82441 2.27709C1.99975 2.085 2.21317 1.93153 2.45108 1.82644C2.68899 1.72136 2.94617 1.66696 3.20625 1.66672H6.01634C6.47092 1.66224 6.91162 1.82322 7.2563 2.11964C7.60098 2.41606 7.82611 2.8277 7.88973 3.27783C8.00834 4.17712 8.2283 5.06011 8.54542 5.90995C8.67144 6.24521 8.69872 6.60958 8.62401 6.95987C8.5493 7.31016 8.37575 7.6317 8.1239 7.88637L6.9343 9.07598C8.26774 11.421 10.2094 13.3627 12.5545 14.6962L13.7441 13.5065C13.9988 13.2547 14.3203 13.0811 14.6706 13.0064C15.0209 12.9317 15.3852 12.959 15.7205 13.085C16.5703 13.4022 17.4533 13.6221 18.3526 13.7407C18.8076 13.8049 19.2232 14.0341 19.5202 14.3847C19.8173 14.7353 19.9751 15.1828 19.9637 15.6422Z" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <span class="subtitle">Contact :</span>
-                                        <h5 class="td-number"><a href="tel:+1(1234)-567-800">+33 (0)6 62 12 34 56</a></h5>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-6 col-lg-10">
-                        <div class="td-about-5-thumb mb-30 p-relative wow fadeInRight" data-wow-duration="1.5s" data-wow-delay="0.3s">
-                            <img class="thumb-1" src="~/images/reserve-biologique-615.png" alt="">
-                        </div>
-                    </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-5">
+                <div class="cf-flip-card cf-flip-before">
+                    <h5 class="mb-3">😴 La formation qu'on oublie</h5>
+                    <ul class="mb-0 ps-3 cf-flip-list">
+                        <li class="mb-2">On regarde une vidéo, on répond à un quiz, on ferme l'onglet.</li>
+                        <li class="mb-2">La majorité des apprenants décrochent avant la fin du parcours.</li>
+                        <li>Ce qu'on retient d'un contenu passif se compte en jours, pas en mois.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="cf-flip-card cf-flip-after">
+                    <h5 class="mb-3">⚡ Le Défi qu'on retient</h5>
+                    <ul class="mb-0 ps-3 cf-flip-list">
+                        <li class="mb-2">Vous recevez un Défi concret à résoudre sur le terrain, cette semaine.</li>
+                        <li class="mb-2">Vous déposez une <strong>Preuve</strong> (photo, vidéo, témoignage) de ce que vous avez vraiment fait.</li>
+                        <li>Un pair ou un Tuteur valide — la compétence s'ancre parce qu'elle a servi.</li>
+                    </ul>
                 </div>
             </div>
         </div>
-        <!-- td-about-area-end -->
+    </div>
+</section>
+<!-- /le constat -->
 
-
-        <!-- td-team-area-start -->
-        <div class="td-team-area grey-bg-4 pt-130 p-relative z-index-1 fix pb-100">
-            <div class="td-hero-4-blur td-team-5-blur"></div>
-            <div class="td-hero-4-blur td-hero-4-blur-2 td-team-5-blur-2"></div>
-            <div class="container-fluid container-1700">
-                <div class="row justify-content-center">
-                    <div class="col-lg-7 col-md-10">
-                        <div class="td-team-tittle-wrap text-center mb-30">
-                            <span class="td-section-subtitle td-section-subtitle-2 td-section-subtitle-3 mb-20 wow fadeInUp" data-wow-duration="1.5s" data-wow-delay="0.3s">Apprenez avec nos formateurs</span>
-                            <h2 class="td-section-title mb-15 wow fadeInUp" data-wow-duration="1.5s" data-wow-delay="0.4s">Nos formateurs</h2>
-                            <p class="td-section-text wow fadeInUp" data-wow-duration="1.5s" data-wow-delay="0.5s">Créez des connexions utiles avec des experts de votre secteur.</p>
-                        </div>
-                    </div>
+<!-- equation -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">L'équation Challenges Factory</span>
+            <h2 class="cf-h2 mb-3">Défis + Cartes + Action</h2>
+            <p class="cf-lead mx-auto" style="max-width:560px;">Trois objets simples suffisent pour transformer une intention en compétence prouvée.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cf-card">
+                    <span class="cf-code-tag">MAN-C23</span>
+                    <h5>🗂️ Carte de Compétences</h5>
+                    <p>Une compétence, une carte : objectif, mantra, exemple concret et astuces actionnables. Votre Cohorte débloque progressivement les cartes utiles à son Défi.</p>
                 </div>
-                <div class="row justify-content-center row-cols-1 row-cols-xxl-3 row-cols-xl-3 row-cols-lg-3 row-cols-md-2">
-                    <div class="col">
-                        <div class="td-team-5-wrap p-relative z-index-1 mb-30 wow fadeInUp" data-wow-duration="1.5s" data-wow-delay="0.3s">
-                            <span class="td-team-5-shape">
-                                <svg width="238" height="238" viewBox="0 0 238 238" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M210.695 118.999C219.214 105.616 226.145 92.0142 230.94 78.7134C253.185 16.8942 221.118 -15.1865 159.287 7.05907C145.973 11.8534 132.372 18.7709 119.003 27.3047C105.634 18.7846 92.0184 11.8534 78.718 7.05907C16.887 -15.1865 -15.1928 16.8942 7.0658 78.7134C11.86 92.0279 18.7773 105.63 27.3109 118.999C18.791 132.382 11.86 145.984 7.0658 159.285C-15.1791 221.104 16.887 253.185 78.718 230.939C92.0321 226.145 105.634 219.228 119.003 210.694C132.372 219.214 145.987 226.145 159.287 230.939C221.105 253.185 253.185 221.118 230.94 159.285C226.145 145.971 219.228 132.369 210.695 118.999Z" fill="#F2F7F7" />
-                                </svg>
-                            </span>
-                            <div class="td-team-5-thumb">
-                                <img src="~/assets/img/team/team-5/thumb.png" alt="">
-                                <div class="td-team-3-social td-team-5-social">
-                                    <span><a href="#"><i class="fa-brands fa-facebook"></i></a></span>
-                                    <span>
-                                        <a href="#">
-                                            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M13.8679 1.60596H16.4382L10.8229 8.02398L17.4289 16.7575H12.2564L8.20515 11.4607L3.56956 16.7575H0.997689L7.00391 9.89267L0.666687 1.60596H5.97049L9.6325 6.44745L13.8679 1.60596ZM12.9658 15.219H14.3901L5.1966 3.06361H3.66824L12.9658 15.219Z" fill="currentColor" />
-                                            </svg>
-                                        </a>
-                                    </span>
-                                    <span><a href="#"><i class="fa-brands fa-linkedin"></i></a></span>
-                                    <span><a href="#"><i class="fa-brands fa-instagram"></i></a></span>
-                                </div>
-                                <div class="td-team-5-content">
-                                    <h5><a href="team-details.html">Devon Lane</a></h5>
-                                    <span>Sr. Software Engineer</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="td-team-5-wrap p-relative z-index-1 mb-30 wow fadeInUp" data-wow-duration="1.5s" data-wow-delay="0.4s">
-                            <span class="td-team-5-shape">
-                                <svg width="255" height="255" viewBox="0 0 255 255" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M254.256 90.6946H218.113C217.451 90.6946 217.126 89.8966 217.586 89.4367L243.137 63.8853C243.421 63.6012 243.421 63.1278 243.137 62.8437L192.156 11.8491C191.872 11.5651 191.399 11.5651 191.115 11.8491L165.563 37.4005C165.103 37.8604 164.305 37.5358 164.305 36.873V0.743953C164.305 0.33816 163.967 0 163.561 0H91.4521C91.0463 0 90.7081 0.33816 90.7081 0.743953V36.873C90.7081 37.5358 89.9101 37.8604 89.4502 37.4005L63.8853 11.8491C63.6012 11.5651 63.1278 11.5651 62.8437 11.8491L11.8491 62.8437C11.5651 63.1278 11.5651 63.6012 11.8491 63.8853L37.4005 89.4367C37.8604 89.8966 37.5358 90.6946 36.873 90.6946H0.743953C0.33816 90.6946 0 91.0192 0 91.4386V163.548C0 163.954 0.324634 164.292 0.743953 164.292H36.873C37.5358 164.292 37.8604 165.09 37.4005 165.55L11.8491 191.101C11.5651 191.385 11.5651 191.859 11.8491 192.143L62.8437 243.137C63.1278 243.421 63.6012 243.421 63.8853 243.137L89.4367 217.586C89.8966 217.126 90.6946 217.451 90.6946 218.113V254.256C90.6946 254.662 91.0192 255 91.4386 255H163.548C163.954 255 164.292 254.675 164.292 254.256V218.113C164.292 217.451 165.09 217.126 165.55 217.586L191.101 243.137C191.385 243.421 191.859 243.421 192.143 243.137L243.137 192.143C243.421 191.859 243.421 191.385 243.137 191.101L217.586 165.55C217.126 165.09 217.451 164.292 218.113 164.292H254.256C254.662 164.292 255 163.967 255 163.548V91.4386C255 91.0328 254.675 90.6946 254.256 90.6946Z" fill="#F2F7F7" />
-                                </svg>
-                            </span>
-                            <div class="td-team-5-thumb">
-                                <img src="~/assets/img/team/team-5/thumb-2.png" alt="">
-                                <div class="td-team-3-social td-team-5-social">
-                                    <span><a href="#"><i class="fa-brands fa-facebook"></i></a></span>
-                                    <span>
-                                        <a href="#">
-                                            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M13.8679 1.60596H16.4382L10.8229 8.02398L17.4289 16.7575H12.2564L8.20515 11.4607L3.56956 16.7575H0.997689L7.00391 9.89267L0.666687 1.60596H5.97049L9.6325 6.44745L13.8679 1.60596ZM12.9658 15.219H14.3901L5.1966 3.06361H3.66824L12.9658 15.219Z" fill="currentColor" />
-                                            </svg>
-                                        </a>
-                                    </span>
-                                    <span><a href="#"><i class="fa-brands fa-linkedin"></i></a></span>
-                                    <span><a href="#"><i class="fa-brands fa-instagram"></i></a></span>
-                                </div>
-                                <div class="td-team-5-content">
-                                    <h5><a href="team-details.html">Esther Howard</a></h5>
-                                    <span>Sr. Software Engineer</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="td-team-5-wrap p-relative z-index-1 mb-30 wow fadeInUp" data-wow-duration="1.5s" data-wow-delay="0.5s">
-                            <span class="td-team-5-shape">
-                                <svg width="242" height="163" viewBox="0 0 242 163" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M242 0L168.797 29.7886V0L95.594 29.7886V0L0 38.9039L0 163L73.203 113.348V163L146.417 113.348V163L242 98.1741L213.674 61.6851L242 0Z" fill="#F2F7F7" />
-                                </svg>
-                            </span>
-                            <div class="td-team-5-thumb">
-                                <img src="~/assets/img/team/team-5/thumb-3.png" alt="">
-                                <div class="td-team-3-social td-team-5-social">
-                                    <span><a href="#"><i class="fa-brands fa-facebook"></i></a></span>
-                                    <span>
-                                        <a href="#">
-                                            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M13.8679 1.60596H16.4382L10.8229 8.02398L17.4289 16.7575H12.2564L8.20515 11.4607L3.56956 16.7575H0.997689L7.00391 9.89267L0.666687 1.60596H5.97049L9.6325 6.44745L13.8679 1.60596ZM12.9658 15.219H14.3901L5.1966 3.06361H3.66824L12.9658 15.219Z" fill="currentColor" />
-                                            </svg>
-                                        </a>
-                                    </span>
-                                    <span><a href="#"><i class="fa-brands fa-linkedin"></i></a></span>
-                                    <span><a href="#"><i class="fa-brands fa-instagram"></i></a></span>
-                                </div>
-                                <div class="td-team-5-content">
-                                    <h5><a href="team-details.html">Robert Fox</a></h5>
-                                    <span>Sr. Software Engineer</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card">
+                    <span class="cf-code-tag">DÉFI</span>
+                    <h5>🎯 Défi individuel ou en Squad</h5>
+                    <p>Une mission à réaliser sur le terrain, seul ou avec votre équipe. Certains Défis ne se résolvent qu'ensemble.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card">
+                    <span class="cf-code-tag">PREUVE</span>
+                    <h5>📸 Preuve d'action</h5>
+                    <p>Photo, vidéo, témoignage ou capture : la preuve que vous avez agi. Validée par un pair, un Tuteur ou un Coach — jamais par un simple QCM.</p>
                 </div>
             </div>
         </div>
-        <!-- td-team-area-end -->
+    </div>
+</section>
+<!-- /equation -->
+
+<!-- comment ca marche -->
+<section class="cf-section" id="comment-ca-marche">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Chaque semaine, en Cohorte</span>
+            <h2 class="cf-h2 mb-3">Comment ça marche</h2>
+            <p class="cf-lead mx-auto" style="max-width:560px;">Le rythme d'une Cohorte : 8 semaines de contenu, une boucle simple répétée chaque semaine.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cf-process-step">
+                    <span class="cf-process-num">01</span>
+                    <h5 class="mb-2">🔍 S'engager <small class="text-muted d-block fw-normal" style="font-size:13px;">Début de semaine</small></h5>
+                    <p class="text-muted mb-0">Vous recevez le Défi de la semaine et les Cartes de Compétences qui vont avec. Vous comprenez pourquoi ça compte.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-process-step">
+                    <span class="cf-process-num">02</span>
+                    <h5 class="mb-2">🌍 Investiguer <small class="text-muted d-block fw-normal" style="font-size:13px;">Milieu de semaine</small></h5>
+                    <p class="text-muted mb-0">Vous testez sur le terrain, seul ou en Squad, avec votre Coach IA disponible 24/7 pour vous débloquer.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-process-step">
+                    <span class="cf-process-num">03</span>
+                    <h5 class="mb-2">⚡ Agir <small class="text-muted d-block fw-normal" style="font-size:13px;">Fin de semaine</small></h5>
+                    <p class="text-muted mb-0">Vous déposez votre Preuve, vous recevez le retour d'un pair ou d'un Tuteur, et vous débloquez votre badge de la semaine.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /comment ca marche -->
+
+<!-- bandeau stats -->
+<section class="cf-stats-band">
+    <div class="container">
+        <div class="cf-stats-grid">
+            <div class="cf-stat-item">
+                <div class="cf-stat-num">75%</div>
+                <div class="cf-stat-label">de rétention en plus qu'une formation passive</div>
+            </div>
+            <div class="cf-stat-item">
+                <div class="cf-stat-num">8S</div>
+                <div class="cf-stat-label">la durée d'une Cohorte, du premier au dernier Défi</div>
+            </div>
+            <div class="cf-stat-item">
+                <div class="cf-stat-num">0</div>
+                <div class="cf-stat-label">QCM comme validateur de compétence</div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /bandeau stats -->
+
+<!-- manifeste -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Notre manifeste</span>
+            <h2 class="cf-h2 mb-3">Une aventure collective, pas une compétition</h2>
+            <p class="cf-lead mx-auto" style="max-width:620px;">Pas de classement individuel qui oppose les apprenants. On progresse ensemble, on s'entraide, et ça compte double.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card">
+                    <div class="cf-card-icon">✅</div>
+                    <h5>La preuve remplace le QCM</h5>
+                    <p>Une compétence se valide par une action réelle sur le terrain, jamais par un quiz.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card">
+                    <div class="cf-card-icon">🤝</div>
+                    <h5>L'équipe avant l'individu</h5>
+                    <p>Aider un pair rapporte plus de points que performer seul. Pas de leaderboard qui oppose les apprenants.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card">
+                    <div class="cf-card-icon">🧑‍🏫</div>
+                    <h5>L'humain valide, l'IA assiste</h5>
+                    <p>Votre Coach IA répond 24/7, mais c'est toujours un pair ou un Tuteur qui valide votre compétence.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card">
+                    <div class="cf-card-icon">🌱</div>
+                    <h5>Un rythme à votre mesure</h5>
+                    <p>Les Cartes se débloquent semaine après semaine, au rythme de votre Cohorte — jamais tout d'un coup.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <p class="mt-5 mb-0 text-muted">
+                    Et après ? Les apprenants les plus investis deviennent <strong>Tuteurs</strong>, puis
+                    <strong>Mentors</strong> en accompagnant à leur tour une nouvelle Cohorte.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /manifeste -->
+
+<!-- cta final -->
+<section class="cf-section">
+    <div class="container">
+        <div class="cf-cta-band">
+            <h2 class="cf-h2 mb-3" style="color:#fff;">Prêt à arrêter de regarder,<br>et à commencer à faire ?</h2>
+            <p class="mb-4" style="color:rgba(255,255,255,.65);">Créez votre compte, rejoignez une Cohorte, relevez votre premier Défi cette semaine.</p>
+            <a class="cf-btn cf-btn-primary" asp-area="Identity" asp-page="/Account/Register">
+                Créer mon compte gratuitement →
+            </a>
+        </div>
+    </div>
+</section>
+<!-- /cta final -->

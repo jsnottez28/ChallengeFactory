@@ -1,0 +1,263 @@
+/*
+  Design tokens Challenges Factory — alignes sur challenges-factory.com
+  (charte officielle : couleurs, polices, rayons, ombres).
+  Reimplementation originale au format CSS variables + classes utilitaires,
+  a completer/valider avec la marque au besoin.
+*/
+
+:root {
+  --cf-orange: #e8500a;
+  --cf-orange-light: #ff6b2b;
+  --cf-orange-pale: #fef3ed;
+  --cf-black: #0f0f0f;
+  --cf-dark: #1c1c1c;
+  --cf-white: #ffffff;
+  --cf-off-white: #f9f7f4;
+  --cf-grey-100: #f4f2ef;
+  --cf-grey-200: #e8e5e0;
+  --cf-grey-400: #9e9890;
+  --cf-grey-600: #5a5650;
+  --cf-grey-800: #2e2c28;
+  --cf-line: #e8e5e0;
+
+  --cf-font-display: 'Bebas Neue', sans-serif;
+  --cf-font-serif: 'Playfair Display', serif;
+  --cf-font-body: 'DM Sans', sans-serif;
+
+  --cf-radius-sm: 4px;
+  --cf-radius-md: 8px;
+  --cf-radius-lg: 16px;
+
+  --cf-shadow-sm: 0 2px 8px rgba(0,0,0,.06);
+  --cf-shadow-md: 0 8px 32px rgba(0,0,0,.10);
+}
+
+/* Wordmark logo (texte stylise, comme sur challenges-factory.com) */
+.cf-logo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-decoration: none;
+  line-height: 1;
+}
+.cf-logo-name {
+  font-family: var(--cf-font-display);
+  font-size: 22px;
+  letter-spacing: 2.5px;
+  color: var(--cf-black);
+  white-space: nowrap;
+}
+.cf-logo-name .cf-logo-dash { color: var(--cf-orange); }
+.cf-logo-name.cf-logo-invert { color: #fff; }
+.cf-logo-tagline {
+  font-family: var(--cf-font-body);
+  font-size: 9.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cf-grey-400);
+  white-space: nowrap;
+}
+
+/* Sections & typo */
+.cf-body { font-family: var(--cf-font-body); color: var(--cf-dark); }
+.cf-section { padding: 100px 0; }
+.cf-section--sm { padding: 60px 0; }
+.cf-section--grey { background: var(--cf-off-white); }
+.cf-section--black { background: var(--cf-black); }
+
+.cf-eyebrow {
+  display: inline-block;
+  font-family: var(--cf-font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--cf-orange);
+  margin-bottom: 16px;
+}
+
+.cf-h1, .cf-h2, .cf-h3 {
+  font-family: var(--cf-font-serif);
+  line-height: 1.15;
+  color: var(--cf-black);
+}
+.cf-h1 { font-size: clamp(40px, 5.5vw, 68px); }
+.cf-h2 { font-size: clamp(28px, 3.5vw, 44px); }
+.cf-h3 { font-size: clamp(20px, 2.5vw, 26px); }
+.cf-accent { color: var(--cf-orange); font-style: italic; }
+
+.cf-lead {
+  font-family: var(--cf-font-body);
+  font-size: 18px;
+  color: var(--cf-grey-600);
+  line-height: 1.75;
+}
+
+/* Badge pill (hero) */
+.cf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cf-orange-pale);
+  border: 1px solid rgba(232,80,10,.2);
+  color: var(--cf-orange);
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 30px;
+  margin-bottom: 24px;
+}
+.cf-badge::before { content: '●'; font-size: 8px; }
+
+/* Boutons */
+.cf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--cf-font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 15px 32px;
+  border-radius: var(--cf-radius-sm);
+  transition: all .25s ease;
+  white-space: nowrap;
+  border: none;
+}
+.cf-btn-primary { background: var(--cf-orange); color: #fff; }
+.cf-btn-primary:hover { background: var(--cf-orange-light); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,80,10,.3); }
+.cf-btn-outline { background: transparent; color: var(--cf-dark); border: 1.5px solid var(--cf-line); font-size: 12px; padding: 11px 20px; }
+.cf-btn-outline:hover { border-color: var(--cf-orange); color: var(--cf-orange); }
+.cf-btn-ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.3); }
+.cf-btn-ghost:hover { border-color: #fff; background: rgba(255,255,255,.08); color: #fff; }
+
+/* Cartes */
+.cf-card {
+  background: #fff;
+  border: 1px solid var(--cf-line);
+  border-radius: var(--cf-radius-md);
+  padding: 32px;
+  height: 100%;
+  transition: all .3s ease;
+}
+.cf-card:hover { border-color: var(--cf-orange); box-shadow: var(--cf-shadow-md); transform: translateY(-4px); }
+.cf-card-icon {
+  width: 48px; height: 48px;
+  background: var(--cf-orange-pale);
+  border-radius: var(--cf-radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+.cf-card h3, .cf-card h5 { margin-bottom: 10px; }
+.cf-card p { color: var(--cf-grey-600); font-size: 15px; margin-bottom: 0; }
+
+.cf-code-tag {
+  display: inline-block;
+  font-family: monospace;
+  background: var(--cf-grey-100);
+  color: var(--cf-grey-600);
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+/* Bandeau statistiques (fond noir) */
+.cf-stats-band { background: var(--cf-black); padding: 70px 0; }
+.cf-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: var(--cf-radius-md);
+  overflow: hidden;
+}
+.cf-stat-item { background: var(--cf-black); padding: 36px 28px; text-align: center; }
+.cf-stat-num { font-family: var(--cf-font-display); font-size: 48px; color: var(--cf-orange); line-height: 1; margin-bottom: 8px; }
+.cf-stat-label { font-family: var(--cf-font-body); font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.4; }
+
+@media (max-width: 767px) {
+  .cf-stats-grid { grid-template-columns: 1fr; }
+}
+
+/* Bloc constat avant/apres */
+.cf-flip-card { border-radius: var(--cf-radius-lg); padding: 32px; height: 100%; }
+.cf-flip-before { background: var(--cf-orange-pale); border: 1px solid rgba(232,80,10,.2); }
+.cf-flip-after { background: var(--cf-black); color: #fff; }
+.cf-flip-after .cf-flip-list { color: rgba(255,255,255,.75); }
+
+/* Bande copyright du footer herite : reste sur le noir de marque */
+.td-footer-4-copyright { background: var(--cf-black) !important; }
+
+/* Override des couleurs "active/hover" du theme herite (rose) par l'orange de marque */
+.tdmenu__navbar-wrap > ul > li.active > a,
+.tdmenu__navbar-wrap > ul > li:hover > a,
+.tdmenu__navbar-wrap > ul > li .sub-menu li:hover > a,
+.tdmenu__navbar-wrap > ul > li .sub-menu li.active > a {
+  color: var(--cf-orange) !important;
+}
+
+/* Hero (fond clair, degrade orange decoratif) */
+.cf-hero-home {
+  position: relative;
+  overflow: hidden;
+  background: var(--cf-white);
+  padding: 110px 0 60px;
+}
+.cf-hero-home::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  right: -200px;
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(232,80,10,.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.cf-hero-proof {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-top: 44px;
+  padding-top: 32px;
+  border-top: 1px solid var(--cf-line);
+}
+.cf-hero-proof-num {
+  font-family: var(--cf-font-display);
+  font-size: 34px;
+  color: var(--cf-orange);
+  line-height: 1;
+}
+.cf-hero-proof-label {
+  font-family: var(--cf-font-body);
+  font-size: 12px;
+  color: var(--cf-grey-400);
+  margin-top: 4px;
+  max-width: 150px;
+  line-height: 1.4;
+}
+
+/* Etapes numerotees (process) */
+.cf-process-step { text-align: left; }
+.cf-process-num {
+  font-family: var(--cf-font-display);
+  font-size: 40px;
+  color: var(--cf-orange-pale);
+  -webkit-text-stroke: 1px var(--cf-orange);
+  line-height: 1;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* CTA final */
+.cf-cta-band {
+  background: var(--cf-black);
+  color: #fff;
+  border-radius: var(--cf-radius-lg);
+  padding: 64px 40px;
+  text-align: center;
+}

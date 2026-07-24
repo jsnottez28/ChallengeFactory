@@ -83,7 +83,7 @@ public class ResendEmailConfirmationModel : PageModel
         var corpsEmail = EmailTemplates.ConfirmationEmail(nomUtilisateur, callbackUrl);
         await _emailSender.SendEmailAsync(
             Input.Email,
-            "Confirmez votre adresse email — Challenge Factory",
+            "Confirmez votre adresse email — Challenges Factory",
             corpsEmail);
 
         ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
