@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Application.Common.Interfaces;
 using Domain.Entities;
+using Infrastructure.ExternalServices.Email;
 using Web.Data;
 
 namespace Web.Areas.Identity.Pages.Account;
@@ -158,6 +159,9 @@ public class RegisterModel : PageModel
                     values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                     protocol: Request.Scheme)!;
 
+                var nomUtilisateur = user.Prenom ?? Input.Email;
+                var corpsEmail = EmailTemplates.ConfirmationEmail(nomUtilisateur, callbackUrl);
+                await _emailSender.SendEmailAsync(Input.Email, "Confirmez votre adresse email — Challenges Factory", corpsEmail);
 
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
