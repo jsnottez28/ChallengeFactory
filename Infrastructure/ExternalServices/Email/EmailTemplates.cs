@@ -14,9 +14,9 @@ public static class EmailTemplates
                             <!-- Header -->
                             <tr>
                                 <td style="background-color:#003189;padding:32px 40px;text-align:center;">
-                                    <h1 style="color:#ffffff;margin:0;font-size:22px;">FNCCR</h1>
+                                    <h1 style="color:#ffffff;margin:0;font-size:22px;">Challenge Factory</h1>
                                     <p style="color:#a8bce8;margin:6px 0 0;font-size:13px;">
-                                        Fédération Nationale des Collectivités Concédantes et Régies
+                                        Plateforme d'apprentissage en ligne
                                     </p>
                                 </td>
                             </tr>
@@ -36,7 +36,7 @@ public static class EmailTemplates
                                 <td style="background-color:#f8f8f8;padding:24px 40px;border-top:1px solid #eeeeee;">
                                     <p style="color:#999999;font-size:12px;margin:0;text-align:center;">
                                         Cet email a été envoyé automatiquement — merci de ne pas y répondre.<br>
-                                        © 2024 FNCCR — 20 boulevard de Latour-Maubourg, 75007 Paris
+                                        © {DateTime.Now.Year} Challenge Factory
                                     </p>
                                 </td>
                             </tr>
@@ -52,11 +52,11 @@ public static class EmailTemplates
     public static string ConfirmationEmail(string nomUtilisateur, string lienConfirmation) =>
         BaseTemplate("Confirmez votre email", $"""
             <h2 style="color:#003189;font-size:20px;margin:0 0 16px;">
-                Bienvenue au Congrès FNCCR 👋
+                Bienvenue sur Challenge Factory 👋
             </h2>
             <p style="color:#444444;font-size:15px;line-height:1.6;margin:0 0 24px;">
                 Bonjour <strong>{nomUtilisateur}</strong>,<br><br>
-                Merci de vous être inscrit sur la plateforme du Congrès FNCCR.
+                Merci de vous être inscrit sur Challenge Factory.
                 Veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">

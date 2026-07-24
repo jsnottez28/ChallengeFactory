@@ -7,7 +7,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - FNCCR</title>
+    <title>@ViewData["Title"] - Challenge Factory</title>
 
     <link rel="stylesheet" href="~/assets/css/fontawesome-all.min.css" />
     <!-- CSS here -->
@@ -32,7 +32,7 @@
                         <div class="tdmenu__wrap d-flex align-items-center justify-content-between">
                             <div class="logo">
                                 <a class="logo-1" asp-controller="Home" asp-action="Index">
-                                    <img src="~/logos/logo-header-fnccr.svg" alt="Logo">
+                                    <img src="~/logos/logo-header.svg" alt="Challenge Factory">
                                 </a>
                             </div>
                             <nav class="tdmenu__nav tdmenu-2 tdmenu-4 mr-90 d-none d-xl-flex">
@@ -42,23 +42,23 @@
                                             <a asp-controller="Home" asp-action="Index">Accueil</a>
                                             <ul class="sub-menu">
                                                 <li><a href="#">Qui sommes nous ?</a></li>
-                                                <li><a href="#">Le congrès</a></li>
-                                                <li><a href="#">Les intervenants</a></li>
-                                                <li><a href="#">Les pleinières</a></li>
-                                                <li><a href="#">Les Tables Rondes</a></li>
-                                                <li><a href="#">Les Visites Techniques</a></li>
+                                                <li><a href="#">La plateforme</a></li>
+                                                <li><a href="#">Les formateurs</a></li>
+                                                <li><a href="#">Catalogue de formations</a></li>
+                                                <li><a href="#">Parcours certifiants</a></li>
+                                                <li><a href="#">Ateliers pratiques</a></li>
                                             </ul>
                                         </li>
-                                        <li class="menu-item-has-children"><a asp-controller="Home" asp-action="Index">Intervenants</a>
+                                        <li class="menu-item-has-children"><a asp-controller="Home" asp-action="Index">Formateurs</a>
                                             <ul class="sub-menu">
-                                                <li><a href="#">Les Intervenants</a></li>
+                                                <li><a href="#">Nos formateurs</a></li>
                                             </ul>
                                         </li>
                                         <li class="menu-item-has-children"><a asp-controller="Home" asp-action="Index">Pages</a>
                                             <ul class="sub-menu">
                                                 <li><a href="#">Faq</a></li>
                                                 <li><a href="#">Tarifs et services</a></li>
-                                                <li><a href="#">Venir au congrès</a></li>
+                                                <li><a href="#">Rejoindre la plateforme</a></li>
                                                 <li><a href="#">Contact</a></li>
                                             </ul>
                                         </li>
@@ -115,7 +115,7 @@
                         <div class="col-lg-6">
                             <div class="td-footer-logo mb-30">
                                 <a asp-controller="Home" asp-action="Index">
-                                    <img src="~/logos/logo-header-fnccr.svg" alt="logo"></a>
+                                    <img src="~/logos/logo-header.svg" alt="Challenge Factory"></a>
                             </div>
                         </div>
                         <div class="col-lg-6">
@@ -134,10 +134,10 @@
                     <div class="row mb-30">
                         <div class="col-lg-3 col-md-5">
                             <div class="td-footer-widget td-footer-4-widget mb-40">
-                                <h3 class="td-footer-title mb-20">Adresse</h3>
-                                <p class="text mb-10">20 boulevard Latour-Maubourg <br>75007 Paris </p>
+                                <h3 class="td-footer-title mb-20">Contact</h3>
+                                <p class="text mb-10">Challenge Factory <br>Plateforme d'apprentissage en ligne</p>
                                 <a class="number mb-10 d-inline-block" href="tel:+123(55)90067990">+33  01 40 62 16 40 </a>
-                                <a class="email" href="mailto:info@gmail.com">info@gmail.com</a>
+                                <a class="email" href="mailto:contact@challenge-factory.fr">contact@challenge-factory.fr</a>
                             </div>
                         </div>
                         <div class="col-lg-5 col-md-7">
@@ -147,19 +147,19 @@
                                     <div class="col-lg-6 col-md-6 col-sm-6">
                                         <div class="td-footer-links">
                                             <ul>
-                                                <li><a href="#">Le Congrès</a></li>
-                                                <li><a href="#">Venir</a></li>
-                                                <li><a href="#">intervenants</a></li>
-                                                <li><a href="#">Agenda</a></li>
-                                                <li><a href="#">Sponsors</a></li>
+                                                <li><a href="#">La plateforme</a></li>
+                                                <li><a href="#">Nous rejoindre</a></li>
+                                                <li><a href="#">Formateurs</a></li>
+                                                <li><a href="#">Catalogue</a></li>
+                                                <li><a href="#">Partenaires</a></li>
                                             </ul>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-sm-6">
                                         <div class="td-footer-links">
                                             <ul>
-                                                <li><a href="#">Communiqués</a></li>
-                                                <li><a href="#">Acheter un ticket</a></li>
+                                                <li><a href="#">Actualités</a></li>
+                                                <li><a href="#">Nos formations</a></li>
                                                 <li><a href="#">Contactez nous</a></li>
                                                 <li><a href="/cgu">Conditions générales d'utilisation</a></li>
                                                 <li><a href="/confidentialite">Politique de protection des données</a></li>
@@ -174,7 +174,7 @@
                 </div>
             </div>
             <div class="td-footer-bottom-copyright td-footer-4-copyright text-center">
-                <p class="mb-0">2027 FNCCR</p>
+                <p class="mb-0">© @DateTime.Now.Year Challenge Factory</p>
             </div>
         </div>
     </footer>
