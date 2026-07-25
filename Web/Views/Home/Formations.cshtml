@@ -3,13 +3,20 @@
     ViewData["Title"] = "Formations";
 }
 
-<section class="py-5">
+<section class="cf-hero-home">
     <div class="container">
-        <div class="mb-5">
-            <h1 class="mb-2">Nos sessions ouvertes aux inscriptions</h1>
-            <p class="text-muted">Rejoignez une Cohorte et progressez en faisant, pas en regardant.</p>
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">Sessions ouvertes</span>
+                <h1 class="cf-h1 mb-3">Nos sessions <span class="cf-accent">ouvertes</span> aux inscriptions.</h1>
+                <p class="cf-lead" style="max-width:640px;">Rejoignez une Cohorte et progressez en faisant, pas en regardant.</p>
+            </div>
         </div>
+    </div>
+</section>
 
+<section class="cf-section pt-0">
+    <div class="container">
         @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
         {
             <div class="alert alert-info alert-dismissible fade show" role="alert">
@@ -28,8 +35,8 @@
                 @foreach (var cohorte in Model)
                 {
                     <div class="col-12 col-md-6 col-lg-4">
-                        <div class="border rounded p-4 h-100 d-flex flex-column shadow-sm">
-                            <h2 class="h5 mb-1">@cohorte.ChallengeTitre</h2>
+                        <div class="cf-card h-100 d-flex flex-column">
+                            <h3 class="cf-h3 mb-1">@cohorte.ChallengeTitre</h3>
                             <p class="text-muted mb-2">@cohorte.Nom</p>
                             <p class="mb-1"><strong>@cohorte.NombreEtapes</strong> étapes</p>
                             @if (cohorte.DateLancement.HasValue)
