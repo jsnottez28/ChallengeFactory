@@ -43,4 +43,8 @@ public interface IChallengeService
 
     // Remplace integralement les Ressources Directrices de l'etape (selection multiple).
     Task<(bool Success, string? ErrorMessage)> DefinirCartesEtapeAsync(int etapeId, List<int> carteCompetenceIds);
+
+    // Uniquement si Brouillon et sans aucune Cohorte rattachee (une Cohorte, meme
+    // EnPreparation, "reserve" deja son Challenge modele) - sinon erreur explicite.
+    Task<(bool Success, string? ErrorMessage)> SupprimerAsync(int id);
 }

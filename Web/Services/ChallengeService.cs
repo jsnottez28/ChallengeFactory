@@ -245,6 +245,34 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
         return (true, null);
     }
 
+    public async Task<(bool Success, string? ErrorMessage)> SupprimerAsync(int id)
+    {
+        var challenge = await dbContext.Challenges.FirstOrDefaultAsync(c => c.Id == id);
+        if (challenge is null)
+        {
+            return (false, "Challenge introuvable.");
+        }
+
+        if (challenge.Statut != StatutChallenge.Brouillon)
+        {
+            return (false, "Impossible de supprimer un Challenge déjà publié. Il ne peut plus être un Brouillon une fois utilisé comme modèle de Cohorte.");
+        }
+
+        // Un Challenge Brouillon ne peut par construction avoir aucune Cohorte rattachee
+        // (CreateAsync de CohorteService exige un Challenge Publie) - controle de defense
+        // en profondeur au cas ou cette regle evoluerait.
+        var aUneCohorte = await dbContext.Cohortes.AnyAsync(co => co.ChallengeId == id);
+        if (aUneCohorte)
+        {
+            return (false, "Impossible de supprimer ce Challenge : au moins une Cohorte y est rattachée.");
+        }
+
+        dbContext.Challenges.Remove(challenge);
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
     // Bloque toute modification de l'architecture (etapes, cartes rattachees) des qu'une
     // Cohorte issue de ce Challenge a ete lancee (Active ou Terminee) : une Cohorte
     // En preparation n'a pas encore consomme l'architecture, la modifier reste sans risque.

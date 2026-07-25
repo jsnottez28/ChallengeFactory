@@ -108,6 +108,16 @@ public class CohortesController(
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    [HttpPost("{id:int}/Delete")]
+    [Authorize(Policy = "Droit:COHORTE.SUPPRIMER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var (success, errorMessage) = await cohorteService.SupprimerAsync(id);
+        TempData["StatusMessage"] = success ? "Cohorte supprimée." : errorMessage;
+        return success ? RedirectToAction(nameof(Index)) : RedirectToAction(nameof(Details), new { id });
+    }
+
     [HttpPost("{id:int}/Membres/AjouterManuel")]
     [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
     [ValidateAntiForgeryToken]

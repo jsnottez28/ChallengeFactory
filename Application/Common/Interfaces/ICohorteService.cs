@@ -115,4 +115,9 @@ public interface ICohorteService
     // attente de validation, cf. statut_acces_plateforme) - controle serveur, jamais
     // seulement masque cote UI.
     Task<List<ParcoursEnCoursInfo>> GetMesParcoursEnCoursAsync(string utilisateurId);
+
+    // Uniquement si EnPreparation (jamais Lancee) : tant qu'elle n'a pas ete Lancee, aucune
+    // carte n'a ete attribuee ni aucune etape validee via cette Cohorte, donc rien a
+    // perdre du cote tracabilite - les membres deja ajoutes sont retires (cascade).
+    Task<(bool Success, string? ErrorMessage)> SupprimerAsync(int id);
 }

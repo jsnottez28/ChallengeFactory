@@ -111,6 +111,16 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    [HttpPost("{id:int}/Delete")]
+    [Authorize(Policy = "Droit:CHALLENGE.SUPPRIMER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var (success, errorMessage) = await challengeService.SupprimerAsync(id);
+        TempData["StatusMessage"] = success ? "Challenge supprimé." : errorMessage;
+        return success ? RedirectToAction(nameof(Index)) : RedirectToAction(nameof(Details), new { id });
+    }
+
     [HttpGet("{challengeId:int}/Etapes/Create")]
     [Authorize(Policy = "Droit:CHALLENGE.MODIFIER")]
     public IActionResult CreateEtape(int challengeId)

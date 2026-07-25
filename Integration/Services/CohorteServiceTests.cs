@@ -335,4 +335,48 @@ public class CohorteServiceTests
         var estMembre = await dbContext.CohorteMembres.AnyAsync(m => m.CohorteId == cohorteId.Value && m.UtilisateurId == compteExistant.Id);
         Assert.True(estMembre);
     }
+
+    [Fact]
+    public async Task SupprimerAsync_Reussit_SiCohorteEnPreparation_EtRetireAussiSesMembres()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var userManager = TestUserManagerFactory.Create(dbContext);
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService());
+
+        var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1);
+        var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local" };
+        dbContext.Users.Add(apprenant);
+        await dbContext.SaveChangesAsync();
+
+        var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
+        await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
+
+        var (success, errorMessage) = await cohorteService.SupprimerAsync(cohorteId.Value);
+
+        Assert.True(success, errorMessage);
+        Assert.Null(await cohorteService.GetResumeAsync(cohorteId.Value));
+        Assert.False(await dbContext.CohorteMembres.AnyAsync(m => m.CohorteId == cohorteId.Value));
+    }
+
+    [Fact]
+    public async Task SupprimerAsync_Echoue_SiCohorteDejaLancee()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var userManager = TestUserManagerFactory.Create(dbContext);
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService());
+
+        var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1);
+        var gestionnaire = new ApplicationUser { UserName = "coach@test.local", Email = "coach@test.local" };
+        dbContext.Users.Add(gestionnaire);
+        await dbContext.SaveChangesAsync();
+
+        var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
+        await cohorteService.LancerAsync(cohorteId!.Value, gestionnaire.Id, "https://test.local/parcours");
+
+        var (success, errorMessage) = await cohorteService.SupprimerAsync(cohorteId.Value);
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+        Assert.NotNull(await cohorteService.GetResumeAsync(cohorteId.Value));
+    }
 }

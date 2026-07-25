@@ -410,6 +410,29 @@ public sealed class CohorteService(
         return resultat;
     }
 
+    public async Task<(bool Success, string? ErrorMessage)> SupprimerAsync(int id)
+    {
+        var cohorte = await dbContext.Cohortes.FirstOrDefaultAsync(c => c.Id == id);
+        if (cohorte is null)
+        {
+            return (false, "Cohorte introuvable.");
+        }
+
+        if (cohorte.Statut != StatutCohorte.EnPreparation)
+        {
+            return (false, "Impossible de supprimer une Cohorte déjà lancée : des cartes ont pu être attribuées et des validations d'étape enregistrées, elles doivent rester traçables.");
+        }
+
+        // Tant qu'elle est En preparation, aucune attribution de carte ni validation d'etape
+        // n'a pu avoir lieu via cette Cohorte (les deux ne se declenchent qu'a LancerAsync) :
+        // les membres deja ajoutes (CohorteMembre -> Cohorte est en cascade) sont retires
+        // sans rien perdre cote tracabilite.
+        dbContext.Cohortes.Remove(cohorte);
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
     // ---- Helpers ----
 
     private static string? VerifierInscriptionPossible(Cohorte cohorte)

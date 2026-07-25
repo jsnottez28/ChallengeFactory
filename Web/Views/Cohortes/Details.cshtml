@@ -63,6 +63,14 @@
                         </form>
                     }
                 </droit-visible>
+                @if (Model.Statut == StatutCohorte.EnPreparation)
+                {
+                    <droit-visible code="COHORTE.SUPPRIMER">
+                        <form method="post" asp-controller="Cohortes" asp-action="Delete" asp-route-id="@Model.Id" onsubmit="return confirm('Supprimer définitivement cette Cohorte et retirer ses membres ?');">
+                            <button type="submit" class="btn btn-outline-danger">Supprimer</button>
+                        </form>
+                    </droit-visible>
+                }
             </div>
         </div>
 

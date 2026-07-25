@@ -51,6 +51,11 @@
                             <button type="submit" class="btn btn-primary">Publier</button>
                         </form>
                     </droit-visible>
+                    <droit-visible code="CHALLENGE.SUPPRIMER">
+                        <form method="post" asp-controller="Challenges" asp-action="Delete" asp-route-id="@Model.Id" onsubmit="return confirm('Supprimer définitivement ce Challenge et toutes ses étapes ?');">
+                            <button type="submit" class="btn btn-outline-danger">Supprimer</button>
+                        </form>
+                    </droit-visible>
                 }
             </div>
         </div>

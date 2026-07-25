@@ -79,4 +79,40 @@ public class ChallengeServiceTests
         var challengeRecu = await challengeService.GetByIdAsync(challenge.Id);
         Assert.Equal(StatutChallenge.Publie, challengeRecu!.Statut);
     }
+
+    [Fact]
+    public async Task SupprimerAsync_Reussit_SiChallengeEnBrouillon_EtSupprimeAussiSesEtapesEtCartesRattachees()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var challengeService = new ChallengeService(dbContext);
+        var carteService = new CarteCompetenceService(dbContext);
+
+        var (_, _, challenge) = await challengeService.CreateAsync(new ChallengeInput { Titre = "À supprimer", Mode = ModePlateforme.BtoC });
+        var (_, _, etape) = await challengeService.CreerEtapeAsync(challenge!.Id, new ChallengeEtapeInput { TitreEtape = "Étape 1" });
+        var (_, _, carte) = await carteService.CreateAsync(new CarteCompetenceInput { Code = "SUP-1", Niveau = NiveauCarte.Debutant, TitreTheorie = "Carte" });
+        await challengeService.DefinirCartesEtapeAsync(etape!.Id, [carte!.Id]);
+
+        var (success, errorMessage) = await challengeService.SupprimerAsync(challenge.Id);
+
+        Assert.True(success, errorMessage);
+        Assert.Null(await challengeService.GetByIdAsync(challenge.Id));
+        Assert.Null(await challengeService.GetEtapeByIdAsync(etape.Id));
+    }
+
+    [Fact]
+    public async Task SupprimerAsync_Echoue_SiChallengeDejaPublie()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var challengeService = new ChallengeService(dbContext);
+
+        var (_, _, challenge) = await challengeService.CreateAsync(new ChallengeInput { Titre = "Publié", Mode = ModePlateforme.BtoC });
+        await challengeService.CreerEtapeAsync(challenge!.Id, new ChallengeEtapeInput { TitreEtape = "Étape 1" });
+        await challengeService.PublierAsync(challenge.Id);
+
+        var (success, errorMessage) = await challengeService.SupprimerAsync(challenge.Id);
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+        Assert.NotNull(await challengeService.GetByIdAsync(challenge.Id));
+    }
 }
