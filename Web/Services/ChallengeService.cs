@@ -22,6 +22,13 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
+    public async Task<ChallengeEtape?> GetEtapeByIdAsync(int etapeId)
+    {
+        return await dbContext.ChallengeEtapes
+            .Include(e => e.Cartes)
+            .FirstOrDefaultAsync(e => e.Id == etapeId);
+    }
+
     public async Task<(bool Success, string? ErrorMessage, Challenge? Challenge)> CreateAsync(ChallengeInput input)
     {
         var erreur = Valider(input);

@@ -24,6 +24,8 @@ public interface IChallengeService
 
     Task<Challenge?> GetByIdAsync(int id);
 
+    Task<ChallengeEtape?> GetEtapeByIdAsync(int etapeId);
+
     Task<(bool Success, string? ErrorMessage, Challenge? Challenge)> CreateAsync(ChallengeInput input);
 
     Task<(bool Success, string? ErrorMessage)> UpdateAsync(int id, ChallengeInput input);

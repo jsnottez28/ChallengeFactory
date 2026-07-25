@@ -1,0 +1,61 @@
+@page
+@model DefinirMotDePasseModel
+@{
+    ViewData["Title"] = "Définir votre mot de passe";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-5">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                    <div>
+                        <p class="text-muted mb-1">Compte</p>
+                        <h1 class="h3 mb-0">Définir votre mot de passe</h1>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        @if (Model.MotDePasseDefini)
+                        {
+                            <p class="text-success mb-3">Votre mot de passe a été défini avec succès.</p>
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary">Se connecter</a>
+                        }
+                        else if (!Model.TokenValide)
+                        {
+                            <p class="text-danger mb-0">Ce lien d'activation est invalide ou a expiré. Demandez à votre Gestionnaire de vous renvoyer une invitation.</p>
+                        }
+                        else
+                        {
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                            <form method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" asp-for="Token" />
+
+                                <div class="mb-3">
+                                    <label asp-for="Input.MotDePasse" class="form-label"></label>
+                                    <input asp-for="Input.MotDePasse" class="form-control" autocomplete="new-password">
+                                    <span asp-validation-for="Input.MotDePasse" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Input.ConfirmerMotDePasse" class="form-label"></label>
+                                    <input asp-for="Input.ConfirmerMotDePasse" class="form-control" autocomplete="new-password">
+                                    <span asp-validation-for="Input.ConfirmerMotDePasse" class="text-danger"></span>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100">Définir mon mot de passe</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

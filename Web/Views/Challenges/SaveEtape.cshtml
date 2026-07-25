@@ -1,0 +1,67 @@
+@model Web.Controllers.ChallengesController.ChallengeEtapeFormModel
+@{
+    var estModification = Model.Id.HasValue;
+    ViewData["Title"] = estModification ? "Modifier une étape" : "Ajouter une étape";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Challenges" asp-action="Index">Challenges</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Challenges" asp-action="Details" asp-route-id="@Model.ChallengeId">Architecture</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            <a asp-controller="Challenges" asp-action="Details" asp-route-id="@Model.ChallengeId" class="btn btn-outline-secondary">Retour à l'architecture</a>
+        </div>
+
+        <form method="post" asp-controller="Challenges" asp-action="@(estModification ? "EditEtape" : "CreateEtape")" asp-route-etapeId="@Model.Id" asp-route-challengeId="@Model.ChallengeId">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ChallengeId" />
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="TitreEtape" class="form-label"></label>
+                            <input asp-for="TitreEtape" class="form-control" autocomplete="off" placeholder="Ex : Recadrage sur les faits">
+                            <span asp-validation-for="TitreEtape" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="ObjectifPedagogique" class="form-label"></label>
+                            <textarea asp-for="ObjectifPedagogique" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="CompetenceCible" class="form-label"></label>
+                            <input asp-for="CompetenceCible" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="DefiIndividuel" class="form-label"></label>
+                            <textarea asp-for="DefiIndividuel" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="Challenges" asp-action="Details" asp-route-id="@Model.ChallengeId" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">@(estModification ? "Enregistrer" : "Créer l'étape")</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,75 @@
+@model List<Domain.Entities.CarteCompetence>
+@using Web.Extensions
+@{
+    var challengeId = (int)ViewData["ChallengeId"]!;
+    var etapeId = (int)ViewData["EtapeId"]!;
+    var etapeTitre = ViewData["EtapeTitre"] as string;
+    var recherche = ViewData["Recherche"] as string;
+    var idsSelectionnes = ViewData["IdsSelectionnes"] as HashSet<int> ?? [];
+    ViewData["Title"] = $"Cartes de l'étape {etapeTitre}";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Challenges" asp-action="Index">Challenges</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Challenges" asp-action="Details" asp-route-id="@challengeId">Architecture</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Cartes de l'étape</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Ressources Directrices — @etapeTitre</h1>
+            </div>
+            <a asp-controller="Challenges" asp-action="Details" asp-route-id="@challengeId" class="btn btn-outline-secondary">Retour à l'architecture</a>
+        </div>
+
+        <form method="get" asp-controller="Challenges" asp-action="CartesEtape" asp-route-etapeId="@etapeId" class="mb-4">
+            <div class="input-group" style="max-width: 420px;">
+                <input type="text" name="recherche" value="@recherche" class="form-control" placeholder="Rechercher par code ou titre...">
+                <button type="submit" class="btn btn-outline-primary">Rechercher</button>
+            </div>
+        </form>
+
+        <form method="post" asp-controller="Challenges" asp-action="CartesEtape" asp-route-etapeId="@etapeId">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="challengeId" value="@challengeId">
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    @if (Model.Count == 0)
+                    {
+                        <p class="text-muted mb-0">Aucune carte ne correspond à cette recherche.</p>
+                    }
+                    else
+                    {
+                        <div class="row g-2">
+                            @foreach (var carte in Model)
+                            {
+                                <div class="col-12 col-md-6">
+                                    <div class="form-check border rounded p-2">
+                                        <input class="form-check-input" type="checkbox" name="carteIds" value="@carte.Id" id="carte-@carte.Id" checked="@idsSelectionnes.Contains(carte.Id)">
+                                        <label class="form-check-label" for="carte-@carte.Id">
+                                            <code>@carte.Code</code> — @carte.TitreTheorie <span class="text-muted small">(@carte.Niveau.Libelle())</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="Challenges" asp-action="Details" asp-route-id="@challengeId" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Enregistrer les Ressources Directrices</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
