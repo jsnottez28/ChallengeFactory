@@ -201,12 +201,35 @@
   color: var(--cf-orange) !important;
 }
 
+/* Degagement sous le header transparent (position: absolute, donc hors du flux -
+   toute premiere section de page doit reserver assez d'espace en haut pour ne pas se
+   faire recouvrir). Le header passe sur deux lignes des que le menu desktop se replie
+   (voir .header-mobile-spacing dans main.css, actif a <=1199px), donc le degagement
+   necessaire est plus grand qu'en desktop a partir de ce meme palier. */
+:root {
+  --cf-header-clearance: 110px;
+}
+@media (max-width: 1199.98px) {
+  :root {
+    --cf-header-clearance: 190px;
+  }
+}
+
 /* Hero (fond clair, degrade orange decoratif) */
 .cf-hero-home {
   position: relative;
   overflow: hidden;
   background: var(--cf-white);
-  padding: 110px 0 60px;
+  padding: var(--cf-header-clearance) 0 60px;
+}
+
+/* Pages d'authentification (Login/Register/ForgotPassword/...) : meme degagement,
+   sans le fond degrade decoratif du hero. */
+.login-page,
+.register-page,
+.auth-page,
+.forgot-password-page {
+  padding-top: var(--cf-header-clearance) !important;
 }
 .cf-hero-home::before {
   content: '';
