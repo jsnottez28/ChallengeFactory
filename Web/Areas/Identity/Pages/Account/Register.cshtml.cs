@@ -33,6 +33,7 @@ public class RegisterModel : PageModel
     private readonly ILogger<RegisterModel> _logger;
     private readonly IEmailSender _emailSender;
     private readonly IDocumentLegalService _documentLegalService;
+    private readonly ICohorteService _cohorteService;
 
     public RegisterModel(
         UserManager<ApplicationUser> userManager,
@@ -40,7 +41,8 @@ public class RegisterModel : PageModel
         SignInManager<ApplicationUser> signInManager,
         ILogger<RegisterModel> logger,
         IEmailSender emailSender,
-        IDocumentLegalService documentLegalService)
+        IDocumentLegalService documentLegalService,
+        ICohorteService cohorteService)
     {
         _userManager = userManager;
         _userStore = userStore;
@@ -49,6 +51,7 @@ public class RegisterModel : PageModel
         _logger = logger;
         _emailSender = emailSender;
         _documentLegalService = documentLegalService;
+        _cohorteService = cohorteService;
     }
 
     /// <summary>
@@ -63,6 +66,10 @@ public class RegisterModel : PageModel
     ///     directly from your code. This API may change or be removed in future releases.
     /// </summary>
     public string? ReturnUrl { get; set; }
+
+    // Renseigne quand l'inscription part du catalogue public /formations (auto-inscription
+    // BtoC sur une Cohorte En preparation) - voir HomeController.InscriptionFormation.
+    public int? CohorteId { get; set; }
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -114,14 +121,16 @@ public class RegisterModel : PageModel
     }
 
 
-    public async Task OnGetAsync(string? returnUrl = null)
+    public async Task OnGetAsync(string? returnUrl = null, int? cohorteId = null)
     {
         ReturnUrl = returnUrl;
+        CohorteId = cohorteId;
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
     }
 
-    public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
+    public async Task<IActionResult> OnPostAsync(string? returnUrl = null, int? cohorteId = null)
     {
+        CohorteId = cohorteId;
         var localReturnUrl = returnUrl ?? Url.Content("~/")!;
         if (localReturnUrl == Url.Content("~/"))
         {
@@ -151,6 +160,14 @@ public class RegisterModel : PageModel
                 var adresseIp = HttpContext.Connection.RemoteIpAddress?.ToString();
                 await _documentLegalService.AccepterAsync(userId, TypeDocumentLegal.CGU, adresseIp);
                 await _documentLegalService.AccepterAsync(userId, TypeDocumentLegal.PPD, adresseIp);
+
+                if (cohorteId.HasValue)
+                {
+                    // L'inscription a la Cohorte n'est jamais bloquee par la confirmation
+                    // d'email a venir : seul l'acces au contenu depend du statut d'acces
+                    // plateforme (voir ICohorteService.AutoInscrireAsync et CLAUDE.md).
+                    await _cohorteService.AutoInscrireAsync(cohorteId.Value, userId);
+                }
 
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));

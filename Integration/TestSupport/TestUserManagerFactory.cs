@@ -16,7 +16,7 @@ internal static class TestUserManagerFactory
 
         return new UserManager<ApplicationUser>(
             store,
-            optionsAccessor: null,
+            optionsAccessor: null!,
             passwordHasher: new PasswordHasher<ApplicationUser>(),
             userValidators: [],
             passwordValidators: [],

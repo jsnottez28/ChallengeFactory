@@ -1,8 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using Application.Common.Interfaces;
+using Domain.Entities;
 using Infrastructure.ExternalServices.Email;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using Web.Data;
 using Web.Models;
 
 namespace Web.Controllers
@@ -13,11 +16,19 @@ namespace Web.Controllers
 
         private readonly ILogger<HomeController> _logger;
         private readonly IEmailService _emailService;
+        private readonly ICohorteService _cohorteService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public HomeController(ILogger<HomeController> logger, IEmailService emailService)
+        public HomeController(
+            ILogger<HomeController> logger,
+            IEmailService emailService,
+            ICohorteService cohorteService,
+            UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _emailService = emailService;
+            _cohorteService = cohorteService;
+            _userManager = userManager;
         }
 
         public IActionResult Index()
@@ -59,6 +70,42 @@ namespace Web.Controllers
 
             TempData["ContactEnvoye"] = true;
             return RedirectToAction(nameof(Contact));
+        }
+
+        [HttpGet]
+        [Route("formations")]
+        public async Task<IActionResult> Formations()
+        {
+            var toutesLesCohortes = await _cohorteService.GetAllAsync();
+            var sessionsOuvertes = toutesLesCohortes
+                .Where(c => c.ChallengeMode == ModePlateforme.BtoC && c.Statut == StatutCohorte.EnPreparation)
+                .ToList();
+
+            return View(sessionsOuvertes);
+        }
+
+        [HttpPost]
+        [Route("formations/{cohorteId:int}/inscription")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> InscriptionFormation(int cohorteId)
+        {
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                return RedirectToPage("/Account/Register", new { area = "Identity", cohorteId });
+            }
+
+            var userId = _userManager.GetUserId(User);
+            if (userId is null)
+            {
+                return RedirectToPage("/Account/Register", new { area = "Identity", cohorteId });
+            }
+
+            var (success, errorMessage) = await _cohorteService.AutoInscrireAsync(cohorteId, userId);
+            TempData["StatusMessage"] = success
+                ? "Inscription enregistrée ! Retrouvez votre parcours depuis votre tableau de bord dès son lancement."
+                : errorMessage;
+
+            return RedirectToAction(nameof(Formations));
         }
 
         public IActionResult Privacy()
