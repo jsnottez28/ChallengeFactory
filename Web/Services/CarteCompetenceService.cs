@@ -118,6 +118,11 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
             return (false, "Impossible de supprimer cette carte : elle est attribuée à au moins un apprenant. Désattribuez-la d'abord.");
         }
 
+        if (await dbContext.ChallengeEtapeCartes.AnyAsync(ec => ec.CarteCompetenceId == id))
+        {
+            return (false, "Impossible de supprimer cette carte : elle est utilisée comme Ressource Directrice d'une étape de Challenge. Retirez-la de l'étape d'abord.");
+        }
+
         dbContext.CartesCompetences.Remove(carte);
         await dbContext.SaveChangesAsync();
 
@@ -472,8 +477,14 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
             return (false, "Sélectionnez au moins une carte et un utilisateur.");
         }
 
+        // Scope strictement aux attributions Libre : une attribution Challenge existante
+        // pour la meme paire (carte, utilisateur) ne doit jamais etre reutilisee/ecrasee
+        // par une attribution manuelle - ce sont deux origines distinctes (voir
+        // OrigineAttribution), chacune avec sa propre ligne.
         var attributionsExistantes = await dbContext.CarteAttributions
-            .Where(a => carteIds.Contains(a.CarteCompetenceId) && utilisateurIds.Contains(a.UtilisateurId))
+            .Where(a => carteIds.Contains(a.CarteCompetenceId)
+                && utilisateurIds.Contains(a.UtilisateurId)
+                && a.OrigineType == OrigineAttribution.Libre)
             .ToListAsync();
 
         foreach (var carteId in carteIds)
@@ -485,8 +496,7 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
 
                 if (existante is not null)
                 {
-                    // Deja attribuee : on reactive si necessaire plutot que de dupliquer
-                    // (index unique CarteCompetenceId+UtilisateurId).
+                    // Deja attribuee : on reactive si necessaire plutot que de dupliquer.
                     if (!existante.EstActif)
                     {
                         existante.EstActif = true;
@@ -505,6 +515,7 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
                     AttribueLe = DateTime.UtcNow,
                     Contexte = contexte,
                     EstActif = true,
+                    OrigineType = OrigineAttribution.Libre,
                 });
             }
         }

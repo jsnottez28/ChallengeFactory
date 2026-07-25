@@ -30,4 +30,15 @@ public class CarteAttribution
     // la tracabilite (qui a attribue/desattribue, quand) - meme principe que
     // Rattachement.EstActif / Scope.EstActif.
     public bool EstActif { get; set; } = true;
+
+    // Distingue une attribution automatique (moteur de Challenges) d'une attribution
+    // manuelle (moteur de Cartes existant). CohorteId/ChallengeEtapeId ne sont renseignes
+    // que si OrigineType == Challenge, jamais pour une attribution Libre.
+    public OrigineAttribution OrigineType { get; set; } = OrigineAttribution.Libre;
+
+    public int? CohorteId { get; set; }
+    public Cohorte? Cohorte { get; set; }
+
+    public int? ChallengeEtapeId { get; set; }
+    public ChallengeEtape? ChallengeEtape { get; set; }
 }

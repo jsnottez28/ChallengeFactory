@@ -23,6 +23,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Badge> Badges { get; set; }
     public DbSet<CarteCompetence> CartesCompetences { get; set; }
     public DbSet<CarteAttribution> CarteAttributions { get; set; }
+    public DbSet<Challenge> Challenges { get; set; }
+    public DbSet<ChallengeEtape> ChallengeEtapes { get; set; }
+    public DbSet<ChallengeEtapeCarte> ChallengeEtapeCartes { get; set; }
+    public DbSet<Cohorte> Cohortes { get; set; }
+    public DbSet<CohorteMembre> CohorteMembres { get; set; }
+    public DbSet<CohorteEtapeValidation> CohorteEtapeValidations { get; set; }
+    public DbSet<InvitationCompte> InvitationsComptes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -78,6 +85,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         ConfigureDroitsEtPermissions(builder);
         ConfigureDocumentsLegaux(builder);
         ConfigureCartesCompetences(builder);
+        ConfigureChallenges(builder);
     }
 
     private static void ConfigureDroitsEtPermissions(ModelBuilder builder)
@@ -193,9 +201,29 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(c => c.BadgeId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Pas d'unicite globale sur (CarteCompetenceId, UtilisateurId) seuls : une meme
+        // carte peut desormais etre attribuee plusieurs fois au meme utilisateur si elle
+        // provient d'origines differentes (Libre, ou plusieurs etapes/cohortes distinctes
+        // du moteur de Challenges). L'unicite est scopee par origine : au plus une ligne
+        // Libre par (carte, utilisateur), et au plus une ligne par (carte, utilisateur,
+        // cohorte, etape) pour une origine Challenge - SQL Server traite les NULL comme
+        // egaux dans un index unique, donc (Libre, null, null) reste bien unique par
+        // (carte, utilisateur) comme avant cette extension.
         builder.Entity<CarteAttribution>()
-            .HasIndex(a => new { a.CarteCompetenceId, a.UtilisateurId })
+            .HasIndex(a => new { a.CarteCompetenceId, a.UtilisateurId, a.OrigineType, a.CohorteId, a.ChallengeEtapeId })
             .IsUnique();
+
+        builder.Entity<CarteAttribution>()
+            .HasOne(a => a.Cohorte)
+            .WithMany()
+            .HasForeignKey(a => a.CohorteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CarteAttribution>()
+            .HasOne(a => a.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(a => a.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<CarteAttribution>()
             .HasOne(a => a.CarteCompetence)
@@ -218,5 +246,91 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(a => a.AttribueParId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigureChallenges(ModelBuilder builder)
+    {
+        builder.Entity<ChallengeEtape>()
+            .HasIndex(e => new { e.ChallengeId, e.NumeroEtape })
+            .IsUnique();
+
+        builder.Entity<ChallengeEtape>()
+            .HasOne(e => e.Challenge)
+            .WithMany(c => c.Etapes)
+            .HasForeignKey(e => e.ChallengeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ChallengeEtapeCarte>()
+            .HasIndex(ec => new { ec.ChallengeEtapeId, ec.CarteCompetenceId })
+            .IsUnique();
+
+        builder.Entity<ChallengeEtapeCarte>()
+            .HasOne(ec => ec.ChallengeEtape)
+            .WithMany(e => e.Cartes)
+            .HasForeignKey(ec => ec.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ChallengeEtapeCarte>()
+            .HasOne(ec => ec.CarteCompetence)
+            .WithMany()
+            .HasForeignKey(ec => ec.CarteCompetenceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Cohorte>()
+            .HasOne(c => c.Challenge)
+            .WithMany()
+            .HasForeignKey(c => c.ChallengeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Cohorte>()
+            .HasOne(c => c.Organisation)
+            .WithMany()
+            .HasForeignKey(c => c.OrganisationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembre>()
+            .HasIndex(m => new { m.CohorteId, m.UtilisateurId })
+            .IsUnique();
+
+        builder.Entity<CohorteMembre>()
+            .HasOne(m => m.Cohorte)
+            .WithMany(c => c.Membres)
+            .HasForeignKey(m => m.CohorteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CohorteMembre>()
+            .HasOne(m => m.Utilisateur)
+            .WithMany()
+            .HasForeignKey(m => m.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CohorteEtapeValidation>()
+            .HasIndex(v => new { v.CohorteId, v.NumeroEtape })
+            .IsUnique();
+
+        builder.Entity<CohorteEtapeValidation>()
+            .HasOne(v => v.Cohorte)
+            .WithMany()
+            .HasForeignKey(v => v.CohorteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict : l'historique de validation d'une Cohorte doit survivre a la
+        // suppression du compte du Gestionnaire qui a valide (meme principe que
+        // CarteAttribution.AttribuePar).
+        builder.Entity<CohorteEtapeValidation>()
+            .HasOne(v => v.ValidePar)
+            .WithMany()
+            .HasForeignKey(v => v.ValideParId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<InvitationCompte>()
+            .HasIndex(i => i.Token)
+            .IsUnique();
+
+        builder.Entity<InvitationCompte>()
+            .HasOne(i => i.Utilisateur)
+            .WithMany()
+            .HasForeignKey(i => i.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
