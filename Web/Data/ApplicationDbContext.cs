@@ -30,6 +30,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CohorteMembre> CohorteMembres { get; set; }
     public DbSet<CohorteEtapeValidation> CohorteEtapeValidations { get; set; }
     public DbSet<InvitationCompte> InvitationsComptes { get; set; }
+    public DbSet<Preuve> Preuves { get; set; }
+    public DbSet<PreuveFichier> PreuveFichiers { get; set; }
+    public DbSet<PreuveValidationPair> PreuveValidationsPairs { get; set; }
+    public DbSet<PreuveValidationGestionnaire> PreuveValidationsGestionnaire { get; set; }
+    public DbSet<ForumMessage> ForumMessages { get; set; }
+    public DbSet<ForumMessageUtile> ForumMessagesUtiles { get; set; }
+    public DbSet<PointsEvenement> PointsEvenements { get; set; }
+    public DbSet<BadgeSocialAttribution> BadgeSocialAttributions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -86,6 +94,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         ConfigureDocumentsLegaux(builder);
         ConfigureCartesCompetences(builder);
         ConfigureChallenges(builder);
+        ConfigurePreuvesPointsEtForum(builder);
     }
 
     private static void ConfigureDroitsEtPermissions(ModelBuilder builder)
@@ -336,5 +345,148 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(i => i.UtilisateurId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    private static void ConfigurePreuvesPointsEtForum(ModelBuilder builder)
+    {
+        // Une seule Preuve par (Utilisateur, ChallengeEtape) : modifiee en place, jamais
+        // recreee (cf. IPreuveService).
+        builder.Entity<Preuve>()
+            .HasIndex(p => new { p.UtilisateurId, p.ChallengeEtapeId })
+            .IsUnique();
+
+        builder.Entity<Preuve>()
+            .HasOne(p => p.Utilisateur)
+            .WithMany()
+            .HasForeignKey(p => p.UtilisateurId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Preuve>()
+            .HasOne(p => p.Cohorte)
+            .WithMany()
+            .HasForeignKey(p => p.CohorteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Preuve>()
+            .HasOne(p => p.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(p => p.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PreuveFichier>()
+            .HasOne(f => f.Preuve)
+            .WithMany(p => p.Fichiers)
+            .HasForeignKey(f => f.PreuveId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un meme pair ne peut voter qu'une fois par Preuve (modifier son avis met a jour
+        // la ligne existante, cf. IPreuveService).
+        builder.Entity<PreuveValidationPair>()
+            .HasIndex(v => new { v.PreuveId, v.ValideurId })
+            .IsUnique();
+
+        builder.Entity<PreuveValidationPair>()
+            .HasOne(v => v.Preuve)
+            .WithMany(p => p.ValidationsPairs)
+            .HasForeignKey(v => v.PreuveId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict : le fil de retours recu par un auteur doit survivre a la suppression
+        // du compte du pair qui a valide (meme principe que CohorteEtapeValidation.ValidePar).
+        builder.Entity<PreuveValidationPair>()
+            .HasOne(v => v.Valideur)
+            .WithMany()
+            .HasForeignKey(v => v.ValideurId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PreuveValidationGestionnaire>()
+            .HasOne(v => v.Preuve)
+            .WithMany(p => p.ValidationsGestionnaire)
+            .HasForeignKey(v => v.PreuveId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PreuveValidationGestionnaire>()
+            .HasOne(v => v.Valideur)
+            .WithMany()
+            .HasForeignKey(v => v.ValideurId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ForumMessage>()
+            .HasOne(m => m.Cohorte)
+            .WithMany()
+            .HasForeignKey(m => m.CohorteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ForumMessage>()
+            .HasOne(m => m.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(m => m.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ForumMessage>()
+            .HasOne(m => m.Auteur)
+            .WithMany()
+            .HasForeignKey(m => m.AuteurId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Cascade : supprimer un message (moderation) supprime ses reponses en fil -
+        // jamais de reponse orpheline affichee sans son message parent.
+        builder.Entity<ForumMessage>()
+            .HasOne(m => m.MessageParent)
+            .WithMany(m => m.Reponses)
+            .HasForeignKey(m => m.MessageParentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ForumMessageUtile>()
+            .HasIndex(u => new { u.MessageId, u.MarqueParId })
+            .IsUnique();
+
+        builder.Entity<ForumMessageUtile>()
+            .HasOne(u => u.Message)
+            .WithMany(m => m.MarquagesUtile)
+            .HasForeignKey(u => u.MessageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ForumMessageUtile>()
+            .HasOne(u => u.MarquePar)
+            .WithMany()
+            .HasForeignKey(u => u.MarqueParId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PointsEvenement>()
+            .HasOne(e => e.Utilisateur)
+            .WithMany()
+            .HasForeignKey(e => e.UtilisateurId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PointsEvenement>()
+            .HasOne(e => e.Cohorte)
+            .WithMany()
+            .HasForeignKey(e => e.CohorteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Idempotence : au plus un badge d'un type donne par (Utilisateur, Cohorte,
+        // ChallengeEtape) - protege le calcul a la cloture d'etape contre un double appel.
+        builder.Entity<BadgeSocialAttribution>()
+            .HasIndex(b => new { b.UtilisateurId, b.CohorteId, b.ChallengeEtapeId, b.TypeBadge })
+            .IsUnique();
+
+        builder.Entity<BadgeSocialAttribution>()
+            .HasOne(b => b.Utilisateur)
+            .WithMany()
+            .HasForeignKey(b => b.UtilisateurId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<BadgeSocialAttribution>()
+            .HasOne(b => b.Cohorte)
+            .WithMany()
+            .HasForeignKey(b => b.CohorteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<BadgeSocialAttribution>()
+            .HasOne(b => b.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(b => b.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,0 +1,76 @@
+@page
+@model Web.Pages.Dashboard.ValiderPreuveModel
+@using Domain.Entities
+@{
+    ViewData["Title"] = "Évaluer une preuve";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/PreuvesAValider" asp-route-cohorteId="@Model.CohorteId">Preuves à valider</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Évaluer</li>
+            </ol>
+        </nav>
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Mon espace</p>
+            <h1 class="h3 mb-0">Preuve de @Model.Apercu!.AuteurNomComplet — @Model.Apercu.TitreEtape</h1>
+            <p class="text-muted small mb-0">Votre avis est indépendant : vous ne voyez pas les décisions déjà données par d'autres pairs sur cette preuve.</p>
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                @if (Model.Apercu.Fichiers.Count > 0)
+                {
+                    <h3 class="h6 text-uppercase text-muted">Fichiers déposés</h3>
+                    <ul class="list-unstyled mb-4">
+                        @foreach (var fichier in Model.Apercu.Fichiers)
+                        {
+                            <li class="mb-1">
+                                <a asp-page="/Dashboard/PreuveFichierTelecharger" asp-route-fichierId="@fichier.Id">@fichier.NomFichier</a>
+                                <span class="text-muted small">(@fichier.TypeFichier)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Apercu.Description))
+                {
+                    <h3 class="h6 text-uppercase text-muted">Description</h3>
+                    <p class="mb-0">@Model.Apercu.Description</p>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Mon avis</h2>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="Decision" id="decision-valide" value="@DecisionValidationPair.Valide" checked="@(Model.Apercu.MaDecisionPrecedente is null or DecisionValidationPair.Valide)">
+                            <label class="form-check-label" for="decision-valide">Validé</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="Decision" id="decision-arevoir" value="@DecisionValidationPair.ARevoir" checked="@(Model.Apercu.MaDecisionPrecedente == DecisionValidationPair.ARevoir)">
+                            <label class="form-check-label" for="decision-arevoir">À revoir</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Commentaire" class="form-label">Commentaire (obligatoire si "À revoir")</label>
+                        <textarea asp-for="Commentaire" class="form-control" rows="3">@Model.Apercu.MonCommentairePrecedent</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enregistrer ma décision</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

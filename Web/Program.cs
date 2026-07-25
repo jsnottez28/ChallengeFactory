@@ -1,5 +1,6 @@
 using Application.Common.Interfaces;
 using Infrastructure.ExternalServices.Email;
+using Infrastructure.ExternalServices.Stockage;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -64,6 +65,12 @@ builder.Services.AddScoped<ICarteCompetenceService, CarteCompetenceService>();
 builder.Services.AddScoped<ICarteApprenantService, CarteApprenantService>();
 builder.Services.AddScoped<IChallengeService, ChallengeService>();
 builder.Services.AddScoped<ICohorteService, CohorteService>();
+builder.Services.AddScoped<IPreuveService, PreuveService>();
+builder.Services.AddScoped<IForumService, ForumService>();
+
+builder.Services.Configure<PreuveFichierStockageSettings>(
+    builder.Configuration.GetSection("PreuveFichierStockage"));
+builder.Services.AddScoped<IPreuveFichierStockageService, LocalDiskPreuveFichierStockageService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IClaimsTransformation, DroitsClaimsTransformation>();

@@ -9,7 +9,8 @@ namespace Web.Services;
 public sealed class CohorteService(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
-    IEmailService emailService) : ICohorteService
+    IEmailService emailService,
+    IPreuveService preuveService) : ICohorteService
 {
     public async Task<List<CohorteResume>> GetAllAsync()
     {
@@ -348,6 +349,14 @@ public sealed class CohorteService(
             ValideParId = gestionnaireId,
             ValideLe = DateTime.UtcNow,
         });
+        await dbContext.SaveChangesAsync();
+
+        // Extension "Depot de preuves, points et forum par etape" : finalise en bloc les
+        // Preuves de l'etape qui se cloture (section 4.2), puis calcule le badge social
+        // Super Helper de la periode (section 5) - toujours declenche par cette meme
+        // action humaine explicite, jamais par une tache planifiee (cf. prompt section 8).
+        await preuveService.ClorePreuvesEtapeAsync(cohorteId, etapeValidee);
+        await preuveService.AttribuerBadgeSuperHelperAsync(cohorteId, etapeValidee);
 
         if (cohorte.EtapeCourante >= cohorte.Challenge.NombreEtapes)
         {
@@ -400,6 +409,7 @@ public sealed class CohorteService(
             {
                 CohorteId = cohorte.Id,
                 ChallengeTitre = cohorte.Challenge.Titre,
+                ChallengeEtapeId = etape.Id,
                 NumeroEtape = etape.NumeroEtape,
                 TitreEtape = etape.TitreEtape,
                 DefiIndividuel = etape.DefiIndividuel,

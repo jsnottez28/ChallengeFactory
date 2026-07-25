@@ -1,0 +1,32 @@
+@model Application.Common.Interfaces.ForumMessageInfo
+@{
+    var cohorteId = (int)ViewData["CohorteId"]!;
+    var challengeEtapeId = (int)ViewData["ChallengeEtapeId"]!;
+}
+
+<div class="border rounded p-3 mb-2">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+            <strong>@Model.AuteurNomComplet</strong>
+            <span class="text-muted small ms-2">@Model.DateCreation.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+            <span class="text-muted small ms-2">@Model.NombreUtile utile(s)</span>
+        </div>
+        <droit-visible code="FORUM.SUPPRIMER">
+            <form method="post" asp-controller="Preuves" asp-action="SupprimerMessage" asp-route-messageId="@Model.Id" asp-route-cohorteId="@cohorteId" asp-route-challengeEtapeId="@challengeEtapeId" onsubmit="return confirm('Supprimer ce message et ses réponses ?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+            </form>
+        </droit-visible>
+    </div>
+    <p class="mb-0 mt-2">@Model.Contenu</p>
+
+    @if (Model.Reponses.Count > 0)
+    {
+        <div class="ms-4 mt-3">
+            @foreach (var reponse in Model.Reponses)
+            {
+                <partial name="_ForumMessageAdmin" model="reponse" view-data="ViewData" />
+            }
+        </div>
+    }
+</div>

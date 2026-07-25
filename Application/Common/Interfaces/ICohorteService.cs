@@ -55,6 +55,7 @@ public sealed class ParcoursEnCoursInfo
 {
     public int CohorteId { get; set; }
     public string ChallengeTitre { get; set; } = string.Empty;
+    public int ChallengeEtapeId { get; set; }
     public int NumeroEtape { get; set; }
     public string TitreEtape { get; set; } = string.Empty;
     public string? DefiIndividuel { get; set; }

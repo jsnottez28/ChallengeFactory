@@ -33,9 +33,16 @@
             @foreach (var parcours in Model.Parcours)
             {
                 <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-bottom p-4">
-                        <p class="text-muted mb-1">@parcours.ChallengeTitre</p>
-                        <h2 class="h5 mb-0">Étape @parcours.NumeroEtape — @parcours.TitreEtape</h2>
+                    <div class="card-header bg-white border-bottom p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <p class="text-muted mb-1">@parcours.ChallengeTitre</p>
+                            <h2 class="h5 mb-0">Étape @parcours.NumeroEtape — @parcours.TitreEtape</h2>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a asp-page="/Dashboard/MaPreuve" asp-route-cohorteId="@parcours.CohorteId" asp-route-challengeEtapeId="@parcours.ChallengeEtapeId" class="btn btn-sm btn-primary">Ma preuve</a>
+                            <a asp-page="/Dashboard/PreuvesAValider" asp-route-cohorteId="@parcours.CohorteId" class="btn btn-sm btn-outline-primary">Preuves à valider</a>
+                            <a asp-page="/Dashboard/Forum" asp-route-cohorteId="@parcours.CohorteId" class="btn btn-sm btn-outline-secondary">Forum</a>
+                        </div>
                     </div>
                     <div class="card-body p-4">
                         @if (!string.IsNullOrWhiteSpace(parcours.DefiIndividuel))

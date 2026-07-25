@@ -1,0 +1,145 @@
+@model List<Application.Common.Interfaces.PreuveEtapeInfo>
+@using Application.Common.Interfaces
+@using Domain.Entities
+@{
+    var cohorte = (CohorteResume)ViewData["Cohorte"]!;
+    var resume = (ResumeClotureEtapeInfo)ViewData["Resume"]!;
+    ViewData["Title"] = "Preuves de l'étape";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@cohorte.Id">@cohorte.Nom</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Preuves de l'étape</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">@cohorte.Nom</p>
+                <h1 class="h3 mb-0">Preuves de l'étape @cohorte.EtapeCourante</h1>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <droit-visible code="PREUVE.CONSULTER">
+                    <a asp-controller="Preuves" asp-action="Contributions" asp-route-cohorteId="@cohorte.Id" class="btn btn-outline-secondary">Contributions de la cohorte</a>
+                </droit-visible>
+                <droit-visible code="FORUM.CONSULTER">
+                    <a asp-controller="Preuves" asp-action="Forum" asp-route-cohorteId="@cohorte.Id" class="btn btn-outline-secondary">Forum (modération)</a>
+                </droit-visible>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@resume.NombreValideesParLesPairs</div>
+                    <div class="text-muted small">Validées par les pairs</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@resume.NombreValideesDefinitivementDeja</div>
+                    <div class="text-muted small">Déjà validées définitivement</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@resume.NombreSoumisesRestantes</div>
+                    <div class="text-muted small">Encore soumises</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@resume.NombreSansPreuveDeposee</div>
+                    <div class="text-muted small">Sans preuve déposée</div>
+                </div>
+            </div>
+        </div>
+        <p class="text-muted small mb-4">Ce résumé est informatif : "Valider l'étape en cours et passer à la suivante" (depuis la fiche Cohorte) reste toujours possible, même si tous les membres n'ont pas terminé.</p>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @if (Model.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucune preuve déposée pour le moment.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Auteur</th>
+                                    <th scope="col">Statut</th>
+                                    <th scope="col">Avis pairs</th>
+                                    <th scope="col">Déposée le</th>
+                                    <th scope="col" class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var preuve in Model)
+                                {
+                                    <tr>
+                                        <td>@preuve.AuteurNomComplet</td>
+                                        <td>
+                                            @switch (preuve.Statut)
+                                            {
+                                                case StatutPreuve.Soumise:
+                                                    <span class="badge text-bg-secondary">Soumise</span>
+                                                    break;
+                                                case StatutPreuve.ValideeParLesPairs:
+                                                    <span class="badge text-bg-info">Validée par les pairs</span>
+                                                    break;
+                                                case StatutPreuve.ValideeDefinitivement:
+                                                    <span class="badge text-bg-success">Validée définitivement</span>
+                                                    break;
+                                                default:
+                                                    <span class="badge text-bg-dark">Non validée à la clôture</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td>@preuve.NombreDecisionsValidePairs / @preuve.NombreDecisionsPairs</td>
+                                        <td>@preuve.DateDepot.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="text-end">
+                                            <droit-visible code="PREUVE.VALIDER">
+                                                @if (preuve.Statut != StatutPreuve.ValideeDefinitivement)
+                                                {
+                                                    <div class="d-inline-flex gap-2">
+                                                        <form method="post" asp-controller="Preuves" asp-action="Valider" asp-route-preuveId="@preuve.PreuveId" asp-route-cohorteId="@cohorte.Id" onsubmit="return confirm('Valider définitivement cette preuve ?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-success">Valider</button>
+                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#refuser-@preuve.PreuveId">Refuser</button>
+                                                    </div>
+                                                    <div class="collapse mt-2" id="refuser-@preuve.PreuveId">
+                                                        <form method="post" asp-controller="Preuves" asp-action="Refuser" asp-route-preuveId="@preuve.PreuveId" asp-route-cohorteId="@cohorte.Id" class="d-flex gap-2">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="text" name="commentaire" class="form-control form-control-sm" placeholder="Commentaire obligatoire" required>
+                                                            <button type="submit" class="btn btn-sm btn-danger">Confirmer le refus</button>
+                                                        </form>
+                                                    </div>
+                                                }
+                                            </droit-visible>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
