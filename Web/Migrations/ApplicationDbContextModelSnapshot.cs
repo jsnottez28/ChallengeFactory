@@ -1728,7 +1728,7 @@ namespace Web.Migrations
                     b.HasOne("Web.Data.ForumMessage", "MessageParent")
                         .WithMany("Reponses")
                         .HasForeignKey("MessageParentId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Auteur");
 

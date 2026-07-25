@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260725200829_AddPreuvesPointsEtForum")]
+    [Migration("20260725203133_AddPreuvesPointsEtForum")]
     partial class AddPreuvesPointsEtForum
     {
         /// <inheritdoc />
@@ -1731,7 +1731,7 @@ namespace Web.Migrations
                     b.HasOne("Web.Data.ForumMessage", "MessageParent")
                         .WithMany("Reponses")
                         .HasForeignKey("MessageParentId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Auteur");
 

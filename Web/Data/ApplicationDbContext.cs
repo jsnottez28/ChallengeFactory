@@ -429,13 +429,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(m => m.AuteurId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Cascade : supprimer un message (moderation) supprime ses reponses en fil -
-        // jamais de reponse orpheline affichee sans son message parent.
+        // Restrict (pas Cascade) : SQL Server refuse un cascade sur une FK
+        // auto-referencee ("may cause cycles or multiple cascade paths"). La suppression
+        // en cascade des reponses en fil lors d'une moderation est donc geree cote
+        // application (cf. ForumService.SupprimerMessageAsync), pas par la base.
         builder.Entity<ForumMessage>()
             .HasOne(m => m.MessageParent)
             .WithMany(m => m.Reponses)
             .HasForeignKey(m => m.MessageParentId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<ForumMessageUtile>()
             .HasIndex(u => new { u.MessageId, u.MarqueParId })

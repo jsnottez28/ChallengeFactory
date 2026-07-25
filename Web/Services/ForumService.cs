@@ -167,7 +167,24 @@ public sealed class ForumService(ApplicationDbContext dbContext) : IForumService
             return (false, "Message introuvable.");
         }
 
-        dbContext.ForumMessages.Remove(message);
+        // La FK MessageParentId est en Restrict (pas Cascade - SQL Server refuse un
+        // cascade auto-reference), donc la suppression des reponses en fil est geree ici :
+        // il faut supprimer les descendants avant le message lui-meme.
+        var aSupprimer = new List<ForumMessage> { message };
+        var frontiere = new List<int> { messageId };
+        while (frontiere.Count > 0)
+        {
+            var enfants = await dbContext.ForumMessages.Where(m => m.MessageParentId != null && frontiere.Contains(m.MessageParentId.Value)).ToListAsync();
+            if (enfants.Count == 0)
+            {
+                break;
+            }
+
+            aSupprimer.AddRange(enfants);
+            frontiere = enfants.Select(m => m.Id).ToList();
+        }
+
+        dbContext.ForumMessages.RemoveRange(aSupprimer);
         await dbContext.SaveChangesAsync();
 
         return (true, null);

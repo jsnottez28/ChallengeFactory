@@ -85,7 +85,7 @@ namespace Web.Migrations
                         column: x => x.MessageParentId,
                         principalTable: "ForumMessages",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
