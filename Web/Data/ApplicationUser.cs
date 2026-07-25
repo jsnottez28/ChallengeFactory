@@ -1,14 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using Web.Data.Entities;
 
 namespace Web.Data;
-
-public enum StatutUtilisateur
-{
-    Actif,
-    Modere,
-    Inactif
-}
 
 public class ApplicationUser : IdentityUser
 {
@@ -18,6 +12,12 @@ public class ApplicationUser : IdentityUser
     public string? Prenom { get; set; }
     public string? Nom { get; set; }
     public StatutUtilisateur Statut { get; set; } = StatutUtilisateur.Actif;
+
+    // Attribut de premier niveau du compte (cf. CLAUDE.md, "Point d'implementation
+    // transverse") - jamais deduit indirectement d'un rattachement Organisation ou d'une
+    // autre donnee. Defaut BtoB : un compte cree par un admin (import/manuel) est BtoB
+    // par defaut ; l'auto-inscription publique (/Register) le repositionne en BtoC.
+    public ModePlateforme Mode { get; set; } = ModePlateforme.BtoB;
 
     public string? Telephone { get; set; }
     public DateTime CreeLe { get; set; } = DateTime.UtcNow;

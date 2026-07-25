@@ -1,4 +1,4 @@
-namespace Web.Data;
+namespace Domain.Entities;
 
 public enum MethodeAjoutMembre
 {

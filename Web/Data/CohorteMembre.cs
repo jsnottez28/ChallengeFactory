@@ -1,3 +1,5 @@
+using Domain.Entities;
+
 namespace Web.Data;
 
 public class CohorteMembre

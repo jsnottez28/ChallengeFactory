@@ -136,6 +136,7 @@ public class RegisterModel : PageModel
             // validation admin) tant qu'un administrateur ne l'a pas active manuellement
             // (voir ApplicationSignInManager.CanSignInAsync et Admin/Utilisateurs).
             user.Statut = StatutUtilisateur.Modere;
+            user.Mode = ModePlateforme.BtoC;
 
             await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);

@@ -12,7 +12,7 @@ public class Challenge
 
     public int NombreEtapes { get; set; } = 8;
 
-    public ModeChallenge Mode { get; set; }
+    public ModePlateforme Mode { get; set; }
     public StatutChallenge Statut { get; set; } = StatutChallenge.Brouillon;
 
     public DateTime CreeLe { get; set; } = DateTime.UtcNow;

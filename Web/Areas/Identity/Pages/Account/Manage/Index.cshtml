@@ -4,9 +4,9 @@
     Layout = "/Views/Shared/_LayoutBackend.cshtml";
     ViewData["Title"] = "Profil";
     ViewData["ActivePage"] = ManageNavPages.Index;
-    var statutBadgeClass = Model.Statut == Web.Data.StatutUtilisateur.Actif
+    var statutBadgeClass = Model.Statut == Domain.Entities.StatutUtilisateur.Actif
         ? "bg-success text-white"
-        : Model.Statut == Web.Data.StatutUtilisateur.Modere
+        : Model.Statut == Domain.Entities.StatutUtilisateur.Modere
             ? "bg-warning text-dark"
             : "bg-secondary text-white";
 }
