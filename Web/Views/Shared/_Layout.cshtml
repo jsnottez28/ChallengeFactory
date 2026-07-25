@@ -39,7 +39,7 @@
                             <span class="cf-logo-tagline">Vous apprenez en faisant</span>
                         </a>
                     </div>
-                    <nav class="tdmenu__nav tdmenu-2 tdmenu-4 d-none d-xl-flex flex-shrink-1">
+                    <nav class="tdmenu__nav tdmenu__wrap tdmenu-2 tdmenu-4 d-none d-xxl-flex flex-shrink-1">
                         <div class="tdmenu__navbar-wrap tdmenu__main-menu">
                             <ul class="navigation">
                                 <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
@@ -51,23 +51,27 @@
                         </div>
                     </nav>
                     <div class="td-menu-right-action td-menu-right-action-2 d-flex align-items-center flex-shrink-0">
+                        @* En dessous du palier xxl, ces liens ne restent pas sur la ligne du header (source du
+                           chevauchement/retour a la ligne signale, y compris juste sous ce palier ou logo+menu+
+                           boutons ne tiennent plus sur une seule ligne) : ils rejoignent le menu mobile offcanvas
+                           ci-dessous, ouvert par le meme bouton hamburger - une seule ligne d'entete, toujours. *@
                         @if (!SignInManager.IsSignedIn(User))
                         {
-                            <div class="header-auth d-flex align-items-center gap-2">
+                            <div class="header-auth d-none d-xxl-flex align-items-center gap-2">
                                 <a asp-area="Identity" asp-page="/Account/Login" class="cf-btn cf-btn-outline">Se connecter</a>
                                 <a asp-area="Identity" asp-page="/Account/Register" class="cf-btn cf-btn-primary">S'inscrire</a>
                             </div>
                         }
                         else
                         {
-                            <div class="header-auth d-flex align-items-center gap-2">
+                            <div class="header-auth d-none d-xxl-flex align-items-center gap-2">
                                 <a asp-area="" asp-page="/Dashboard/Index" class="cf-btn cf-btn-outline">Dashboard</a>
                                 <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline-flex align-items-center">
                                     <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
                                 </form>
                             </div>
                         }
-                        <div class="td-header-menu-bar lh-1 p-relative ms-3 d-block d-xl-none">
+                        <div class="td-header-menu-bar lh-1 p-relative ms-3 d-block d-xxl-none">
                             <button class="tdmenu-offcanvas-open-btn mobile-nav-toggler">
                                 <span></span>
                                 <span></span>
@@ -79,6 +83,51 @@
             </div>
         </div>
     </header>
+
+    <div class="tdmobile__menu-wrapper d-xxl-none">
+        <div class="tdmobile__menu-backdrop"></div>
+        <div class="tdmobile__menu">
+            <div class="tdmobile__menu-box">
+                <div class="close-btn mobile-nav-toggler"><i class="fa-solid fa-xmark"></i></div>
+                <div class="nav-logo">
+                    <a class="cf-logo" asp-controller="Home" asp-action="Index">
+                        <span class="cf-logo-name">CHALLENGES<span class="cf-logo-dash">-</span>FACTORY</span>
+                    </a>
+                </div>
+                <div class="tdmobile__menu-outer">
+                    <nav class="tdmenu__main-menu">
+                        <ul class="navigation">
+                            <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+                            <li><a asp-controller="Home" asp-action="Formations">Formations</a></li>
+                            <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
+                            <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
+                            <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="tdmenu__action">
+                    @if (!SignInManager.IsSignedIn(User))
+                    {
+                        <ul class="list-wrap flex-column align-items-stretch gap-2 px-4 pb-4">
+                            <li><a asp-area="Identity" asp-page="/Account/Login" class="cf-btn cf-btn-outline w-100 justify-content-center">Se connecter</a></li>
+                            <li><a asp-area="Identity" asp-page="/Account/Register" class="cf-btn cf-btn-primary w-100 justify-content-center">S'inscrire</a></li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul class="list-wrap flex-column align-items-stretch gap-2 px-4 pb-4">
+                            <li><a asp-area="" asp-page="/Dashboard/Index" class="cf-btn cf-btn-outline w-100 justify-content-center">Dashboard</a></li>
+                            <li>
+                                <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main>
         @RenderBody()
@@ -155,6 +204,23 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Menu offcanvas mobile : un seul bouton (.mobile-nav-toggler) sert a la fois a
+        // ouvrir (hamburger dans le header) et a fermer (croix dans le panneau) puisque
+        // toggle() gere les deux cas identiquement.
+        document.querySelectorAll('.mobile-nav-toggler').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.body.classList.toggle('mobile-menu-visible');
+            });
+        });
+        var offcanvasBackdrop = document.querySelector('.tdmobile__menu-backdrop');
+        if (offcanvasBackdrop) {
+            offcanvasBackdrop.addEventListener('click', function () {
+                document.body.classList.remove('mobile-menu-visible');
+            });
+        }
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
