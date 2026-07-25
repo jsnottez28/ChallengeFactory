@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = "Importer des Challenges";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Challenges" asp-action="Index">Challenges</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Importer</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Importer des Challenges</h1>
+            </div>
+            <a asp-controller="Challenges" asp-action="Index" class="btn btn-outline-secondary">Retour aux Challenges</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <form method="post" asp-controller="Challenges" asp-action="Import" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <label class="form-label">Fichier .xlsx (feuilles "challenge" et "etapes")</label>
+                                <input type="file" name="fichier" class="form-control" accept=".xlsx" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Lancer l'import</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Format attendu</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="fw-semibold mb-1">Feuille "challenge"</p>
+                        <p class="text-muted small mb-3"><code>challenge_code, titre, slogan, nombre_etapes, mode, statut</code></p>
+                        <p class="fw-semibold mb-1">Feuille "etapes"</p>
+                        <p class="text-muted small mb-3"><code>challenge_code, numero_etape, titre_etape, objectif_pedagogique, competence_cible, defi_individuel, codes_cartes</code></p>
+                        <ul class="mb-0 ps-3">
+                            <li>Les Challenges et étapes sont mis à jour par correspondance sur <code>challenge_code</code> (étapes : + <code>numero_etape</code>).</li>
+                            <li>Un Challenge ou une étape déjà en base et absent(e) du fichier n'est <strong>jamais supprimé(e)</strong>.</li>
+                            <li><code>codes_cartes</code> accepte plusieurs codes séparés par une virgule ou un point-virgule ; ces cartes doivent déjà exister (import Cartes au préalable).</li>
+                            <li><code>statut = Publié</code> ne publie le Challenge qu'à la fin de l'import, et seulement s'il a au moins une étape.</li>
+                            <li>Impossible de modifier les étapes d'un Challenge dont au moins une Cohorte a déjà été lancée.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

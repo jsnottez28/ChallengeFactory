@@ -250,6 +250,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     private static void ConfigureChallenges(ModelBuilder builder)
     {
+        builder.Entity<Challenge>()
+            .HasIndex(c => c.Code)
+            .IsUnique();
+
         builder.Entity<ChallengeEtape>()
             .HasIndex(e => new { e.ChallengeId, e.NumeroEtape })
             .IsUnique();

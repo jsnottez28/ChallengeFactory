@@ -25,7 +25,13 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
             <div>
                 <p class="text-muted mb-1">Administration</p>
-                <h1 class="h3 mb-0">@Model.Titre</h1>
+                <h1 class="h3 mb-0">
+                    @Model.Titre
+                    @if (!string.IsNullOrWhiteSpace(Model.Code))
+                    {
+                        <code class="fs-6 text-muted ms-2">@Model.Code</code>
+                    }
+                </h1>
                 @if (!string.IsNullOrWhiteSpace(Model.Slogan))
                 {
                     <p class="text-muted mb-0">@Model.Slogan</p>

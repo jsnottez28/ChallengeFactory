@@ -7,6 +7,12 @@ public class Challenge
 {
     public int Id { get; set; }
 
+    // Identifiant stable optionnel (ex. "CHAL-ENGAGER-EQUIPE-PROJET") : sert de cle
+    // d'upsert pour l'import Excel (cf. IChallengeService.ImporterAsync), sur le meme
+    // principe que CarteCompetence.Code. Facultatif pour un Challenge cree manuellement
+    // via l'UI - d'ou l'index unique filtre (plusieurs NULL autorises).
+    public string? Code { get; set; }
+
     public string Titre { get; set; } = null!;
     public string? Slogan { get; set; }
 

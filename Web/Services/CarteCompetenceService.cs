@@ -221,25 +221,25 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
 
     private async Task ImporterBadgesAsync(IXLWorksheet feuille, ImportRapport rapport)
     {
-        var colonnes = LireEntetes(feuille);
+        var colonnes = ExcelImportHelpers.LireEntetes(feuille);
         var badgesExistants = await dbContext.Badges.ToDictionaryAsync(b => b.BadgeCode, StringComparer.OrdinalIgnoreCase);
 
-        foreach (var ligne in LignesDeDonnees(feuille))
+        foreach (var ligne in ExcelImportHelpers.LignesDeDonnees(feuille))
         {
             var numeroLigne = ligne.RowNumber();
 
             try
             {
-                var badgeCode = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "badge_code"));
+                var badgeCode = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "badge_code"));
                 if (badgeCode is null)
                 {
                     rapport.Erreurs.Add(new ImportErreurLigne { Feuille = "badges", Ligne = numeroLigne, Champ = "badge_code", Raison = "Champ obligatoire manquant." });
                     continue;
                 }
 
-                var badgeNom = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "badge_nom"));
-                var badgeImage = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "badge_image"));
-                var programme = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "programme"));
+                var badgeNom = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "badge_nom"));
+                var badgeImage = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "badge_image"));
+                var programme = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "programme"));
 
                 if (badgesExistants.TryGetValue(badgeCode, out var badgeExistant))
                 {
@@ -274,31 +274,31 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
 
     private async Task ImporterCartesAsync(IXLWorksheet feuille, ImportRapport rapport)
     {
-        var colonnes = LireEntetes(feuille);
+        var colonnes = ExcelImportHelpers.LireEntetes(feuille);
         var cartesExistantes = await dbContext.CartesCompetences.ToDictionaryAsync(c => c.Code, StringComparer.OrdinalIgnoreCase);
         var badgesParCode = await dbContext.Badges.ToDictionaryAsync(b => b.BadgeCode, b => b.Id, StringComparer.OrdinalIgnoreCase);
 
-        foreach (var ligne in LignesDeDonnees(feuille))
+        foreach (var ligne in ExcelImportHelpers.LignesDeDonnees(feuille))
         {
             var numeroLigne = ligne.RowNumber();
 
             try
             {
-                var code = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "code"));
+                var code = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "code"));
                 if (code is null)
                 {
                     rapport.Erreurs.Add(new ImportErreurLigne { Feuille = "cartes", Ligne = numeroLigne, Champ = "code", Raison = "Champ obligatoire manquant." });
                     continue;
                 }
 
-                var titreTheorie = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "titre_theorie"));
+                var titreTheorie = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "titre_theorie"));
                 if (titreTheorie is null)
                 {
                     rapport.Erreurs.Add(new ImportErreurLigne { Feuille = "cartes", Ligne = numeroLigne, Champ = "titre_theorie", Raison = "Champ obligatoire manquant." });
                     continue;
                 }
 
-                var niveauTexte = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "niveau"));
+                var niveauTexte = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "niveau"));
                 if (niveauTexte is null || !TryParserNiveau(niveauTexte, out var niveau))
                 {
                     rapport.Erreurs.Add(new ImportErreurLigne { Feuille = "cartes", Ligne = numeroLigne, Champ = "niveau", Raison = $"Valeur \"{niveauTexte}\" non reconnue (attendu : Débutant, Intermédiaire, Moyen, Expert)." });
@@ -306,7 +306,7 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
                 }
 
                 int? badgeId = null;
-                var badgeCode = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "badge_code"));
+                var badgeCode = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "badge_code"));
                 if (badgeCode is not null)
                 {
                     if (!badgesParCode.TryGetValue(badgeCode, out var idBadgeResolu))
@@ -324,29 +324,29 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
                 carte.BadgeId = badgeId;
                 carte.Niveau = niveau;
                 carte.TitreTheorie = titreTheorie;
-                carte.Objectif1 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "objectif_1"));
-                carte.Objectif2 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "objectif_2"));
-                carte.Objectif3 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "objectif_3"));
-                carte.Objectif4 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "objectif_4"));
-                carte.Citation = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "citation"));
-                carte.AuteurCitation = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "auteur_citation"));
-                carte.ImageCarteA = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "image_carte_a"));
-                carte.TitreDefi = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "titre_defi"));
-                carte.ContextePro = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "contexte_pro"));
-                carte.ContextePerso = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "contexte_perso"));
-                carte.TonDefi = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "ton_defi"));
-                carte.Etape1 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "etape_1"));
-                carte.Etape2 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "etape_2"));
-                carte.Etape3 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "etape_3"));
-                carte.Etape4 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "etape_4"));
-                carte.Etape5 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "etape_5"));
-                carte.Tip1 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "tip_1"));
-                carte.Tip2 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "tip_2"));
-                carte.Tip3 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "tip_3"));
-                carte.Tip4 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "tip_4"));
-                carte.Tip5 = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "tip_5"));
-                carte.CitationHumour = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "citation_humour"));
-                carte.LienVideo = ImportTextNormalizer.Normaliser(ValeurColonne(ligne, colonnes, "lien_video"));
+                carte.Objectif1 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "objectif_1"));
+                carte.Objectif2 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "objectif_2"));
+                carte.Objectif3 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "objectif_3"));
+                carte.Objectif4 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "objectif_4"));
+                carte.Citation = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "citation"));
+                carte.AuteurCitation = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "auteur_citation"));
+                carte.ImageCarteA = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "image_carte_a"));
+                carte.TitreDefi = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "titre_defi"));
+                carte.ContextePro = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "contexte_pro"));
+                carte.ContextePerso = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "contexte_perso"));
+                carte.TonDefi = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "ton_defi"));
+                carte.Etape1 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "etape_1"));
+                carte.Etape2 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "etape_2"));
+                carte.Etape3 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "etape_3"));
+                carte.Etape4 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "etape_4"));
+                carte.Etape5 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "etape_5"));
+                carte.Tip1 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "tip_1"));
+                carte.Tip2 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "tip_2"));
+                carte.Tip3 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "tip_3"));
+                carte.Tip4 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "tip_4"));
+                carte.Tip5 = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "tip_5"));
+                carte.CitationHumour = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "citation_humour"));
+                carte.LienVideo = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "lien_video"));
 
                 if (estNouvelleCarte)
                 {
@@ -385,59 +385,6 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
 
         niveau = default;
         return false;
-    }
-
-    private static Dictionary<string, int> LireEntetes(IXLWorksheet feuille)
-    {
-        var entetes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        var ligneEntetes = feuille.FirstRowUsed();
-        if (ligneEntetes is null)
-        {
-            return entetes;
-        }
-
-        foreach (var cellule in ligneEntetes.CellsUsed())
-        {
-            var nomColonne = cellule.GetString().Trim();
-            if (nomColonne.Length > 0)
-            {
-                entetes[nomColonne] = cellule.Address.ColumnNumber;
-            }
-        }
-
-        return entetes;
-    }
-
-    private static IEnumerable<IXLRow> LignesDeDonnees(IXLWorksheet feuille)
-    {
-        var premiereLigne = feuille.FirstRowUsed();
-        var derniereLigne = feuille.LastRowUsed();
-        if (premiereLigne is null || derniereLigne is null)
-        {
-            yield break;
-        }
-
-        for (var numero = premiereLigne.RowNumber() + 1; numero <= derniereLigne.RowNumber(); numero++)
-        {
-            var ligne = feuille.Row(numero);
-            if (!ligne.CellsUsed().Any())
-            {
-                continue;
-            }
-
-            yield return ligne;
-        }
-    }
-
-    private static string? ValeurColonne(IXLRow ligne, Dictionary<string, int> colonnes, string nomColonne)
-    {
-        if (!colonnes.TryGetValue(nomColonne, out var indiceColonne))
-        {
-            return null;
-        }
-
-        var cellule = ligne.Cell(indiceColonne);
-        return cellule.IsEmpty() ? null : cellule.GetString();
     }
 
     // ---- Attribution ----

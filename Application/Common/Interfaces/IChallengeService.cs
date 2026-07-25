@@ -4,6 +4,9 @@ namespace Application.Common.Interfaces;
 
 public sealed class ChallengeInput
 {
+    // Identifiant stable optionnel, cf. Challenge.Code : sert de cle d'upsert pour
+    // l'import Excel. Facultatif pour une creation manuelle via l'UI.
+    public string? Code { get; set; }
     public string Titre { get; set; } = string.Empty;
     public string? Slogan { get; set; }
     public int NombreEtapes { get; set; } = 8;
@@ -16,6 +19,19 @@ public sealed class ChallengeEtapeInput
     public string? ObjectifPedagogique { get; set; }
     public string? CompetenceCible { get; set; }
     public string? DefiIndividuel { get; set; }
+}
+
+// Reutilise ImportErreurLigne (defini dans ICarteCompetenceService.cs, meme namespace) :
+// meme forme Feuille/Ligne/Champ/Raison, pas de raison d'en dupliquer une variante.
+public sealed class ImportChallengeRapport
+{
+    public int ChallengesCrees { get; set; }
+    public int ChallengesMisAJour { get; set; }
+    public int EtapesCreees { get; set; }
+    public int EtapesMisesAJour { get; set; }
+    public int CartesRattachees { get; set; }
+    public int ChallengesPublies { get; set; }
+    public List<ImportErreurLigne> Erreurs { get; set; } = [];
 }
 
 public interface IChallengeService
@@ -47,4 +63,11 @@ public interface IChallengeService
     // Uniquement si Brouillon et sans aucune Cohorte rattachee (une Cohorte, meme
     // EnPreparation, "reserve" deja son Challenge modele) - sinon erreur explicite.
     Task<(bool Success, string? ErrorMessage)> SupprimerAsync(int id);
+
+    // Import/synchronisation depuis un fichier .xlsx (feuilles "challenge" et "etapes",
+    // cf. ChallengeService.ImporterAsync pour le detail des colonnes). Upsert par
+    // challenge_code / (challenge_code, numero_etape) : ne supprime jamais un Challenge ou
+    // une etape absente du fichier. Publie automatiquement en fin d'import les Challenges
+    // dont la colonne "statut" du fichier demande "Publie" (seulement si >= 1 etape).
+    Task<ImportChallengeRapport> ImporterAsync(Stream fichierXlsx);
 }

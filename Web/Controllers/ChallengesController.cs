@@ -17,6 +17,36 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
         return View(challenges);
     }
 
+    [HttpGet("Import")]
+    [Authorize(Policy = "Droit:CHALLENGE.CREER")]
+    public IActionResult Import()
+    {
+        return View();
+    }
+
+    [HttpPost("Import")]
+    [Authorize(Policy = "Droit:CHALLENGE.CREER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Import(IFormFile fichier)
+    {
+        if (fichier is null || fichier.Length == 0)
+        {
+            ModelState.AddModelError(string.Empty, "Sélectionnez un fichier .xlsx à importer.");
+            return View();
+        }
+
+        if (!Path.GetExtension(fichier.FileName).Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(string.Empty, "Le fichier doit être au format .xlsx.");
+            return View();
+        }
+
+        await using var flux = fichier.OpenReadStream();
+        var rapport = await challengeService.ImporterAsync(flux);
+
+        return View("ImportResultat", rapport);
+    }
+
     [HttpGet("Create")]
     [Authorize(Policy = "Droit:CHALLENGE.CREER")]
     public IActionResult Create()
@@ -59,6 +89,7 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
         return View("Save", new ChallengeFormModel
         {
             Id = challenge.Id,
+            Code = challenge.Code,
             Titre = challenge.Titre,
             Slogan = challenge.Slogan,
             NombreEtapes = challenge.NombreEtapes,
@@ -239,6 +270,7 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
 
     private static ChallengeInput VersInput(ChallengeFormModel model) => new()
     {
+        Code = model.Code,
         Titre = model.Titre,
         Slogan = model.Slogan,
         NombreEtapes = model.NombreEtapes,
@@ -256,6 +288,9 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
     public sealed class ChallengeFormModel
     {
         public int? Id { get; set; }
+
+        [Display(Name = "Code (optionnel)")]
+        public string? Code { get; set; }
 
         [Required(ErrorMessage = "Le titre est obligatoire.")]
         [Display(Name = "Titre")]
