@@ -1,5 +1,6 @@
 @page
 @model Web.Pages.Dashboard.CartesModel
+@using Domain.Entities
 @using Web.Extensions
 @{
     ViewData["Title"] = "Mes cartes de compétences";
@@ -21,20 +22,59 @@
             </div>
         </div>
 
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Origine</label>
+                        <select name="Origine" class="form-select">
+                            <option value="">Toutes</option>
+                            <option value="@OrigineAttribution.Challenge" selected="@(Model.Origine == OrigineAttribution.Challenge)">Challenge</option>
+                            <option value="@OrigineAttribution.Libre" selected="@(Model.Origine == OrigineAttribution.Libre)">Attribution libre</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Challenge d'origine</label>
+                        <select name="ChallengeTitre" class="form-select">
+                            <option value="">Tous</option>
+                            @foreach (var titre in Model.ChallengesOrigine)
+                            {
+                                <option value="@titre" selected="@(Model.ChallengeTitre == titre)">@titre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <button type="submit" class="btn btn-outline-primary w-100">Filtrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 @if (Model.MesCartes.Count == 0)
                 {
-                    <p class="text-muted mb-0">Aucune carte ne vous a encore été attribuée. Votre Coach ou Tuteur vous en attribuera au fil de votre parcours.</p>
+                    <p class="text-muted mb-0">Aucune carte ne correspond à ces critères. Votre Coach, Tuteur ou un Challenge en cours vous en attribuera au fil de votre parcours.</p>
                 }
                 else
                 {
                     <div class="row g-3">
-                        @foreach (var carte in Model.MesCartes)
+                        @foreach (var info in Model.MesCartes)
                         {
+                            var carte = info.Carte;
                             <div class="col-12 col-md-6 col-lg-4">
                                 <div class="border rounded p-3 h-100 d-flex flex-column">
-                                    <span class="badge text-bg-light mb-2 align-self-start">@carte.Niveau.Libelle()</span>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <span class="badge text-bg-light align-self-start">@carte.Niveau.Libelle()</span>
+                                        @if (info.OrigineType == OrigineAttribution.Challenge)
+                                        {
+                                            <span class="badge text-bg-primary align-self-start">Étape @info.NumeroEtape — @info.ChallengeTitre</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge text-bg-secondary align-self-start">Attribution libre</span>
+                                        }
+                                    </div>
                                     <h3 class="h6 mb-1">@carte.TitreTheorie</h3>
                                     <p class="text-muted small mb-3">@carte.Code @(carte.Badge is not null ? $"· {carte.Badge.BadgeNom}" : "")</p>
                                     <a asp-page="/Dashboard/CarteDetail" asp-route-id="@carte.Id" class="btn btn-outline-primary mt-auto">Explorer la carte</a>

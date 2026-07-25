@@ -367,6 +367,49 @@ public sealed class CohorteService(
         return (true, null);
     }
 
+    public async Task<List<ParcoursEnCoursInfo>> GetMesParcoursEnCoursAsync(string utilisateurId)
+    {
+        var utilisateur = await userManager.FindByIdAsync(utilisateurId);
+        if (utilisateur is null || (!utilisateur.EstSuperAdministrateur && utilisateur.Statut != StatutUtilisateur.Actif))
+        {
+            return [];
+        }
+
+        var cohortes = await dbContext.CohorteMembres
+            .Where(m => m.UtilisateurId == utilisateurId && m.Cohorte.Statut == StatutCohorte.Active)
+            .Include(m => m.Cohorte)
+                .ThenInclude(c => c.Challenge)
+            .Select(m => m.Cohorte)
+            .ToListAsync();
+
+        var resultat = new List<ParcoursEnCoursInfo>();
+        foreach (var cohorte in cohortes)
+        {
+            var etape = await dbContext.ChallengeEtapes
+                .Include(e => e.Cartes)
+                    .ThenInclude(ec => ec.CarteCompetence)
+                        .ThenInclude(c => c.Badge)
+                .FirstOrDefaultAsync(e => e.ChallengeId == cohorte.ChallengeId && e.NumeroEtape == cohorte.EtapeCourante);
+
+            if (etape is null)
+            {
+                continue;
+            }
+
+            resultat.Add(new ParcoursEnCoursInfo
+            {
+                CohorteId = cohorte.Id,
+                ChallengeTitre = cohorte.Challenge.Titre,
+                NumeroEtape = etape.NumeroEtape,
+                TitreEtape = etape.TitreEtape,
+                DefiIndividuel = etape.DefiIndividuel,
+                Cartes = etape.Cartes.Select(ec => ec.CarteCompetence).ToList(),
+            });
+        }
+
+        return resultat;
+    }
+
     // ---- Helpers ----
 
     private static string? VerifierInscriptionPossible(Cohorte cohorte)

@@ -1,0 +1,71 @@
+@page
+@model Web.Pages.Dashboard.MonParcoursModel
+@{
+    ViewData["Title"] = "Mon parcours en cours";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Mon parcours en cours</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Mon espace</p>
+                <h1 class="h3 mb-0">Mon parcours en cours</h1>
+            </div>
+        </div>
+
+        @if (Model.Parcours.Count == 0)
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <p class="text-muted mb-0">Vous n'êtes membre d'aucun Challenge actif pour le moment.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var parcours in Model.Parcours)
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <p class="text-muted mb-1">@parcours.ChallengeTitre</p>
+                        <h2 class="h5 mb-0">Étape @parcours.NumeroEtape — @parcours.TitreEtape</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (!string.IsNullOrWhiteSpace(parcours.DefiIndividuel))
+                        {
+                            <div class="mb-4">
+                                <h3 class="h6 text-uppercase text-muted">Défi individuel</h3>
+                                <p class="mb-0">@parcours.DefiIndividuel</p>
+                            </div>
+                        }
+
+                        @if (parcours.Cartes.Count == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune carte rattachée à cette étape.</p>
+                        }
+                        else
+                        {
+                            <div class="carte-flip-grid">
+                                @foreach (var carte in parcours.Cartes)
+                                {
+                                    <partial name="_CarteFlipCard" model="carte" />
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/carte-flip.js"></script>
+}

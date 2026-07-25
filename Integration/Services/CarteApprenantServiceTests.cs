@@ -13,7 +13,7 @@ public class CarteApprenantServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var carteService = new CarteCompetenceService(dbContext);
-        var apprenantService = new CarteApprenantService(dbContext);
+        var apprenantService = new CarteApprenantService(dbContext, TestUserManagerFactory.Create(dbContext));
 
         var (_, _, carte) = await carteService.CreateAsync(new CarteCompetenceInput
         {
@@ -40,7 +40,7 @@ public class CarteApprenantServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var carteService = new CarteCompetenceService(dbContext);
-        var apprenantService = new CarteApprenantService(dbContext);
+        var apprenantService = new CarteApprenantService(dbContext, TestUserManagerFactory.Create(dbContext));
 
         var (_, _, carteNonAttribuee) = await carteService.CreateAsync(new CarteCompetenceInput
         {
@@ -65,7 +65,7 @@ public class CarteApprenantServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var carteService = new CarteCompetenceService(dbContext);
-        var apprenantService = new CarteApprenantService(dbContext);
+        var apprenantService = new CarteApprenantService(dbContext, TestUserManagerFactory.Create(dbContext));
 
         var (_, _, carte) = await carteService.CreateAsync(new CarteCompetenceInput
         {
@@ -92,7 +92,7 @@ public class CarteApprenantServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var carteService = new CarteCompetenceService(dbContext);
-        var apprenantService = new CarteApprenantService(dbContext);
+        var apprenantService = new CarteApprenantService(dbContext, TestUserManagerFactory.Create(dbContext));
 
         var (_, _, carte) = await carteService.CreateAsync(new CarteCompetenceInput
         {
@@ -120,7 +120,7 @@ public class CarteApprenantServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var carteService = new CarteCompetenceService(dbContext);
-        var apprenantService = new CarteApprenantService(dbContext);
+        var apprenantService = new CarteApprenantService(dbContext, TestUserManagerFactory.Create(dbContext));
 
         var (_, _, carteAttribuee) = await carteService.CreateAsync(new CarteCompetenceInput { Code = "MAN-C23", Niveau = NiveauCarte.Debutant, TitreTheorie = "Conduire le changement" });
         var (_, _, carteNonAttribuee) = await carteService.CreateAsync(new CarteCompetenceInput { Code = "MAN-C15", Niveau = NiveauCarte.Expert, TitreTheorie = "OSBD" });
@@ -135,7 +135,7 @@ public class CarteApprenantServiceTests
         var mesCartes = await apprenantService.GetMesCartesAsync(apprenant.Id);
 
         var carteRecue = Assert.Single(mesCartes);
-        Assert.Equal(carteAttribuee.Id, carteRecue.Id);
-        Assert.DoesNotContain(mesCartes, c => c.Id == carteNonAttribuee!.Id);
+        Assert.Equal(carteAttribuee.Id, carteRecue.Carte.Id);
+        Assert.DoesNotContain(mesCartes, c => c.Carte.Id == carteNonAttribuee!.Id);
     }
 }

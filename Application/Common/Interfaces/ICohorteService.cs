@@ -48,6 +48,19 @@ public sealed class CohorteEtapeValidationInfo
     public DateTime ValideLe { get; set; }
 }
 
+// Cote apprenant : une Cohorte a laquelle l'utilisateur appartient, tant qu'elle est
+// Active. Disparait de "Mon parcours en cours" des qu'elle passe Terminee (les cartes
+// restent visibles dans la bibliotheque, mais plus ici - voir prompt section 7.1).
+public sealed class ParcoursEnCoursInfo
+{
+    public int CohorteId { get; set; }
+    public string ChallengeTitre { get; set; } = string.Empty;
+    public int NumeroEtape { get; set; }
+    public string TitreEtape { get; set; } = string.Empty;
+    public string? DefiIndividuel { get; set; }
+    public List<CarteCompetence> Cartes { get; set; } = [];
+}
+
 public sealed class MembreImportInput
 {
     public string Email { get; set; } = string.Empty;
@@ -97,4 +110,9 @@ public interface ICohorteService
     // Cree une ligne d'audit, puis avance EtapeCourante (+attribution+email etape) ou
     // cloture la Cohorte (+email de cloture) si c'etait la derniere etape.
     Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque);
+
+    // Cote apprenant : renvoie [] si le compte n'a pas acces au contenu (Suspendu/En
+    // attente de validation, cf. statut_acces_plateforme) - controle serveur, jamais
+    // seulement masque cote UI.
+    Task<List<ParcoursEnCoursInfo>> GetMesParcoursEnCoursAsync(string utilisateurId);
 }
