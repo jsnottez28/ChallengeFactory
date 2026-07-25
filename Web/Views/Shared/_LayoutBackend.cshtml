@@ -133,6 +133,15 @@
                         <droit-visible code="CARTE.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="Cartes" asp-action="Index">Cartes de Compétences</a></li>
                         </droit-visible>
+                        <droit-visible code="CHALLENGE.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Challenges" asp-action="Index">Challenges</a></li>
+                        </droit-visible>
+                        <droit-visible code="COHORTE.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
+                        </droit-visible>
+                        <droit-visible code="COHORTE.MODIFIER">
+                            <li><a class="dropdown-item" asp-page="/Admin/AbonnementsBtoC">Abonnements BtoC</a></li>
+                        </droit-visible>
                         <li><a class="dropdown-item" asp-page="/Admin/Parametrage">Parametrage</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Droits et permissions (RBAC)</h6></li>
