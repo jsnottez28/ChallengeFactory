@@ -1,0 +1,75 @@
+@model Web.Controllers.CohortesController.CohorteFormModel
+@{
+    ViewData["Title"] = "Créer une Cohorte";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Créer une Cohorte</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Créer une Cohorte</h1>
+            </div>
+            <a asp-controller="Cohortes" asp-action="Index" class="btn btn-outline-secondary">Retour aux Cohortes</a>
+        </div>
+
+        @if (Model.Challenges.Count == 0)
+        {
+            <div class="alert alert-warning">Aucun Challenge publié pour le moment. Publiez d'abord un Challenge pour pouvoir créer une Cohorte.</div>
+        }
+
+        <form method="post" asp-controller="Cohortes" asp-action="Create">
+            @Html.AntiForgeryToken()
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="ChallengeId" class="form-label"></label>
+                            <select asp-for="ChallengeId" asp-items="Model.Challenges" class="form-select">
+                                <option value="">Sélectionner un Challenge publié</option>
+                            </select>
+                            <span asp-validation-for="ChallengeId" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Nom" class="form-label"></label>
+                            <input asp-for="Nom" class="form-control" placeholder="Ex : Cohorte Management Sept. 2026">
+                            <span asp-validation-for="Nom" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="DateLancement" class="form-label"></label>
+                            <input asp-for="DateLancement" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="OrganisationId" class="form-label"></label>
+                            <select asp-for="OrganisationId" asp-items="Model.Organisations" class="form-select">
+                                <option value="">Aucune (Challenge BtoC)</option>
+                            </select>
+                            <div class="form-text">Obligatoire uniquement pour une Cohorte issue d'un Challenge BtoB.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="Cohortes" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Créer la Cohorte</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,58 @@
+@model Web.Controllers.CohortesController.ImporterMembresFormModel
+@{
+    ViewData["Title"] = "Importer des membres";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@Model.CohorteId">@Model.CohorteNom</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Importer des membres</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Importer des membres — @Model.CohorteNom</h1>
+            </div>
+            <a asp-controller="Cohortes" asp-action="Details" asp-route-id="@Model.CohorteId" class="btn btn-outline-secondary">Retour à la Cohorte</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <form method="post" asp-controller="Cohortes" asp-action="ImporterMembres" asp-route-id="@Model.CohorteId">
+                    @Html.AntiForgeryToken()
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <label asp-for="Lignes" class="form-label"></label>
+                            <textarea asp-for="Lignes" class="form-control" rows="10" placeholder="jean.dupont@entreprise.fr,Jean,Dupont&#10;marie.martin@entreprise.fr"></textarea>
+                        </div>
+                        <div class="card-footer bg-white border-top p-4">
+                            <button type="submit" class="btn btn-primary">Importer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">À savoir</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <ul class="mb-0 ps-3">
+                            <li>Un compte déjà existant est directement rattaché à la Cohorte, sans email.</li>
+                            <li>Un compte inconnu est créé et reçoit un email avec un lien pour définir son mot de passe (jamais de mot de passe en clair).</li>
+                            <li>Si la Cohorte est déjà active, les nouveaux membres reçoivent automatiquement les cartes des étapes déjà validées.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
