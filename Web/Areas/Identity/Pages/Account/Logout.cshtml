@@ -1,21 +1,39 @@
 @page
 @model LogoutModel
 @{
-    ViewData["Title"] = "Log out";
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Déconnexion";
 }
 
-<header>
-    <h1>@ViewData["Title"]</h1>
-    @{
-        if (User.Identity?.IsAuthenticated ?? false)
-        {
-            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                <button type="submit" class="nav-link btn btn-link text-dark">Click here to Logout</button>
-            </form>
-        }
-        else
-        {
-            <p>You have successfully logged out of the application.</p>
-        }
-    }
-</header>
+<section class="auth-page pt-110 pb-80">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 text-center">
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <div class="mb-4">
+                            <h2 class="td-section-title">Déconnexion</h2>
+                            <p class="text-muted">Confirmez pour vous déconnecter de votre compte.</p>
+                        </div>
+                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">Se déconnecter</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="mb-4">
+                            <h2 class="td-section-title">Déconnexion réussie</h2>
+                        </div>
+                        <div class="alert alert-info" role="alert">
+                            Vous avez été déconnecté avec succès.
+                        </div>
+                        <div class="mt-4">
+                            <a asp-page="/Account/Login" class="btn btn-primary btn-lg w-100">Retour à la connexion</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
