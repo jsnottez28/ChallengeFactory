@@ -1,4 +1,6 @@
+using Application.Common.Interfaces;
 using Domain.Entities;
+using Infrastructure.ExternalServices.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +14,7 @@ namespace Web.Pages.Admin;
 // tel quel) au niveau du compte, independamment de ses inscriptions a telle ou telle
 // Cohorte - voir ICohorteService et CLAUDE.md, "Point d'implementation transverse".
 [Authorize]
-public class AbonnementsBtoCModel(UserManager<ApplicationUser> userManager, IAuthorizationService authorizationService) : PageModel
+public class AbonnementsBtoCModel(UserManager<ApplicationUser> userManager, IAuthorizationService authorizationService, IEmailService emailService) : PageModel
 {
     public List<UserRow> Users { get; private set; } = [];
 
@@ -34,13 +36,7 @@ public class AbonnementsBtoCModel(UserManager<ApplicationUser> userManager, IAut
         return Page();
     }
 
-    public Task<IActionResult> OnPostValiderPaiementAsync(string userId)
-        => MettreAJourStatutAsync(userId, StatutUtilisateur.Actif, "Paiement validé : l'accès est désormais actif pour tous les Challenges BtoC en cours de cet utilisateur.");
-
-    public Task<IActionResult> OnPostSuspendreAccesAsync(string userId)
-        => MettreAJourStatutAsync(userId, StatutUtilisateur.Inactif, "Accès suspendu pour tous les Challenges BtoC en cours de cet utilisateur.");
-
-    private async Task<IActionResult> MettreAJourStatutAsync(string userId, StatutUtilisateur statut, string message)
+    public async Task<IActionResult> OnPostValiderPaiementAsync(string userId)
     {
         var authResult = await authorizationService.AuthorizeAsync(User, "Droit:COHORTE.MODIFIER");
         if (!authResult.Succeeded)
@@ -55,10 +51,50 @@ public class AbonnementsBtoCModel(UserManager<ApplicationUser> userManager, IAut
             return RedirectToPage();
         }
 
-        utilisateur.Statut = statut;
+        var statutPrecedent = utilisateur.Statut;
+        utilisateur.Statut = StatutUtilisateur.Actif;
         await userManager.UpdateAsync(utilisateur);
 
-        StatusMessage = message;
+        if (statutPrecedent != StatutUtilisateur.Actif && !string.IsNullOrWhiteSpace(utilisateur.Email))
+        {
+            var lienConnexion = Url.Page("/Account/Login", pageHandler: null, values: new { area = "Identity" }, protocol: Request.Scheme)
+                ?? "/Identity/Account/Login";
+            var nomUtilisateur = utilisateur.Prenom ?? utilisateur.Email;
+            var corpsEmail = EmailTemplates.AccesValide(nomUtilisateur, lienConnexion);
+            await emailService.EnvoyerAsync(utilisateur.Email, "Votre accès Challenges Factory est activé", corpsEmail);
+        }
+
+        StatusMessage = "Paiement validé : l'accès est désormais actif pour tous les Challenges BtoC en cours de cet utilisateur.";
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostSuspendreAccesAsync(string userId)
+    {
+        var authResult = await authorizationService.AuthorizeAsync(User, "Droit:COHORTE.MODIFIER");
+        if (!authResult.Succeeded)
+        {
+            return Forbid();
+        }
+
+        var utilisateur = await userManager.FindByIdAsync(userId);
+        if (utilisateur is null)
+        {
+            StatusMessage = "Utilisateur introuvable.";
+            return RedirectToPage();
+        }
+
+        var statutPrecedent = utilisateur.Statut;
+        utilisateur.Statut = StatutUtilisateur.Inactif;
+        await userManager.UpdateAsync(utilisateur);
+
+        if (statutPrecedent != StatutUtilisateur.Inactif && !string.IsNullOrWhiteSpace(utilisateur.Email))
+        {
+            var nomUtilisateur = utilisateur.Prenom ?? utilisateur.Email;
+            var corpsEmail = EmailTemplates.AccesSuspendu(nomUtilisateur);
+            await emailService.EnvoyerAsync(utilisateur.Email, "Votre accès Challenges Factory a été suspendu", corpsEmail);
+        }
+
+        StatusMessage = "Accès suspendu pour tous les Challenges BtoC en cours de cet utilisateur.";
         return RedirectToPage();
     }
 

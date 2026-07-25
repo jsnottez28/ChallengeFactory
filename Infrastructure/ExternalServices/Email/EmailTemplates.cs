@@ -108,6 +108,40 @@ public static class EmailTemplates
             </p>
             """);
 
+    public static string AccesValide(string nomUtilisateur, string lienConnexion) =>
+        BaseTemplate("Votre accès est activé", $"""
+            <h2 style="color:#003189;font-size:20px;margin:0 0 16px;">
+                Votre accès à Challenges Factory est activé ✅
+            </h2>
+            <p style="color:#444444;font-size:15px;line-height:1.6;margin:0 0 24px;">
+                Bonjour <strong>{nomUtilisateur}</strong>,<br><br>
+                Votre abonnement vient d'être validé par notre équipe. Vous pouvez dès à présent
+                vous connecter et accéder à vos Challenges en cours.
+            </p>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                <tr>
+                    <td style="background-color:#003189;border-radius:6px;padding:14px 32px;">
+                        <a href="{lienConnexion}"
+                           style="color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;">
+                            Me connecter
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            """);
+
+    public static string AccesSuspendu(string nomUtilisateur) =>
+        BaseTemplate("Votre accès a été suspendu", $"""
+            <h2 style="color:#003189;font-size:20px;margin:0 0 16px;">
+                Votre accès à Challenges Factory a été suspendu
+            </h2>
+            <p style="color:#444444;font-size:15px;line-height:1.6;margin:0 0 24px;">
+                Bonjour <strong>{nomUtilisateur}</strong>,<br><br>
+                Votre accès à la plateforme a été temporairement suspendu par notre équipe.
+                Si vous pensez qu'il s'agit d'une erreur, contactez-nous.
+            </p>
+            """);
+
     public static string MessageContact(string nom, string email, string message)
     {
         var nomSecurise = System.Net.WebUtility.HtmlEncode(nom);

@@ -1,4 +1,6 @@
+using Application.Common.Interfaces;
 using Domain.Entities;
+using Infrastructure.ExternalServices.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +14,8 @@ namespace Web.Pages.Admin;
 public class UtilisateursModel(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
-    IAuthorizationService authorizationService) : PageModel
+    IAuthorizationService authorizationService,
+    IEmailService emailService) : PageModel
 {
     public List<UserRow> Users { get; private set; } = [];
     public List<string> Roles { get; private set; } = [];
@@ -84,8 +87,29 @@ public class UtilisateursModel(
             return RedirectToPage();
         }
 
+        var statutPrecedent = user.Statut;
         user.Statut = statut;
         await userManager.UpdateAsync(user);
+
+        // Un seul email par vrai changement d'etat, pas a chaque clic (evite de spammer
+        // si l'admin re-clique sur un statut deja applique).
+        if (statutPrecedent != statut && !string.IsNullOrWhiteSpace(user.Email))
+        {
+            if (statut == StatutUtilisateur.Actif)
+            {
+                var lienConnexion = Url.Page("/Account/Login", pageHandler: null, values: new { area = "Identity" }, protocol: Request.Scheme)
+                    ?? "/Identity/Account/Login";
+                var nomUtilisateur = user.Prenom ?? user.Email;
+                var corpsEmail = EmailTemplates.AccesValide(nomUtilisateur, lienConnexion);
+                await emailService.EnvoyerAsync(user.Email, "Votre accès Challenges Factory est activé", corpsEmail);
+            }
+            else if (statut == StatutUtilisateur.Inactif)
+            {
+                var nomUtilisateur = user.Prenom ?? user.Email;
+                var corpsEmail = EmailTemplates.AccesSuspendu(nomUtilisateur);
+                await emailService.EnvoyerAsync(user.Email, "Votre accès Challenges Factory a été suspendu", corpsEmail);
+            }
+        }
 
         StatusMessage = statut == StatutUtilisateur.Actif
             ? "Compte validé : l'utilisateur peut désormais se connecter."
