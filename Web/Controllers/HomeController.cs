@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using Application.Common.Interfaces;
 using Domain.Entities;
 using Infrastructure.ExternalServices.Email;
@@ -80,9 +81,10 @@ namespace Web.Controllers
         public async Task<IActionResult> Formations()
         {
             var toutesLesCohortes = await _cohorteService.GetAllAsync();
-            var sessionsOuvertes = toutesLesCohortes
+            var nombreCohortesOuvertesParChallenge = toutesLesCohortes
                 .Where(c => c.ChallengeMode == ModePlateforme.BtoC && c.Statut == StatutCohorte.EnPreparation)
-                .ToList();
+                .GroupBy(c => c.ChallengeId)
+                .ToDictionary(g => g.Key, g => g.Count());
 
             var challenges = await _challengeService.GetAllAsync();
             var challengesDisponibles = challenges
@@ -93,13 +95,52 @@ namespace Web.Controllers
                     ChallengeId = challenge.Id,
                     Titre = challenge.Titre,
                     Slogan = challenge.Slogan,
-                    Description = challenge.Description,
+                    DescriptionExtrait = ExtraireTexte(challenge.Description, 110),
                     NombreEtapes = challenge.NombreEtapes,
-                    CohortesOuvertes = sessionsOuvertes.Where(c => c.ChallengeId == challenge.Id).ToList(),
+                    NombreCohortesOuvertes = nombreCohortesOuvertesParChallenge.GetValueOrDefault(challenge.Id),
                 })
                 .ToList();
 
             return View(challengesDisponibles);
+        }
+
+        // Page de presentation dediee a un Challenge (bouton "Decouvrir ce Challenge" depuis
+        // la liste /formations) : description complete, programme detaille etape par etape,
+        // et toutes les Cohortes ouvertes a l'inscription pour ce Challenge.
+        [HttpGet]
+        [Route("formations/{challengeId:int}")]
+        public async Task<IActionResult> Formation(int challengeId)
+        {
+            var challenge = await _challengeService.GetByIdAsync(challengeId);
+            if (challenge is null || challenge.Mode != ModePlateforme.BtoC || challenge.Statut != StatutChallenge.Publie)
+            {
+                return NotFound();
+            }
+
+            var toutesLesCohortes = await _cohorteService.GetAllAsync();
+            var cohortesOuvertes = toutesLesCohortes
+                .Where(c => c.ChallengeId == challengeId && c.Statut == StatutCohorte.EnPreparation)
+                .ToList();
+
+            var viewModel = new FormationDetailViewModel
+            {
+                ChallengeId = challenge.Id,
+                Titre = challenge.Titre,
+                Slogan = challenge.Slogan,
+                Description = challenge.Description,
+                Etapes = challenge.Etapes
+                    .OrderBy(e => e.NumeroEtape)
+                    .Select(e => new EtapeApercuViewModel
+                    {
+                        NumeroEtape = e.NumeroEtape,
+                        TitreEtape = e.TitreEtape,
+                        ObjectifPedagogique = e.ObjectifPedagogique,
+                    })
+                    .ToList(),
+                CohortesOuvertes = cohortesOuvertes,
+            };
+
+            return View(viewModel);
         }
 
         [HttpPost]
@@ -118,12 +159,15 @@ namespace Web.Controllers
                 return RedirectToPage("/Account/Register", new { area = "Identity", cohorteId });
             }
 
+            var cohorte = await _cohorteService.GetResumeAsync(cohorteId);
             var (success, errorMessage) = await _cohorteService.AutoInscrireAsync(cohorteId, userId);
             TempData["StatusMessage"] = success
                 ? "Inscription enregistrée ! Retrouvez votre parcours depuis votre tableau de bord dès son lancement."
                 : errorMessage;
 
-            return RedirectToAction(nameof(Formations));
+            return cohorte is not null
+                ? RedirectToAction(nameof(Formation), new { challengeId = cohorte.ChallengeId })
+                : RedirectToAction(nameof(Formations));
         }
 
         // "Demander un embarquement pour ce Challenge" (prompt section H) : cree ou rejoint
@@ -150,7 +194,24 @@ namespace Web.Controllers
                 ? "Ta demande d'embarquement a été enregistrée ! Notre équipe l'étudie et reviendra vers toi dès qu'une session est prête."
                 : errorMessage;
 
-            return RedirectToAction(nameof(Formations));
+            return RedirectToAction(nameof(Formation), new { challengeId });
+        }
+
+        // Extrait texte pour l'apercu carte (prompt : "on voit encore les balises HTML" sur
+        // la liste) : la Description peut desormais contenir du HTML simple (paragraphes,
+        // listes) rendu tel quel sur la page de detail - mais un extrait tronque au milieu
+        // d'une balise casserait le rendu, donc on retire les balises avant de tronquer.
+        private static string? ExtraireTexte(string? html, int longueurMax)
+        {
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                return null;
+            }
+
+            var texte = System.Net.WebUtility.HtmlDecode(Regex.Replace(html, "<[^>]*>", " "));
+            texte = Regex.Replace(texte, @"\s+", " ").Trim();
+
+            return texte.Length > longueurMax ? texte[..longueurMax].TrimEnd() + "…" : texte;
         }
 
         public IActionResult Privacy()
@@ -165,17 +226,38 @@ namespace Web.Controllers
         }
     }
 
-    // Vue Challenge-centree du catalogue public (prompt section H) : un Challenge, sa
-    // Description, et les Cohortes actuellement ouvertes a l'inscription pour ce Challenge
-    // (jamais une Cohorte Proposee - cf. ICohorteService.GetAllAsync).
+    // Carte compacte du catalogue public /formations : juste de quoi decider si on va voir
+    // le detail (extrait de description, nombre de sessions ouvertes) - le detail complet
+    // (etapes, choix de la Cohorte, embarquement) vit sur FormationDetailViewModel.
     public class FormationViewModel
     {
         public int ChallengeId { get; set; }
         public string Titre { get; set; } = string.Empty;
         public string? Slogan { get; set; }
-        public string? Description { get; set; }
+        public string? DescriptionExtrait { get; set; }
         public int NombreEtapes { get; set; }
+        public int NombreCohortesOuvertes { get; set; }
+    }
+
+    // Page de presentation dediee a un Challenge (prompt section H) : description complete
+    // (rendue en HTML - cf. vue, la saisie admin peut contenir des balises simples),
+    // programme etape par etape, et les Cohortes actuellement ouvertes a l'inscription pour
+    // ce Challenge (jamais une Cohorte Proposee - cf. ICohorteService.GetAllAsync).
+    public class FormationDetailViewModel
+    {
+        public int ChallengeId { get; set; }
+        public string Titre { get; set; } = string.Empty;
+        public string? Slogan { get; set; }
+        public string? Description { get; set; }
+        public List<EtapeApercuViewModel> Etapes { get; set; } = [];
         public List<CohorteResume> CohortesOuvertes { get; set; } = [];
+    }
+
+    public class EtapeApercuViewModel
+    {
+        public int NumeroEtape { get; set; }
+        public string TitreEtape { get; set; } = string.Empty;
+        public string? ObjectifPedagogique { get; set; }
     }
 
     public class ContactFormModel

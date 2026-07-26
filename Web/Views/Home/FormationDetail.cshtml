@@ -1,0 +1,112 @@
+@model Web.Controllers.FormationDetailViewModel
+@{
+    ViewData["Title"] = Model.Titre;
+}
+
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <a asp-controller="Home" asp-action="Formations" class="cf-badge text-decoration-none">← Tous les Challenges</a>
+                <h1 class="cf-h1 mb-2 mt-3">@Model.Titre</h1>
+                @if (!string.IsNullOrWhiteSpace(Model.Slogan))
+                {
+                    <p class="cf-lead" style="max-width:640px;">@Model.Slogan</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <div class="cf-formation-description mb-4">
+                        @Html.Raw(Model.Description)
+                    </div>
+                }
+
+                @if (Model.Etapes.Count > 0)
+                {
+                    <h2 class="cf-h3 mb-3">Le programme</h2>
+                    <ol class="cf-formation-programme list-unstyled mb-0">
+                        @foreach (var etape in Model.Etapes)
+                        {
+                            <li class="d-flex gap-3 mb-3">
+                                <span class="cf-formation-numero flex-shrink-0">@etape.NumeroEtape</span>
+                                <div>
+                                    <h3 class="h6 mb-1">@etape.TitreEtape</h3>
+                                    @if (!string.IsNullOrWhiteSpace(etape.ObjectifPedagogique))
+                                    {
+                                        <p class="text-muted small mb-0">@etape.ObjectifPedagogique</p>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="cf-card">
+                    <h2 class="cf-h3 mb-3">Rejoindre ce Challenge</h2>
+
+                    @if (Model.CohortesOuvertes.Count > 0)
+                    {
+                        <div class="d-flex flex-column gap-2">
+                            @foreach (var cohorte in Model.CohortesOuvertes)
+                            {
+                                <form method="post" asp-controller="Home" asp-action="InscriptionFormation" asp-route-cohorteId="@cohorte.Id">
+                                    @Html.AntiForgeryToken()
+                                    <div class="d-flex align-items-center justify-content-between gap-2 border rounded p-3">
+                                        <span class="small">
+                                            @cohorte.Nom
+                                            @if (cohorte.DateLancement.HasValue)
+                                            {
+                                                <span class="text-muted d-block">Lancement le @cohorte.DateLancement.Value.ToString("dd/MM/yyyy")</span>
+                                            }
+                                        </span>
+                                        <button type="submit" class="cf-btn cf-btn-primary flex-shrink-0">S'inscrire</button>
+                                    </div>
+                                </form>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <form method="post" asp-controller="Home" asp-action="DemanderEmbarquement" asp-route-challengeId="@Model.ChallengeId">
+                            @Html.AntiForgeryToken()
+                            <p class="text-muted small mb-3">Aucune session n'est ouverte pour ce Challenge pour le moment.</p>
+                            <button type="submit" class="cf-btn cf-btn-outline w-100">Demander un embarquement pour ce Challenge</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .cf-formation-description p { margin-bottom: 14px; }
+    .cf-formation-description ul, .cf-formation-description ol { margin-bottom: 14px; padding-left: 20px; }
+    .cf-formation-description li { margin-bottom: 6px; }
+    .cf-formation-numero {
+        width: 32px; height: 32px;
+        background: var(--cf-orange-pale);
+        color: var(--cf-orange);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 14px;
+    }
+</style>

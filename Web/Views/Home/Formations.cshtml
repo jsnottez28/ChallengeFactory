@@ -31,53 +31,29 @@
         }
         else
         {
-            <div class="row g-4">
+            <div class="row g-3">
                 @foreach (var challenge in Model)
                 {
                     <div class="col-12 col-md-6 col-xl-4">
-                        <div class="cf-card cf-formation-card h-100 d-flex flex-column">
-                            <h3 class="cf-h3 mb-1">@challenge.Titre</h3>
+                        <a asp-controller="Home" asp-action="Formation" asp-route-challengeId="@challenge.ChallengeId" class="cf-formation-card d-block h-100 text-decoration-none">
+                            <h3 class="cf-formation-title mb-1">@challenge.Titre</h3>
                             @if (!string.IsNullOrWhiteSpace(challenge.Slogan))
                             {
                                 <p class="text-muted small mb-2">@challenge.Slogan</p>
                             }
-                            @if (!string.IsNullOrWhiteSpace(challenge.Description))
+                            @if (!string.IsNullOrWhiteSpace(challenge.DescriptionExtrait))
                             {
-                                var description = challenge.Description.Length > 140 ? challenge.Description[..140] + "…" : challenge.Description;
-                                <p class="small mb-2">@description</p>
+                                <p class="small mb-2">@challenge.DescriptionExtrait</p>
                             }
-                            <p class="small text-muted mb-3"><strong class="text-dark">@challenge.NombreEtapes</strong> étapes</p>
-
-                            @if (challenge.CohortesOuvertes.Count > 0)
-                            {
-                                <div class="mt-auto d-flex flex-column gap-2">
-                                    @foreach (var cohorte in challenge.CohortesOuvertes)
-                                    {
-                                        <form method="post" asp-controller="Home" asp-action="InscriptionFormation" asp-route-cohorteId="@cohorte.Id">
-                                            @Html.AntiForgeryToken()
-                                            <div class="d-flex align-items-center justify-content-between gap-2 border rounded p-2">
-                                                <span class="small">
-                                                    @cohorte.Nom
-                                                    @if (cohorte.DateLancement.HasValue)
-                                                    {
-                                                        <span class="text-muted d-block">Lancement le @cohorte.DateLancement.Value.ToString("dd/MM/yyyy")</span>
-                                                    }
-                                                </span>
-                                                <button type="submit" class="cf-btn cf-btn-primary flex-shrink-0">S'inscrire</button>
-                                            </div>
-                                        </form>
-                                    }
-                                </div>
-                            }
-                            else
-                            {
-                                <form method="post" asp-controller="Home" asp-action="DemanderEmbarquement" asp-route-challengeId="@challenge.ChallengeId" class="mt-auto">
-                                    @Html.AntiForgeryToken()
-                                    <p class="text-muted small mb-2">Aucune session ouverte pour ce Challenge pour le moment.</p>
-                                    <button type="submit" class="cf-btn cf-btn-outline w-100">Demander un embarquement</button>
-                                </form>
-                            }
-                        </div>
+                            <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
+                                <span class="badge @(challenge.NombreCohortesOuvertes > 0 ? "text-bg-success" : "text-bg-light")">
+                                    @(challenge.NombreCohortesOuvertes > 0
+                                        ? $"{challenge.NombreCohortesOuvertes} session{(challenge.NombreCohortesOuvertes > 1 ? "s" : "")} en cours"
+                                        : "Aucune session ouverte")
+                                </span>
+                                <span class="cf-formation-cta">Découvrir →</span>
+                            </div>
+                        </a>
                     </div>
                 }
             </div>
@@ -86,6 +62,18 @@
 </section>
 
 <style>
-    .cf-formation-card { padding: 24px; }
-    .cf-formation-card .cf-h3 { font-size: 20px; }
+    .cf-formation-card {
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid var(--cf-line);
+        border-radius: var(--cf-radius-md);
+        padding: 18px 20px;
+        height: 100%;
+        color: inherit;
+        transition: all .2s ease;
+    }
+    .cf-formation-card:hover { border-color: var(--cf-orange); box-shadow: var(--cf-shadow-md); transform: translateY(-2px); }
+    .cf-formation-title { font-size: 17px; font-weight: 700; color: var(--cf-dark); }
+    .cf-formation-cta { font-size: 13px; font-weight: 600; color: var(--cf-orange); }
 </style>
