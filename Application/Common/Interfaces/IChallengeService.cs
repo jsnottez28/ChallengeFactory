@@ -9,6 +9,7 @@ public sealed class ChallengeInput
     public string? Code { get; set; }
     public string Titre { get; set; } = string.Empty;
     public string? Slogan { get; set; }
+    public string? Description { get; set; }
     public int NombreEtapes { get; set; } = 8;
     public ModePlateforme Mode { get; set; }
 }

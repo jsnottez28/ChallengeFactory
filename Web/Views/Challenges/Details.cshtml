@@ -66,6 +66,16 @@
             </div>
         </div>
 
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h6 mb-2">Description</h2>
+                    <p class="mb-0" style="white-space: pre-line;">@Model.Description</p>
+                </div>
+            </div>
+        }
+
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
