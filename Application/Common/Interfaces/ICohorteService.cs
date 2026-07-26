@@ -146,8 +146,9 @@ public interface ICohorteService
 
     // Proposee -> EnPreparation, avec une date de lancement obligatoire : la Cohorte devient
     // alors visible/ouverte a l'inscription publique comme n'importe quelle Cohorte
-    // EnPreparation.
-    Task<(bool Success, string? ErrorMessage)> ValiderEmbarquementAsync(int cohorteId, string nom, DateTime dateLancement);
+    // EnPreparation. Notifie ET envoie un email a chaque demandeur deja membre (ils sont
+    // deja inscrits sur cette Cohorte depuis DemanderEmbarquementAsync, rien a re-inscrire).
+    Task<(bool Success, string? ErrorMessage)> ValiderEmbarquementAsync(int cohorteId, string nom, DateTime dateLancement, string lienFormations);
 
     // Supprime la demande (jamais de Cohorte "fantome" qui trainerait en Proposee) et
     // notifie chaque demandeur (reutilise INotificationService, cf. prompt section B).

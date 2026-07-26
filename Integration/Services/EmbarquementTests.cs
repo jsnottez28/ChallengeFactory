@@ -14,14 +14,15 @@ namespace Integration.Services;
 // transitionne correctement Proposee -> EnPreparation.
 public class EmbarquementTests
 {
-    private static (ApplicationDbContext DbContext, ICohorteService CohorteService, IPreuveService PreuveService, INotificationService NotificationService) CreerServices()
+    private static (ApplicationDbContext DbContext, ICohorteService CohorteService, IPreuveService PreuveService, INotificationService NotificationService, FakeEmailService EmailService) CreerServices()
     {
         var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var notificationService = new NotificationService(dbContext);
+        var emailService = new FakeEmailService();
         var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), notificationService, new FakeEmailService());
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService, notificationService);
-        return (dbContext, cohorteService, preuveService, notificationService);
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, preuveService, notificationService);
+        return (dbContext, cohorteService, preuveService, notificationService, emailService);
     }
 
     private static async Task<Challenge> CreerChallengeBtoCPublieAsync(ApplicationDbContext dbContext, ModePlateforme mode = ModePlateforme.BtoC)
@@ -36,7 +37,7 @@ public class EmbarquementTests
     [Fact]
     public async Task DemanderEmbarquementAsync_PremiereDemande_CreeUneNouvelleCohorteProposee()
     {
-        var (dbContext, cohorteService, _, _) = CreerServices();
+        var (dbContext, cohorteService, _, _, _) = CreerServices();
         await using var _ = dbContext;
 
         var challenge = await CreerChallengeBtoCPublieAsync(dbContext);
@@ -58,7 +59,7 @@ public class EmbarquementTests
     [Fact]
     public async Task DemanderEmbarquementAsync_SecondeDemandeSurLeMemeChallenge_RejointLaMemeCohorteProposee()
     {
-        var (dbContext, cohorteService, _, _) = CreerServices();
+        var (dbContext, cohorteService, _, _, _) = CreerServices();
         await using var _ = dbContext;
 
         var challenge = await CreerChallengeBtoCPublieAsync(dbContext);
@@ -83,7 +84,7 @@ public class EmbarquementTests
     [Fact]
     public async Task CohorteProposee_NApparaitJamaisDansLeCatalogueEtNePermetPasDeDeposerUnePreuve()
     {
-        var (dbContext, cohorteService, preuveService, _) = CreerServices();
+        var (dbContext, cohorteService, preuveService, _, _) = CreerServices();
         await using var _ = dbContext;
 
         var challenge = await CreerChallengeBtoCPublieAsync(dbContext);
@@ -107,18 +108,21 @@ public class EmbarquementTests
     [Fact]
     public async Task ValiderEmbarquementAsync_TransitionneProposeeVersEnPreparation_EtDevientVisibleDansLeCatalogue()
     {
-        var (dbContext, cohorteService, _, _) = CreerServices();
+        var (dbContext, cohorteService, _, notificationService, emailService) = CreerServices();
         await using var _ = dbContext;
 
         var challenge = await CreerChallengeBtoCPublieAsync(dbContext);
-        var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local" };
-        dbContext.Users.Add(apprenant);
+        var premier = new ApplicationUser { UserName = "premier@test.local", Email = "premier@test.local" };
+        var second = new ApplicationUser { UserName = "second@test.local", Email = "second@test.local" };
+        dbContext.Users.AddRange(premier, second);
         await dbContext.SaveChangesAsync();
 
-        var (_, _, cohorteId) = await cohorteService.DemanderEmbarquementAsync(challenge.Id, apprenant.Id);
+        var (_, _, cohorteId) = await cohorteService.DemanderEmbarquementAsync(challenge.Id, premier.Id);
+        await cohorteService.DemanderEmbarquementAsync(challenge.Id, second.Id);
 
         var dateLancement = DateTime.UtcNow.Date.AddDays(14);
-        var (success, errorMessage) = await cohorteService.ValiderEmbarquementAsync(cohorteId!.Value, "Session validée", dateLancement);
+        var (success, errorMessage) = await cohorteService.ValiderEmbarquementAsync(
+            cohorteId!.Value, "Session validée", dateLancement, "https://test.local/formations");
 
         Assert.True(success, errorMessage);
 
@@ -129,12 +133,23 @@ public class EmbarquementTests
 
         var toutesLesCohortes = await cohorteService.GetAllAsync();
         Assert.Contains(toutesLesCohortes, c => c.Id == cohorteId.Value && c.Statut == StatutCohorte.EnPreparation);
+
+        // Chaque demandeur (deja membre depuis DemanderEmbarquementAsync) recoit un email
+        // ET une notification in-app annoncant la confirmation de sa session.
+        Assert.Equal(2, emailService.Envois.Count);
+        Assert.Contains(emailService.Envois, e => e.Destinataire == premier.Email && e.Sujet.Contains("confirmée"));
+        Assert.Contains(emailService.Envois, e => e.Destinataire == second.Email && e.Sujet.Contains("confirmée"));
+
+        var notifsPremier = await notificationService.GetMesNotificationsAsync(premier.Id);
+        Assert.Contains(notifsPremier, n => n.Type == TypeNotification.DemandeEmbarquementValidee);
+        var notifsSecond = await notificationService.GetMesNotificationsAsync(second.Id);
+        Assert.Contains(notifsSecond, n => n.Type == TypeNotification.DemandeEmbarquementValidee);
     }
 
     [Fact]
     public async Task RefuserEmbarquementAsync_SupprimeLaCohorteEtNotifieChaqueDemandeur()
     {
-        var (dbContext, cohorteService, _, notificationService) = CreerServices();
+        var (dbContext, cohorteService, _, notificationService, _) = CreerServices();
         await using var _ = dbContext;
 
         var challenge = await CreerChallengeBtoCPublieAsync(dbContext);

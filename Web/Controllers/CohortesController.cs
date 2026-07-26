@@ -193,7 +193,8 @@ public class CohortesController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ValiderEmbarquement(int cohorteId, string nom, DateTime dateLancement)
     {
-        var (success, errorMessage) = await cohorteService.ValiderEmbarquementAsync(cohorteId, nom, dateLancement);
+        var lienFormations = Url.Action("Formations", "Home", null, Request.Scheme) ?? "/formations";
+        var (success, errorMessage) = await cohorteService.ValiderEmbarquementAsync(cohorteId, nom, dateLancement, lienFormations);
         TempData["StatusMessage"] = success
             ? "Demande validée : la Cohorte est désormais ouverte à l'inscription publique."
             : errorMessage;

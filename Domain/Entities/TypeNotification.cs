@@ -8,4 +8,5 @@ public enum TypeNotification
     PreuveValideeParLesPairs,
     MessageMarqueUtile,
     DemandeEmbarquementRefusee,
+    DemandeEmbarquementValidee,
 }

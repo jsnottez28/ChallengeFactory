@@ -521,14 +521,18 @@ public sealed class CohorteService(
         }).ToList();
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> ValiderEmbarquementAsync(int cohorteId, string nom, DateTime dateLancement)
+    public async Task<(bool Success, string? ErrorMessage)> ValiderEmbarquementAsync(int cohorteId, string nom, DateTime dateLancement, string lienFormations)
     {
         if (string.IsNullOrWhiteSpace(nom))
         {
             return (false, "Le nom de la Cohorte est obligatoire.");
         }
 
-        var cohorte = await dbContext.Cohortes.FirstOrDefaultAsync(c => c.Id == cohorteId);
+        var cohorte = await dbContext.Cohortes
+            .Include(c => c.Challenge)
+            .Include(c => c.Membres).ThenInclude(m => m.Utilisateur)
+            .FirstOrDefaultAsync(c => c.Id == cohorteId);
+
         if (cohorte is null)
         {
             return (false, "Cohorte introuvable.");
@@ -543,6 +547,19 @@ public sealed class CohorteService(
         cohorte.DateLancement = dateLancement;
         cohorte.Statut = StatutCohorte.EnPreparation;
         await dbContext.SaveChangesAsync();
+
+        var (sujet, corps) = ChallengeEmailTemplates.EmbarquementValide(cohorte.Challenge.Titre, cohorte.Nom, dateLancement, lienFormations);
+        foreach (var membre in cohorte.Membres)
+        {
+            await notificationService.CreerAsync(membre.UtilisateurId, TypeNotification.DemandeEmbarquementValidee,
+                ReferenceTypeNotification.Cohorte, cohorte.Id,
+                $"Ta session pour \"{cohorte.Challenge.Titre}\" est confirmée — viens voir les détails", lienFormations);
+
+            if (!string.IsNullOrWhiteSpace(membre.Utilisateur.Email))
+            {
+                await emailService.EnvoyerAsync(membre.Utilisateur.Email, sujet, corps);
+            }
+        }
 
         return (true, null);
     }

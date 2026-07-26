@@ -63,6 +63,26 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // 4e declencheur email (demande d'embarquement acceptee, prompt section H) : meme
+    // esprit qu'ailleurs - annonce directe et appel a l'action, pas une simple information.
+    public static (string Sujet, string CorpsHtml) EmbarquementValide(
+        string challengeTitre,
+        string cohorteNom,
+        DateTime dateLancement,
+        string lienFormations)
+    {
+        var sujet = $"{challengeTitre} — Ta session est confirmée !";
+
+        var corps = $"""
+            <p>Bonne nouvelle,</p>
+            <p>Ta demande d'embarquement pour le Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> a été validée : la session <strong>{WebUtility.HtmlEncode(cohorteNom)}</strong> est confirmée, avec un lancement prévu le <strong>{dateLancement:dd/MM/yyyy}</strong>.</p>
+            <p>Tu es déjà inscrit·e : tu seras prévenu·e dès le lancement de la première étape.</p>
+            <p><a href="{lienFormations}">Voir le Challenge</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {
         const string sujet = "Bienvenue sur Challenges Factory — Définissez votre mot de passe";
