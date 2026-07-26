@@ -1,5 +1,6 @@
 @page "{id:int}"
 @model Web.Pages.Dashboard.CarteDetailModel
+@using Domain.Entities
 @{
     ViewData["Title"] = Model.Carte?.TitreTheorie ?? "Carte de compétences";
 }
@@ -43,6 +44,60 @@
                         <p class="text-muted mb-0">Cliquez sur la carte (ou appuyez sur Entrée si elle est sélectionnée au clavier) pour la retourner et passer de la face Théorie à la face Défi terrain.</p>
                     </div>
                 </div>
+
+                @if (Model.MesPreuves.Count > 0)
+                {
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Preuves déposées pour cette carte</h2>
+                            <p class="text-muted small mb-0">Le défi individuel rendu lors du (ou des) Challenge(s) qui vous ont attribué cette carte.</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var preuveCarte in Model.MesPreuves)
+                                {
+                                    <li class="border rounded p-3 mb-2">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <strong>@preuveCarte.ChallengeTitre — étape @preuveCarte.NumeroEtape</strong>
+                                            @if (preuveCarte.Preuve is not null)
+                                            {
+                                                var statutLabel = preuveCarte.Preuve.Statut switch
+                                                {
+                                                    StatutPreuve.Soumise => ("Soumise, en attente d'avis", "text-bg-secondary"),
+                                                    StatutPreuve.ValideeParLesPairs => ("Validée par les pairs", "text-bg-success"),
+                                                    StatutPreuve.ValideeDefinitivement => ("Validée définitivement", "text-bg-success"),
+                                                    _ => ("Non validée à la clôture", "text-bg-danger"),
+                                                };
+                                                <span class="badge @statutLabel.Item2">@statutLabel.Item1</span>
+                                            }
+                                        </div>
+
+                                        @if (preuveCarte.Preuve is null)
+                                        {
+                                            <p class="text-muted small mb-0">Aucune preuve déposée pour cette étape.</p>
+                                        }
+                                        else
+                                        {
+                                            @if (!string.IsNullOrWhiteSpace(preuveCarte.Preuve.Description))
+                                            {
+                                                <p class="small mb-2" style="white-space: pre-line;">@preuveCarte.Preuve.Description</p>
+                                            }
+                                            @if (preuveCarte.Preuve.Fichiers.Count > 0)
+                                            {
+                                                <ul class="list-unstyled small mb-0">
+                                                    @foreach (var fichier in preuveCarte.Preuve.Fichiers)
+                                                    {
+                                                        <li><a asp-page="/Dashboard/PreuveFichierTelecharger" asp-route-fichierId="@fichier.Id">@fichier.NomFichier</a></li>
+                                                    }
+                                                </ul>
+                                            }
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom p-4">

@@ -18,6 +18,11 @@ public class CarteDetailModel(ICarteApprenantService carteApprenantService, User
     // cartes", section 2.1 : commentaires strictement prives).
     public List<CommentaireCarteInfo> MesCommentaires { get; private set; } = [];
 
+    // Preuves deposees lors des (precedents) Challenges qui ont attribue cette carte -
+    // permet de retrouver son travail passe sans avoir a chercher dans "Mon parcours en
+    // cours" (qui ne montre que les Cohortes encore actives).
+    public List<PreuveCarteInfo> MesPreuves { get; private set; } = [];
+
     [BindProperty]
     public string NouveauCommentaire { get; set; } = string.Empty;
 
@@ -42,6 +47,7 @@ public class CarteDetailModel(ICarteApprenantService carteApprenantService, User
         }
 
         MesCommentaires = await carteApprenantService.GetMesCommentairesAsync(userId, id);
+        MesPreuves = await carteApprenantService.GetMesPreuvesPourCarteAsync(userId, id);
         return Page();
     }
 

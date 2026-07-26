@@ -25,6 +25,20 @@ public sealed class CommentaireCarteInfo
     public DateTime? DateModification { get; set; }
 }
 
+// Preuve deposee lors d'un Challenge qui a attribue cette carte a l'utilisateur -
+// permet de retrouver son travail passe (defi individuel rendu) directement depuis la
+// bibliotheque de cartes, sans devoir chercher dans "Mon parcours en cours" (qui ne
+// montre que les Cohortes encore actives, pas les Challenges deja termines).
+public sealed class PreuveCarteInfo
+{
+    public string ChallengeTitre { get; set; } = string.Empty;
+    public int NumeroEtape { get; set; }
+    // Null si, pour une raison quelconque, aucune preuve n'a ete deposee pour cette
+    // etape malgre l'attribution de la carte (ex. etape non-atteinte lors d'une cloture
+    // anticipee) - a l'appelant de gerer cet affichage plutot que de filtrer en silence.
+    public PreuveDetailInfo? Preuve { get; set; }
+}
+
 // Cote apprenant : un utilisateur ne voit jamais que les cartes qui lui ont ete
 // explicitement attribuees, jamais le catalogue complet. Ce controle doit etre applique
 // cote serveur (pas seulement masque dans l'UI) - voir GetCarteAttribueeAsync qui renvoie
@@ -36,6 +50,10 @@ public interface ICarteApprenantService
     Task<List<CarteBibliothequeInfo>> GetMesCartesAsync(string utilisateurId);
 
     Task<CarteCompetence?> GetCarteAttribueeAsync(string utilisateurId, int carteId);
+
+    // Une entree par etape de Challenge distincte qui a attribue cette carte (une carte
+    // peut avoir ete obtenue via plusieurs Challenges/etapes differents dans le temps).
+    Task<List<PreuveCarteInfo>> GetMesPreuvesPourCarteAsync(string utilisateurId, int carteId);
 
     // ---- Notes personnelles sur une carte ----
 

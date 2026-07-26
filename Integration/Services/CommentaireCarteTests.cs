@@ -18,7 +18,7 @@ public class CommentaireCarteTests
         var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var carteService = new CarteCompetenceService(dbContext);
-        var apprenantService = new CarteApprenantService(dbContext, userManager);
+        var apprenantService = new CarteApprenantService(dbContext, userManager, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (_, _, carte) = await carteService.CreateAsync(new CarteCompetenceInput
         {
@@ -144,7 +144,7 @@ public class CommentaireCarteTests
         await using var _ = dbContext;
         var userManager = TestUserManagerFactory.Create(dbContext);
         var carteService = new CarteCompetenceService(dbContext);
-        var apprenantService = new CarteApprenantService(dbContext, userManager);
+        var apprenantService = new CarteApprenantService(dbContext, userManager, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (_, _, carteNonAttribuee) = await carteService.CreateAsync(new CarteCompetenceInput
         {

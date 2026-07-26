@@ -6,7 +6,7 @@ using Web.Data;
 
 namespace Web.Services;
 
-public sealed class CarteApprenantService(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager) : ICarteApprenantService
+public sealed class CarteApprenantService(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IPreuveService preuveService) : ICarteApprenantService
 {
     public async Task<List<CarteBibliothequeInfo>> GetMesCartesAsync(string utilisateurId)
     {
@@ -50,6 +50,48 @@ public sealed class CarteApprenantService(ApplicationDbContext dbContext, UserMa
                 .ThenInclude(c => c.Badge)
             .Select(a => a.CarteCompetence)
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<PreuveCarteInfo>> GetMesPreuvesPourCarteAsync(string utilisateurId, int carteId)
+    {
+        if (!await AccesContenuAutoriseAsync(utilisateurId))
+        {
+            return [];
+        }
+
+        var attributionsChallenge = await dbContext.CarteAttributions
+            .Include(a => a.ChallengeEtape)
+                .ThenInclude(e => e!.Challenge)
+            .Where(a => a.UtilisateurId == utilisateurId
+                && a.CarteCompetenceId == carteId
+                && a.OrigineType == OrigineAttribution.Challenge
+                && a.ChallengeEtapeId != null)
+            .ToListAsync();
+
+        var resultat = new List<PreuveCarteInfo>();
+        var etapesDejaTraitees = new HashSet<int>();
+        foreach (var attribution in attributionsChallenge)
+        {
+            var etapeId = attribution.ChallengeEtapeId!.Value;
+            // Une carte peut avoir ete rattachee a plusieurs etapes d'un meme Challenge
+            // (Ressource Directrice reutilisee) : on ne veut qu'une entree par etape,
+            // pas une par ligne d'attribution.
+            if (!etapesDejaTraitees.Add(etapeId))
+            {
+                continue;
+            }
+
+            resultat.Add(new PreuveCarteInfo
+            {
+                ChallengeTitre = attribution.ChallengeEtape!.Challenge.Titre,
+                NumeroEtape = attribution.ChallengeEtape.NumeroEtape,
+                Preuve = await preuveService.GetMaPreuveAsync(utilisateurId, etapeId),
+            });
+        }
+
+        return resultat
+            .OrderByDescending(r => r.Preuve?.DateDepot ?? DateTime.MinValue)
+            .ToList();
     }
 
     // Un compte Suspendu ou En attente de validation (BtoC, statut_acces_plateforme) ne
