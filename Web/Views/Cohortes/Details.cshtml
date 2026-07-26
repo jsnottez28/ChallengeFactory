@@ -7,6 +7,14 @@
     var historique = ViewData["Historique"] as List<CohorteEtapeValidationInfo> ?? [];
     var visios = ViewData["Visios"] as List<VisioEtapeInfo> ?? [];
     var derniereEtape = Model.EtapeCourante >= Model.NombreEtapes;
+
+    // Une fois l'étape validée, sa visio n'a plus d'intérêt à rester dans la liste : ne
+    // garder que celles des étapes pas encore terminées (courante ou à venir).
+    var numerosEtapesValidees = historique.Select(h => h.NumeroEtape).ToHashSet();
+    var visiosAAfficher = visios.Where(v => !numerosEtapesValidees.Contains(v.NumeroEtape)).ToList();
+    var visioEtapeCourante = Model.Statut == StatutCohorte.Active
+        ? visios.FirstOrDefault(v => v.NumeroEtape == Model.EtapeCourante)
+        : null;
 }
 
 <section class="backend-page">
@@ -46,6 +54,13 @@
                     default:
                         <span class="badge text-bg-secondary align-self-center">Terminée</span>
                         break;
+                }
+
+                @if (visioEtapeCourante is not null)
+                {
+                    <a href="@visioEtapeCourante.LienConnexion" target="_blank" rel="noopener" class="btn btn-outline-primary align-self-center">
+                        Visio de l'étape en cours — @visioEtapeCourante.DateHeure.ToLocalTime().ToString("dd/MM HH:mm")
+                    </a>
                 }
 
                 @if (Model.Statut == StatutCohorte.Active)
@@ -211,16 +226,17 @@
                 <div class="card border-0 shadow-sm mt-4">
                     <div class="card-header bg-white border-bottom p-4">
                         <h2 class="h5 mb-0">Visios planifiées</h2>
+                        <p class="text-muted small mb-0">Une fois l'étape validée, sa visio n'apparaît plus ici.</p>
                     </div>
                     <div class="card-body p-4">
-                        @if (visios.Count == 0)
+                        @if (visiosAAfficher.Count == 0)
                         {
                             <p class="text-muted mb-0">Aucune visio planifiée pour le moment.</p>
                         }
                         else
                         {
                             <ul class="list-unstyled mb-0">
-                                @foreach (var visio in visios)
+                                @foreach (var visio in visiosAAfficher)
                                 {
                                     var estPassee = visio.DateHeure < DateTime.UtcNow;
                                     <li class="mb-3">
