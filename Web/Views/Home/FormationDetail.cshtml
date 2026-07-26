@@ -88,7 +88,7 @@
                         <form method="post" asp-controller="Home" asp-action="DemanderEmbarquement" asp-route-challengeId="@Model.ChallengeId">
                             @Html.AntiForgeryToken()
                             <p class="text-muted small mb-3">Aucune session n'est ouverte pour ce Challenge pour le moment.</p>
-                            <button type="submit" class="cf-btn cf-btn-outline w-100">Demander un embarquement pour ce Challenge</button>
+                            <button type="submit" class="cf-btn cf-btn-outline cf-btn-wrap w-100 justify-content-center text-center">Demander un embarquement</button>
                         </form>
                     }
                 </div>
@@ -98,6 +98,9 @@
 </section>
 
 <style>
+    /* .cf-btn impose white-space: nowrap (pense pour des CTA courts type "S'inscrire") :
+       un libelle plus long comme "Demander un embarquement" deborderait sinon du bouton. */
+    .cf-btn-wrap { white-space: normal; line-height: 1.3; }
     .cf-formation-description p { margin-bottom: 14px; }
     .cf-formation-description ul, .cf-formation-description ol { margin-bottom: 14px; padding-left: 20px; }
     .cf-formation-description li { margin-bottom: 6px; }
