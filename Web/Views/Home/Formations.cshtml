@@ -34,18 +34,19 @@
             <div class="row g-4">
                 @foreach (var challenge in Model)
                 {
-                    <div class="col-12 col-lg-6">
-                        <div class="cf-card h-100 d-flex flex-column">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="cf-card cf-formation-card h-100 d-flex flex-column">
                             <h3 class="cf-h3 mb-1">@challenge.Titre</h3>
                             @if (!string.IsNullOrWhiteSpace(challenge.Slogan))
                             {
-                                <p class="text-muted mb-2">@challenge.Slogan</p>
+                                <p class="text-muted small mb-2">@challenge.Slogan</p>
                             }
                             @if (!string.IsNullOrWhiteSpace(challenge.Description))
                             {
-                                <p class="mb-2" style="white-space: pre-line;">@challenge.Description</p>
+                                var description = challenge.Description.Length > 140 ? challenge.Description[..140] + "…" : challenge.Description;
+                                <p class="small mb-2">@description</p>
                             }
-                            <p class="mb-3"><strong>@challenge.NombreEtapes</strong> étapes</p>
+                            <p class="small text-muted mb-3"><strong class="text-dark">@challenge.NombreEtapes</strong> étapes</p>
 
                             @if (challenge.CohortesOuvertes.Count > 0)
                             {
@@ -59,7 +60,7 @@
                                                     @cohorte.Nom
                                                     @if (cohorte.DateLancement.HasValue)
                                                     {
-                                                        <span class="text-muted d-block">Lancement prévu le @cohorte.DateLancement.Value.ToString("dd/MM/yyyy")</span>
+                                                        <span class="text-muted d-block">Lancement le @cohorte.DateLancement.Value.ToString("dd/MM/yyyy")</span>
                                                     }
                                                 </span>
                                                 <button type="submit" class="cf-btn cf-btn-primary flex-shrink-0">S'inscrire</button>
@@ -73,7 +74,7 @@
                                 <form method="post" asp-controller="Home" asp-action="DemanderEmbarquement" asp-route-challengeId="@challenge.ChallengeId" class="mt-auto">
                                     @Html.AntiForgeryToken()
                                     <p class="text-muted small mb-2">Aucune session ouverte pour ce Challenge pour le moment.</p>
-                                    <button type="submit" class="cf-btn cf-btn-outline w-100">Demander un embarquement pour ce Challenge</button>
+                                    <button type="submit" class="cf-btn cf-btn-outline w-100">Demander un embarquement</button>
                                 </form>
                             }
                         </div>
@@ -83,3 +84,8 @@
         }
     </div>
 </section>
+
+<style>
+    .cf-formation-card { padding: 24px; }
+    .cf-formation-card .cf-h3 { font-size: 20px; }
+</style>
