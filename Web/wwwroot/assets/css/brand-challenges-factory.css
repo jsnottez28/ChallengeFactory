@@ -70,10 +70,18 @@
 
 /* Sections & typo */
 .cf-body { font-family: var(--cf-font-body); color: var(--cf-dark); }
-.cf-section { padding: 100px 0; }
-.cf-section--sm { padding: 60px 0; }
+.cf-section { padding: 80px 0; }
+.cf-section--sm { padding: 48px 0; }
 .cf-section--grey { background: var(--cf-off-white); }
 .cf-section--black { background: var(--cf-black); }
+
+/* En-dessous de 768px, les sections restent condensees : le padding vertical
+   genereux (pense pour desktop) ajoute sinon un aerage excessif sur mobile,
+   ou l'ecran est deja plus court. */
+@media (max-width: 767.98px) {
+  .cf-section { padding: 56px 0; }
+  .cf-section--sm { padding: 40px 0; }
+}
 
 .cf-eyebrow {
   display: inline-block;
@@ -176,7 +184,7 @@
 }
 
 /* Bandeau statistiques (fond noir) */
-.cf-stats-band { background: var(--cf-black); padding: 70px 0; }
+.cf-stats-band { background: var(--cf-black); padding: 56px 0; }
 .cf-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -223,7 +231,7 @@
 }
 @media (max-width: 1399.98px) {
   :root {
-    --cf-header-clearance: 190px;
+    --cf-header-clearance: 120px;
   }
 }
 /* main.css n'applique le padding vertical supplementaire du mode hamburger (voir
@@ -240,7 +248,10 @@
   position: relative;
   overflow: hidden;
   background: var(--cf-white);
-  padding: var(--cf-header-clearance) 0 60px;
+  padding: var(--cf-header-clearance) 0 48px;
+}
+@media (max-width: 767.98px) {
+  .cf-hero-home { padding-bottom: 32px; }
 }
 
 /* Pages d'authentification (Login/Register/ForgotPassword/...) : meme degagement,
@@ -265,8 +276,8 @@
   display: flex;
   gap: 32px;
   flex-wrap: wrap;
-  margin-top: 44px;
-  padding-top: 32px;
+  margin-top: 28px;
+  padding-top: 24px;
   border-top: 1px solid var(--cf-line);
 }
 .cf-hero-proof-num {
