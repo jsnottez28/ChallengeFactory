@@ -140,7 +140,7 @@ namespace Web.Controllers
                 CohortesOuvertes = cohortesOuvertes,
             };
 
-            return View(viewModel);
+            return View("FormationDetail", viewModel);
         }
 
         [HttpPost]
