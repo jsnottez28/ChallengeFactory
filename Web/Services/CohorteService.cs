@@ -306,7 +306,9 @@ public sealed class CohorteService(
         return (true, null);
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> LancerAsync(int cohorteId, string gestionnaireId, string lienMonParcours)
+    public async Task<(bool Success, string? ErrorMessage)> LancerAsync(
+        int cohorteId, string gestionnaireId, string lienMonParcours,
+        DateTime? dateHeureVisio, string? lienConnexionVisio, string? descriptifVisio)
     {
         var cohorte = await dbContext.Cohortes.Include(c => c.Challenge).FirstOrDefaultAsync(c => c.Id == cohorteId);
         if (cohorte is null)
@@ -319,8 +321,34 @@ public sealed class CohorteService(
             return (false, "Seule une Cohorte en préparation peut être lancée.");
         }
 
+        // Planification de la visio de l'etape 1 obligatoire avant confirmation (prompt
+        // "Visio planifiee par etape", section 1.2) - verifie AVANT toute mutation, pour ne
+        // jamais laisser la Cohorte a moitie lancee si la validation echoue.
+        if (dateHeureVisio is null || string.IsNullOrWhiteSpace(lienConnexionVisio))
+        {
+            return (false, "La date/heure et le lien de connexion de la visio de l'étape 1 sont obligatoires pour lancer la Cohorte.");
+        }
+
+        var etape1 = await dbContext.ChallengeEtapes
+            .Include(e => e.Cartes).ThenInclude(ec => ec.CarteCompetence)
+            .FirstOrDefaultAsync(e => e.ChallengeId == cohorte.ChallengeId && e.NumeroEtape == 1);
+        if (etape1 is null)
+        {
+            return (false, "Étape 1 introuvable pour ce Challenge.");
+        }
+
         cohorte.Statut = StatutCohorte.Active;
         cohorte.EtapeCourante = 1;
+
+        dbContext.VisiosEtape.Add(new VisioEtape
+        {
+            CohorteId = cohorte.Id,
+            ChallengeEtapeId = etape1.Id,
+            DateHeure = dateHeureVisio.Value,
+            LienConnexion = lienConnexionVisio.Trim(),
+            Descriptif = string.IsNullOrWhiteSpace(descriptifVisio) ? ConstruireDescriptifVisio(etape1) : descriptifVisio.Trim(),
+            PlanifieParId = gestionnaireId,
+        });
         await dbContext.SaveChangesAsync();
 
         await AttribuerCartesEtapeAsync(cohorte, 1, gestionnaireId);
@@ -333,7 +361,8 @@ public sealed class CohorteService(
         int cohorteId,
         string gestionnaireId,
         string lienMonParcours,
-        string lienBibliotheque)
+        string lienBibliotheque,
+        DateTime? dateHeureVisio, string? lienConnexionVisio, string? descriptifVisio)
     {
         var cohorte = await dbContext.Cohortes.Include(c => c.Challenge).FirstOrDefaultAsync(c => c.Id == cohorteId);
         if (cohorte is null)
@@ -347,6 +376,27 @@ public sealed class CohorteService(
         }
 
         var etapeValidee = cohorte.EtapeCourante;
+        var estDerniereEtape = etapeValidee >= cohorte.Challenge.NombreEtapes;
+
+        // La visio de l'etape SUIVANTE n'est demandee que s'il y a bien une etape suivante
+        // a introduire - jamais sur la derniere etape, qui cloture la Cohorte (prompt
+        // section 1.2). Verifie AVANT toute mutation, meme raison que dans LancerAsync.
+        ChallengeEtape? etapeSuivante = null;
+        if (!estDerniereEtape)
+        {
+            if (dateHeureVisio is null || string.IsNullOrWhiteSpace(lienConnexionVisio))
+            {
+                return (false, "La date/heure et le lien de connexion de la visio de l'étape suivante sont obligatoires pour valider cette étape.");
+            }
+
+            etapeSuivante = await dbContext.ChallengeEtapes
+                .Include(e => e.Cartes).ThenInclude(ec => ec.CarteCompetence)
+                .FirstOrDefaultAsync(e => e.ChallengeId == cohorte.ChallengeId && e.NumeroEtape == etapeValidee + 1);
+            if (etapeSuivante is null)
+            {
+                return (false, "Étape suivante introuvable pour ce Challenge.");
+            }
+        }
 
         dbContext.CohorteEtapeValidations.Add(new CohorteEtapeValidation
         {
@@ -364,7 +414,7 @@ public sealed class CohorteService(
         await preuveService.ClorePreuvesEtapeAsync(cohorteId, etapeValidee);
         await preuveService.AttribuerBadgeSuperHelperAsync(cohorteId, etapeValidee);
 
-        if (cohorte.EtapeCourante >= cohorte.Challenge.NombreEtapes)
+        if (estDerniereEtape)
         {
             cohorte.Statut = StatutCohorte.Terminee;
             await dbContext.SaveChangesAsync();
@@ -374,12 +424,57 @@ public sealed class CohorteService(
         }
 
         cohorte.EtapeCourante++;
+
+        dbContext.VisiosEtape.Add(new VisioEtape
+        {
+            CohorteId = cohorte.Id,
+            ChallengeEtapeId = etapeSuivante!.Id,
+            DateHeure = dateHeureVisio!.Value,
+            LienConnexion = lienConnexionVisio!.Trim(),
+            Descriptif = string.IsNullOrWhiteSpace(descriptifVisio) ? ConstruireDescriptifVisio(etapeSuivante) : descriptifVisio.Trim(),
+            PlanifieParId = gestionnaireId,
+        });
         await dbContext.SaveChangesAsync();
 
         await AttribuerCartesEtapeAsync(cohorte, cohorte.EtapeCourante, gestionnaireId);
         await NotifierNouvelleEtapeAsync(cohorte, cohorte.EtapeCourante, lienMonParcours);
 
         return (true, null);
+    }
+
+    // ---- Visios par etape ----
+
+    public async Task<string> GenererDescriptifVisioAsync(int challengeEtapeId)
+    {
+        var etape = await dbContext.ChallengeEtapes
+            .Include(e => e.Cartes).ThenInclude(ec => ec.CarteCompetence)
+            .FirstOrDefaultAsync(e => e.Id == challengeEtapeId);
+
+        return etape is null ? string.Empty : ConstruireDescriptifVisio(etape);
+    }
+
+    public async Task<List<VisioEtapeInfo>> GetVisiosAsync(int cohorteId)
+    {
+        var visios = await dbContext.VisiosEtape
+            .Include(v => v.ChallengeEtape)
+            .Include(v => v.PlanifiePar)
+            .Where(v => v.CohorteId == cohorteId)
+            .OrderBy(v => v.DateHeure)
+            .ToListAsync();
+
+        return visios.Select(VersVisioInfo).ToList();
+    }
+
+    public async Task<VisioEtapeInfo?> GetProchaineVisioAsync(int cohorteId)
+    {
+        var visio = await dbContext.VisiosEtape
+            .Include(v => v.ChallengeEtape)
+            .Include(v => v.PlanifiePar)
+            .Where(v => v.CohorteId == cohorteId && v.DateHeure >= DateTime.UtcNow)
+            .OrderBy(v => v.DateHeure)
+            .FirstOrDefaultAsync();
+
+        return visio is null ? null : VersVisioInfo(visio);
     }
 
     public async Task<List<ParcoursEnCoursInfo>> GetMesParcoursEnCoursAsync(string utilisateurId)
@@ -693,11 +788,53 @@ public sealed class CohorteService(
             return;
         }
 
+        // La visio de cette etape vient d'etre creee juste avant l'appel (LancerAsync /
+        // ValiderEtapeAsync la planifient toujours en amont de cette notification) - cf.
+        // prompt "Visio planifiee par etape", section 1.5 : ajoutee au contenu de cet email
+        // puisqu'elle est planifiee exactement au meme moment que son declenchement.
+        var visio = await dbContext.VisiosEtape
+            .FirstOrDefaultAsync(v => v.CohorteId == cohorte.Id && v.ChallengeEtapeId == etape.Id);
+
         var carteTitres = etape.Cartes.Select(ec => ec.CarteCompetence.TitreTheorie).ToList();
-        var (sujet, corps) = ChallengeEmailTemplates.NouvelleEtape(cohorte.Challenge.Titre, etape.TitreEtape, carteTitres, lienMonParcours);
+        var (sujet, corps) = ChallengeEmailTemplates.NouvelleEtape(
+            cohorte.Challenge.Titre, etape.TitreEtape, carteTitres, lienMonParcours,
+            visio?.DateHeure, visio?.LienConnexion);
 
         await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
     }
+
+    // Agenda fixe en 3 temps (prompt "Visio planifiee par etape", section 1.3) : le
+    // Gestionnaire peut ensuite ajuster librement ce texte avant de valider l'action.
+    private static string ConstruireDescriptifVisio(ChallengeEtape etape)
+    {
+        var carteNoms = etape.Cartes.Select(ec => ec.CarteCompetence.TitreTheorie).ToList();
+        var cartesTexte = carteNoms.Count > 0 ? string.Join(", ", carteNoms) : "aucune carte rattachée";
+
+        return $"""
+            1. Échange sur les difficultés rencontrées
+            Bilan de l'étape qui vient de se terminer, questions ouvertes des participants.
+
+            2. Atelier collectif
+            Construction en groupe d'un plan d'action collectif pendant la visio.
+
+            3. Présentation de la carte et du défi individuel de la semaine à venir
+            Étape à venir : {etape.TitreEtape}
+            Carte(s) : {cartesTexte}
+            Défi individuel : {etape.DefiIndividuel ?? "non renseigné"}
+            """;
+    }
+
+    private static VisioEtapeInfo VersVisioInfo(VisioEtape v) => new()
+    {
+        Id = v.Id,
+        ChallengeEtapeId = v.ChallengeEtapeId,
+        NumeroEtape = v.ChallengeEtape.NumeroEtape,
+        TitreEtape = v.ChallengeEtape.TitreEtape,
+        DateHeure = v.DateHeure,
+        LienConnexion = v.LienConnexion,
+        Descriptif = v.Descriptif,
+        PlanifieParNomComplet = NomComplet(v.PlanifiePar),
+    };
 
     private async Task NotifierClotureAsync(Cohorte cohorte, string lienBibliotheque)
     {

@@ -57,6 +57,21 @@ public sealed class CohorteEtapeValidationInfo
     public DateTime ValideLe { get; set; }
 }
 
+// Visio planifiee pour introduire une etape d'une Cohorte (prompt "Visio planifiee par
+// etape", section 1). Toujours creee via LancerAsync (etape 1) ou ValiderEtapeAsync
+// (etape suivante), jamais via une action admin dediee.
+public sealed class VisioEtapeInfo
+{
+    public int Id { get; set; }
+    public int ChallengeEtapeId { get; set; }
+    public int NumeroEtape { get; set; }
+    public string TitreEtape { get; set; } = string.Empty;
+    public DateTime DateHeure { get; set; }
+    public string LienConnexion { get; set; } = string.Empty;
+    public string Descriptif { get; set; } = string.Empty;
+    public string PlanifieParNomComplet { get; set; } = string.Empty;
+}
+
 // Cote apprenant : une Cohorte a laquelle l'utilisateur appartient, tant qu'elle est
 // Active. Disparait de "Mon parcours en cours" des qu'elle passe Terminee (les cartes
 // restent visibles dans la bibliotheque, mais plus ici - voir prompt section 7.1).
@@ -115,11 +130,36 @@ public interface ICohorteService
     // Ferme les inscriptions, passe Active, EtapeCourante = 1, attribue les cartes de
     // l'etape 1 et notifie tous les membres actuels (lienMonParcours construit par
     // l'appelant, cf. Url.Page - le service ne construit jamais d'URL lui-meme).
-    Task<(bool Success, string? ErrorMessage)> LancerAsync(int cohorteId, string gestionnaireId, string lienMonParcours);
+    // dateHeureVisio/lienConnexionVisio sont OBLIGATOIRES (prompt "Visio planifiee par
+    // etape", section 1.2) : renvoie une erreur explicite si absents, plutot que de
+    // lancer la Cohorte sans visio planifiee. descriptifVisio est optionnel : si vide,
+    // le descriptif auto-genere (GenererDescriptifVisioAsync) est utilise tel quel.
+    Task<(bool Success, string? ErrorMessage)> LancerAsync(
+        int cohorteId, string gestionnaireId, string lienMonParcours,
+        DateTime? dateHeureVisio, string? lienConnexionVisio, string? descriptifVisio);
 
     // Cree une ligne d'audit, puis avance EtapeCourante (+attribution+email etape) ou
     // cloture la Cohorte (+email de cloture) si c'etait la derniere etape.
-    Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque);
+    // dateHeureVisio/lienConnexionVisio sont OBLIGATOIRES sauf si cette validation cloture
+    // la Cohorte (derniere etape : pas d'etape suivante a introduire, donc pas de visio
+    // demandee - prompt section 1.2).
+    Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(
+        int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque,
+        DateTime? dateHeureVisio, string? lienConnexionVisio, string? descriptifVisio);
+
+    // ---- Visios par etape ----
+
+    // Texte par defaut (agenda fixe en 3 temps, prompt section 1.3) pour l'etape donnee -
+    // a afficher en apercu EDITABLE avant confirmation de LancerAsync/ValiderEtapeAsync
+    // (le Gestionnaire peut l'ajuster librement avant de valider).
+    Task<string> GenererDescriptifVisioAsync(int challengeEtapeId);
+
+    // Visios deja planifiees pour une Cohorte (passees et a venir), triees par date.
+    Task<List<VisioEtapeInfo>> GetVisiosAsync(int cohorteId);
+
+    // La prochaine visio a venir pour une Cohorte (cote apprenant, "Mon parcours en
+    // cours") - null si aucune visio a venir.
+    Task<VisioEtapeInfo?> GetProchaineVisioAsync(int cohorteId);
 
     // Cote apprenant : renvoie [] si le compte n'a pas acces au contenu (Suspendu/En
     // attente de validation, cf. statut_acces_plateforme) - controle serveur, jamais

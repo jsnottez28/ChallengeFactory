@@ -1,0 +1,69 @@
+@model Web.Controllers.CohortesController.LancerFormModel
+@{
+    ViewData["Title"] = "Lancer la Cohorte";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@Model.CohorteId">@Model.CohorteNom</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Lancer la Cohorte</li>
+            </ol>
+        </nav>
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Administration</p>
+            <h1 class="h3 mb-0">Lancer « @Model.CohorteNom »</h1>
+            <p class="text-muted mb-0">@Model.ChallengeTitre — planifiez la visio qui introduira l'étape 1 (« @Model.TitreEtape ») avant de confirmer le lancement.</p>
+        </div>
+
+        <form method="post" asp-controller="Cohortes" asp-action="Lancer" asp-route-id="@Model.CohorteId">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="CohorteId" />
+            <input type="hidden" asp-for="CohorteNom" />
+            <input type="hidden" asp-for="ChallengeTitre" />
+            <input type="hidden" asp-for="TitreEtape" />
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-0">Visio d'introduction — étape 1</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="DateHeureVisio" class="form-label"></label>
+                            <input asp-for="DateHeureVisio" type="datetime-local" class="form-control">
+                            <span asp-validation-for="DateHeureVisio" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="LienConnexionVisio" class="form-label"></label>
+                            <input asp-for="LienConnexionVisio" type="url" class="form-control" placeholder="https://...">
+                            <span asp-validation-for="LienConnexionVisio" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="DescriptifVisio" class="form-label"></label>
+                            <textarea asp-for="DescriptifVisio" class="form-control" rows="10"></textarea>
+                            <div class="form-text">Pré-rempli automatiquement à partir de l'étape 1 (agenda en 3 temps) — modifiable librement avant de confirmer.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="Cohortes" asp-action="Details" asp-route-id="@Model.CohorteId" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Confirmer le lancement de la Cohorte</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

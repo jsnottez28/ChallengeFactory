@@ -14,6 +14,14 @@
             </ol>
         </nav>
 
+        @if (Model.StatusMessage is not null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
             <div>
                 <p class="text-muted mb-1">Mon espace</p>
@@ -27,12 +35,65 @@
                 <partial name="_CarteFlipCard" model="Model.Carte" />
             </div>
             <div class="col-12 col-lg-6">
-                <div class="card border-0 shadow-sm backend-side-card">
+                <div class="card border-0 shadow-sm backend-side-card mb-4">
                     <div class="card-header bg-white border-bottom p-4">
                         <h2 class="h5 mb-0">Comment explorer cette carte</h2>
                     </div>
                     <div class="card-body p-4">
                         <p class="text-muted mb-0">Cliquez sur la carte (ou appuyez sur Entrée si elle est sélectionnée au clavier) pour la retourner et passer de la face Théorie à la face Défi terrain.</p>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm backend-side-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Mes notes</h2>
+                        <p class="text-muted small mb-0">Strictement privées : personne d'autre — ni vos pairs, ni votre Coach — ne peut les voir.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" asp-page-handler="AjouterCommentaire" asp-route-id="@Model.Carte?.Id" class="mb-4">
+                            @Html.AntiForgeryToken()
+                            <textarea asp-for="NouveauCommentaire" class="form-control mb-2" rows="3" placeholder="Ajouter une note personnelle sur cette carte..." required></textarea>
+                            <button type="submit" class="btn btn-sm btn-primary">Ajouter la note</button>
+                        </form>
+
+                        @if (Model.MesCommentaires.Count == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune note pour le moment.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var commentaire in Model.MesCommentaires)
+                                {
+                                    <li class="border rounded p-3 mb-2">
+                                        <p class="mb-1" style="white-space: pre-line;">@commentaire.Contenu</p>
+                                        <p class="text-muted small mb-2">
+                                            @commentaire.DateCreation.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                            @if (commentaire.DateModification.HasValue)
+                                            {
+                                                <span>(modifiée le @commentaire.DateModification.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm"))</span>
+                                            }
+                                        </p>
+
+                                        <details class="mb-2">
+                                            <summary class="small text-primary" style="cursor: pointer;">Modifier</summary>
+                                            <form method="post" asp-page-handler="ModifierCommentaire" asp-route-id="@Model.Carte?.Id" class="mt-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="commentaireId" value="@commentaire.Id" />
+                                                <textarea name="contenu" class="form-control mb-2" rows="2" required>@commentaire.Contenu</textarea>
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">Enregistrer</button>
+                                            </form>
+                                        </details>
+
+                                        <form method="post" asp-page-handler="SupprimerCommentaire" asp-route-id="@Model.Carte?.Id" onsubmit="return confirm('Supprimer cette note ?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="commentaireId" value="@commentaire.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </div>
                 </div>
             </div>

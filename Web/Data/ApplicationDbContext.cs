@@ -39,6 +39,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<PointsEvenement> PointsEvenements { get; set; }
     public DbSet<BadgeSocialAttribution> BadgeSocialAttributions { get; set; }
     public DbSet<NotificationInApp> NotificationsInApp { get; set; }
+    public DbSet<VisioEtape> VisiosEtape { get; set; }
+    public DbSet<CommentaireCarte> CommentairesCarte { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -97,6 +99,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         ConfigureChallenges(builder);
         ConfigurePreuvesPointsEtForum(builder);
         ConfigureNotifications(builder);
+        ConfigureVisiosEtCommentairesCarte(builder);
     }
 
     private static void ConfigureDroitsEtPermissions(ModelBuilder builder)
@@ -503,6 +506,51 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(n => n.Utilisateur)
             .WithMany()
             .HasForeignKey(n => n.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    private static void ConfigureVisiosEtCommentairesCarte(ModelBuilder builder)
+    {
+        // Une seule VisioEtape par (Cohorte, ChallengeEtape) - cf. prompt "Visio planifiee
+        // par etape" section 1.1.
+        builder.Entity<VisioEtape>()
+            .HasIndex(v => new { v.CohorteId, v.ChallengeEtapeId })
+            .IsUnique();
+
+        builder.Entity<VisioEtape>()
+            .HasOne(v => v.Cohorte)
+            .WithMany()
+            .HasForeignKey(v => v.CohorteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<VisioEtape>()
+            .HasOne(v => v.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(v => v.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Restrict : la visio planifiee doit survivre a la suppression du compte du
+        // Gestionnaire qui l'a programmee (meme principe que CohorteEtapeValidation.ValidePar
+        // et PreuveValidationPair.Valideur).
+        builder.Entity<VisioEtape>()
+            .HasOne(v => v.PlanifiePar)
+            .WithMany()
+            .HasForeignKey(v => v.PlanifieParId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CommentaireCarte>()
+            .HasIndex(c => new { c.UtilisateurId, c.CarteCompetenceId });
+
+        builder.Entity<CommentaireCarte>()
+            .HasOne(c => c.Utilisateur)
+            .WithMany()
+            .HasForeignKey(c => c.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CommentaireCarte>()
+            .HasOne(c => c.CarteCompetence)
+            .WithMany()
+            .HasForeignKey(c => c.CarteCompetenceId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -5,6 +5,7 @@
     ViewData["Title"] = Model.Nom;
     var membres = ViewData["Membres"] as List<CohorteMembreInfo> ?? [];
     var historique = ViewData["Historique"] as List<CohorteEtapeValidationInfo> ?? [];
+    var visios = ViewData["Visios"] as List<VisioEtapeInfo> ?? [];
     var derniereEtape = Model.EtapeCourante >= Model.NombreEtapes;
 }
 
@@ -57,17 +58,20 @@
                 <droit-visible code="COHORTE.VALIDER">
                     @if (Model.Statut == StatutCohorte.EnPreparation)
                     {
-                        <form method="post" asp-controller="Cohortes" asp-action="Lancer" asp-route-id="@Model.Id" onsubmit="return confirm('Lancer cette Cohorte ? Les inscriptions seront fermées et l\'étape 1 sera attribuée à tous les membres actuels.');">
-                            <button type="submit" class="btn btn-primary">Lancer la Cohorte</button>
-                        </form>
+                        <a asp-controller="Cohortes" asp-action="LancerConfirmation" asp-route-id="@Model.Id" class="btn btn-primary">Lancer la Cohorte</a>
                     }
                     else if (Model.Statut == StatutCohorte.Active)
                     {
-                        <form method="post" asp-controller="Cohortes" asp-action="ValiderEtape" asp-route-id="@Model.Id" onsubmit="return confirm('Confirmer la validation de cette étape ? Consultez le résumé sur la page \'Preuves de l\'étape\' avant de continuer si besoin.');">
-                            <button type="submit" class="btn btn-primary">
-                                @(derniereEtape ? "Valider la dernière étape et clôturer le Challenge" : "Valider l'étape en cours et passer à la suivante")
-                            </button>
-                        </form>
+                        @if (derniereEtape)
+                        {
+                            <form method="post" asp-controller="Cohortes" asp-action="ValiderEtape" asp-route-id="@Model.Id" onsubmit="return confirm('Confirmer la validation de la dernière étape et la clôture du Challenge ? Consultez le résumé sur la page \'Preuves de l\'étape\' avant de continuer si besoin.');">
+                                <button type="submit" class="btn btn-primary">Valider la dernière étape et clôturer le Challenge</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="Cohortes" asp-action="ValiderEtapeConfirmation" asp-route-id="@Model.Id" class="btn btn-primary">Valider l'étape en cours et passer à la suivante</a>
+                        }
                     }
                 </droit-visible>
                 @if (Model.Statut == StatutCohorte.EnPreparation)
@@ -197,6 +201,35 @@
                                     <li class="mb-2">
                                         <strong>Étape @validation.NumeroEtape</strong> validée par @validation.ValideParNomComplet
                                         <span class="d-block text-muted small">@validation.ValideLe.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Visios planifiées</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (visios.Count == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune visio planifiée pour le moment.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var visio in visios)
+                                {
+                                    var estPassee = visio.DateHeure < DateTime.UtcNow;
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong>Étape @visio.NumeroEtape — @visio.TitreEtape</strong>
+                                            <span class="badge @(estPassee ? "text-bg-secondary" : "text-bg-success")">@(estPassee ? "Passée" : "À venir")</span>
+                                        </div>
+                                        <span class="d-block text-muted small">@visio.DateHeure.ToLocalTime().ToString("dd/MM/yyyy HH:mm") — planifiée par @visio.PlanifieParNomComplet</span>
+                                        <a href="@visio.LienConnexion" target="_blank" rel="noopener" class="small">Lien de connexion</a>
                                     </li>
                                 }
                             </ul>

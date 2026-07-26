@@ -38,12 +38,14 @@ public class MonParcoursModel(
             var dernierMessage = Aplatir(messages).OrderByDescending(m => m.DateCreation).FirstOrDefault();
 
             var preuvesAValider = await preuveService.GetPreuvesAValiderAsync(userId, parcours.CohorteId);
+            var prochaineVisio = await cohorteService.GetProchaineVisioAsync(parcours.CohorteId);
 
             Contextes[parcours.ChallengeEtapeId] = new ParcoursContexteInfo
             {
                 MaPreuve = maPreuve,
                 DernierMessageForum = dernierMessage,
                 NombrePreuvesAValider = preuvesAValider.Count,
+                ProchaineVisio = prochaineVisio,
             };
         }
 
@@ -66,5 +68,6 @@ public class MonParcoursModel(
         public PreuveDetailInfo? MaPreuve { get; set; }
         public ForumMessageInfo? DernierMessageForum { get; set; }
         public int NombrePreuvesAValider { get; set; }
+        public VisioEtapeInfo? ProchaineVisio { get; set; }
     }
 }

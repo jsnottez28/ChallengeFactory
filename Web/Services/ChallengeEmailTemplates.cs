@@ -7,11 +7,18 @@ namespace Web.Services;
 // sans toucher a la logique d'envoi.
 public static class ChallengeEmailTemplates
 {
+    // dateHeureVisio/lienConnexionVisio : la visio de l'etape est desormais planifiee
+    // exactement au meme moment que le declenchement de cet email (prompt "Visio planifiee
+    // par etape", section 1.5) - nullable uniquement en garde-fou defensif, la visio est en
+    // pratique toujours deja creee a ce stade (planification rendue obligatoire cote
+    // ICohorteService.LancerAsync/ValiderEtapeAsync).
     public static (string Sujet, string CorpsHtml) NouvelleEtape(
         string challengeTitre,
         string etapeTitre,
         List<string> carteTitres,
-        string lienMonParcours)
+        string lienMonParcours,
+        DateTime? dateHeureVisio,
+        string? lienConnexionVisio)
     {
         var sujet = $"{challengeTitre} — Nouvelle étape disponible";
 
@@ -19,10 +26,15 @@ public static class ChallengeEmailTemplates
             ? "<ul>" + string.Join("", carteTitres.Select(titre => $"<li>{WebUtility.HtmlEncode(titre)}</li>")) + "</ul>"
             : "";
 
+        var blocVisio = dateHeureVisio is not null && !string.IsNullOrWhiteSpace(lienConnexionVisio)
+            ? $"""<p>Rendez-vous en visio le <strong>{dateHeureVisio:dd/MM/yyyy à HH:mm}</strong> : <a href="{lienConnexionVisio}">Rejoindre la visio</a></p>"""
+            : "";
+
         var corps = $"""
             <p>Bonjour,</p>
             <p>Une nouvelle étape de votre Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> vient de s'ouvrir : <strong>{WebUtility.HtmlEncode(etapeTitre)}</strong>.</p>
             {listeCartes}
+            {blocVisio}
             <p><a href="{lienMonParcours}">Accéder à mon parcours en cours</a></p>
             """;
 

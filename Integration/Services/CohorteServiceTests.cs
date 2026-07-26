@@ -80,7 +80,7 @@ public class CohorteServiceTests
         var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
 
-        var (success, errorMessage) = await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
+        var (success, errorMessage) = await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
 
         Assert.True(success, errorMessage);
 
@@ -116,10 +116,10 @@ public class CohorteServiceTests
 
         var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
-        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
+        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
         emailService.Envois.Clear();
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque");
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
 
         Assert.True(success, errorMessage);
 
@@ -156,10 +156,10 @@ public class CohorteServiceTests
 
         var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
-        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
+        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
         emailService.Envois.Clear();
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque");
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
 
         Assert.True(success, errorMessage);
 
@@ -205,7 +205,7 @@ public class CohorteServiceTests
         });
         await dbContext.SaveChangesAsync();
 
-        var (success, errorMessage) = await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
+        var (success, errorMessage) = await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
         Assert.True(success, errorMessage);
 
         var nombreAttributions = await dbContext.CarteAttributions.CountAsync(a =>
@@ -235,8 +235,8 @@ public class CohorteServiceTests
 
         // Lance (etape 1) puis valide une fois (passe a l'etape 2) avant l'arrivee du
         // retardataire : etapes 1 et 2 sont "deja validees jusqu'a l'etape courante".
-        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
-        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque");
+        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
+        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
 
         await cohorteService.AjouterMembreManuelAsync(cohorteId.Value, retardataire.Id);
 
@@ -371,7 +371,7 @@ public class CohorteServiceTests
         await dbContext.SaveChangesAsync();
 
         var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
-        await cohorteService.LancerAsync(cohorteId!.Value, gestionnaire.Id, "https://test.local/parcours");
+        await cohorteService.LancerAsync(cohorteId!.Value, gestionnaire.Id, "https://test.local/parcours", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
 
         var (success, errorMessage) = await cohorteService.SupprimerAsync(cohorteId.Value);
 

@@ -35,7 +35,7 @@ public class ForumServiceTests
         {
             await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, membre.Id);
         }
-        await cohorteService.LancerAsync(cohorteId!.Value, gestionnaire.Id, "https://test.local/parcours");
+        await cohorteService.LancerAsync(cohorteId!.Value, gestionnaire.Id, "https://test.local/parcours", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
 
         return (cohorteId.Value, etape!.Id, membres);
     }
@@ -129,7 +129,7 @@ public class ForumServiceTests
         var membre = membres[0];
 
         var gestionnaire = await dbContext.Users.FirstAsync(u => u.Email == "coach@test.local");
-        await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque");
+        await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", DateTime.UtcNow.AddDays(1), "https://test.local/visio", null);
 
         var (success, errorMessage) = await forumService.PosterMessageAsync(membre.Id, cohorteId, etapeId, "Trop tard", null, "https://test.local/forum");
 

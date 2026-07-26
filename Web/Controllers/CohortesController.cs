@@ -80,21 +80,142 @@ public class CohortesController(
 
         ViewData["Membres"] = await cohorteService.GetMembresAsync(id);
         ViewData["Historique"] = await cohorteService.GetHistoriqueValidationsAsync(id);
+        ViewData["Visios"] = await cohorteService.GetVisiosAsync(id);
 
         return View(cohorte);
+    }
+
+    // ---- Lancement (planification de la visio de l'étape 1 obligatoire, prompt "Visio
+    // planifiee par etape" section 1.2) ----
+
+    [HttpGet("{id:int}/LancerConfirmation")]
+    [Authorize(Policy = "Droit:COHORTE.VALIDER")]
+    public async Task<IActionResult> LancerConfirmation(int id)
+    {
+        var cohorte = await cohorteService.GetResumeAsync(id);
+        if (cohorte is null || cohorte.Statut != StatutCohorte.EnPreparation)
+        {
+            return NotFound();
+        }
+
+        var challenge = await challengeService.GetByIdAsync(cohorte.ChallengeId);
+        var etape1 = challenge?.Etapes.FirstOrDefault(e => e.NumeroEtape == 1);
+        if (etape1 is null)
+        {
+            TempData["StatusMessage"] = "Étape 1 introuvable pour ce Challenge.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        return View("LancerConfirmation", new LancerFormModel
+        {
+            CohorteId = id,
+            CohorteNom = cohorte.Nom,
+            ChallengeTitre = cohorte.ChallengeTitre,
+            TitreEtape = etape1.TitreEtape,
+            DescriptifVisio = await cohorteService.GenererDescriptifVisioAsync(etape1.Id),
+        });
     }
 
     [HttpPost("{id:int}/Lancer")]
     [Authorize(Policy = "Droit:COHORTE.VALIDER")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Lancer(int id)
+    public async Task<IActionResult> Lancer(int id, LancerFormModel model)
     {
+        if (!ModelState.IsValid)
+        {
+            model.CohorteId = id;
+            return View("LancerConfirmation", model);
+        }
+
         var lienMonParcours = Url.Page("/Dashboard/MonParcours", null, null, Request.Scheme) ?? "/Dashboard/MonParcours";
-        var (success, errorMessage) = await cohorteService.LancerAsync(id, userManager.GetUserId(User)!, lienMonParcours);
-        TempData["StatusMessage"] = success ? "Cohorte lancée : étape 1 attribuée et membres notifiés." : errorMessage;
+        var (success, errorMessage) = await cohorteService.LancerAsync(
+            id, userManager.GetUserId(User)!, lienMonParcours,
+            model.DateHeureVisio, model.LienConnexionVisio, model.DescriptifVisio);
+
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, errorMessage ?? "Impossible de lancer cette Cohorte.");
+            model.CohorteId = id;
+            return View("LancerConfirmation", model);
+        }
+
+        TempData["StatusMessage"] = "Cohorte lancée : étape 1 attribuée, visio planifiée et membres notifiés.";
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    // ---- Validation d'etape (planification de la visio de l'etape suivante obligatoire,
+    // sauf sur la derniere etape qui cloture le Challenge - prompt section 1.2) ----
+
+    [HttpGet("{id:int}/ValiderEtapeConfirmation")]
+    [Authorize(Policy = "Droit:COHORTE.VALIDER")]
+    public async Task<IActionResult> ValiderEtapeConfirmation(int id)
+    {
+        var cohorte = await cohorteService.GetResumeAsync(id);
+        if (cohorte is null || cohorte.Statut != StatutCohorte.Active)
+        {
+            return NotFound();
+        }
+
+        if (cohorte.EtapeCourante >= cohorte.NombreEtapes)
+        {
+            // Derniere etape : aucune visio a planifier, reste sur le flux direct existant
+            // (bouton simple sur Details.cshtml).
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var challenge = await challengeService.GetByIdAsync(cohorte.ChallengeId);
+        var etapeSuivante = challenge?.Etapes.FirstOrDefault(e => e.NumeroEtape == cohorte.EtapeCourante + 1);
+        if (etapeSuivante is null)
+        {
+            TempData["StatusMessage"] = "Étape suivante introuvable pour ce Challenge.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        return View("ValiderEtapeConfirmation", new ValiderEtapeFormModel
+        {
+            CohorteId = id,
+            CohorteNom = cohorte.Nom,
+            ChallengeTitre = cohorte.ChallengeTitre,
+            NumeroEtapeSuivante = etapeSuivante.NumeroEtape,
+            TitreEtapeSuivante = etapeSuivante.TitreEtape,
+            DescriptifVisio = await cohorteService.GenererDescriptifVisioAsync(etapeSuivante.Id),
+        });
+    }
+
+    [HttpPost("{id:int}/ValiderEtapeAvecVisio")]
+    [Authorize(Policy = "Droit:COHORTE.VALIDER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValiderEtapeAvecVisio(int id, ValiderEtapeFormModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            model.CohorteId = id;
+            return View("ValiderEtapeConfirmation", model);
+        }
+
+        var lienMonParcours = Url.Page("/Dashboard/MonParcours", null, null, Request.Scheme) ?? "/Dashboard/MonParcours";
+        var lienBibliotheque = Url.Page("/Dashboard/Cartes", null, null, Request.Scheme) ?? "/Dashboard/Cartes";
+
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(
+            id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque,
+            model.DateHeureVisio, model.LienConnexionVisio, model.DescriptifVisio);
+
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, errorMessage ?? "Impossible de valider cette étape.");
+            model.CohorteId = id;
+            return View("ValiderEtapeConfirmation", model);
+        }
+
+        TempData["StatusMessage"] = "Étape validée, visio de l'étape suivante planifiée.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // Flux direct conserve UNIQUEMENT pour la derniere etape (cloture du Challenge) : pas
+    // de visio a planifier, donc pas de page de confirmation necessaire (prompt section
+    // 1.2, "sur la derniere etape ce champ n'est pas demande"). La verification cote
+    // service (ValiderEtapeAsync) protege quand meme contre un appel direct sur une etape
+    // non-derniere : elle renvoie une erreur explicite plutot que d'ignorer la visio.
     [HttpPost("{id:int}/ValiderEtape")]
     [Authorize(Policy = "Droit:COHORTE.VALIDER")]
     [ValidateAntiForgeryToken]
@@ -103,7 +224,10 @@ public class CohortesController(
         var lienMonParcours = Url.Page("/Dashboard/MonParcours", null, null, Request.Scheme) ?? "/Dashboard/MonParcours";
         var lienBibliotheque = Url.Page("/Dashboard/Cartes", null, null, Request.Scheme) ?? "/Dashboard/Cartes";
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque);
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(
+            id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque,
+            null, null, null);
+
         TempData["StatusMessage"] = success ? "Étape validée." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -270,5 +394,44 @@ public class CohortesController(
 
         [Display(Name = "Emails (un par ligne, format : email,prénom,nom)")]
         public string? Lignes { get; set; }
+    }
+
+    public sealed class LancerFormModel
+    {
+        public int CohorteId { get; set; }
+        public string CohorteNom { get; set; } = string.Empty;
+        public string ChallengeTitre { get; set; } = string.Empty;
+        public string TitreEtape { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La date et l'heure de la visio sont obligatoires.")]
+        [Display(Name = "Date et heure de la visio")]
+        public DateTime? DateHeureVisio { get; set; }
+
+        [Required(ErrorMessage = "Le lien de connexion de la visio est obligatoire.")]
+        [Display(Name = "Lien de connexion")]
+        public string LienConnexionVisio { get; set; } = string.Empty;
+
+        [Display(Name = "Descriptif / agenda de la visio")]
+        public string DescriptifVisio { get; set; } = string.Empty;
+    }
+
+    public sealed class ValiderEtapeFormModel
+    {
+        public int CohorteId { get; set; }
+        public string CohorteNom { get; set; } = string.Empty;
+        public string ChallengeTitre { get; set; } = string.Empty;
+        public int NumeroEtapeSuivante { get; set; }
+        public string TitreEtapeSuivante { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La date et l'heure de la visio sont obligatoires.")]
+        [Display(Name = "Date et heure de la visio")]
+        public DateTime? DateHeureVisio { get; set; }
+
+        [Required(ErrorMessage = "Le lien de connexion de la visio est obligatoire.")]
+        [Display(Name = "Lien de connexion")]
+        public string LienConnexionVisio { get; set; } = string.Empty;
+
+        [Display(Name = "Descriptif / agenda de la visio")]
+        public string DescriptifVisio { get; set; } = string.Empty;
     }
 }

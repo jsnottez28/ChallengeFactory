@@ -73,6 +73,17 @@
                             </div>
 
                             <div class="col-12 col-lg-4">
+                                @if (contexte?.ProchaineVisio is not null)
+                                {
+                                    <div class="border rounded p-3 mb-3 border-primary">
+                                        <h3 class="h6 mb-2">Prochaine visio</h3>
+                                        <p class="mb-1 fw-semibold">Étape @contexte.ProchaineVisio.NumeroEtape — @contexte.ProchaineVisio.TitreEtape</p>
+                                        <p class="text-muted small mb-2">@contexte.ProchaineVisio.DateHeure.ToLocalTime().ToString("dddd dd MMMM yyyy à HH:mm")</p>
+                                        <p class="small mb-2" style="white-space: pre-line;">@contexte.ProchaineVisio.Descriptif</p>
+                                        <a href="@contexte.ProchaineVisio.LienConnexion" target="_blank" rel="noopener" class="btn btn-sm btn-primary w-100">Rejoindre la visio</a>
+                                    </div>
+                                }
+
                                 <div class="border rounded p-3 mb-3">
                                     <h3 class="h6 mb-2">Ma preuve pour cette étape</h3>
                                     @if (contexte?.MaPreuve is null)
