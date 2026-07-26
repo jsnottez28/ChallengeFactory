@@ -9,14 +9,21 @@ namespace Web.Services;
 public sealed class CohorteService(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
-    IEmailService emailService) : ICohorteService
+    IEmailService emailService,
+    IPreuveService preuveService,
+    INotificationService notificationService) : ICohorteService
 {
     public async Task<List<CohorteResume>> GetAllAsync()
     {
+        // Les Cohortes Proposee ne sont pas de "vraies" Cohortes tant qu'un Gestionnaire ne
+        // les a pas validees (cf. GetDemandesEmbarquementAsync/ValiderEmbarquementAsync,
+        // ecran dedie "Demandes d'embarquement") : exclues de la liste generale pour ne pas
+        // se retrouver affichees avec un statut ambigu.
         var cohortes = await dbContext.Cohortes
             .Include(c => c.Challenge)
             .Include(c => c.Organisation)
             .Include(c => c.Membres)
+            .Where(c => c.Statut != StatutCohorte.Proposee)
             .OrderByDescending(c => c.CreeLe)
             .ToListAsync();
 
@@ -348,6 +355,14 @@ public sealed class CohorteService(
             ValideParId = gestionnaireId,
             ValideLe = DateTime.UtcNow,
         });
+        await dbContext.SaveChangesAsync();
+
+        // Extension "Depot de preuves, points et forum par etape" : finalise en bloc les
+        // Preuves de l'etape qui se cloture (section 4.2), puis calcule le badge social
+        // Super Helper de la periode (section 5) - toujours declenche par cette meme
+        // action humaine explicite, jamais par une tache planifiee (cf. prompt section 8).
+        await preuveService.ClorePreuvesEtapeAsync(cohorteId, etapeValidee);
+        await preuveService.AttribuerBadgeSuperHelperAsync(cohorteId, etapeValidee);
 
         if (cohorte.EtapeCourante >= cohorte.Challenge.NombreEtapes)
         {
@@ -400,6 +415,7 @@ public sealed class CohorteService(
             {
                 CohorteId = cohorte.Id,
                 ChallengeTitre = cohorte.Challenge.Titre,
+                ChallengeEtapeId = etape.Id,
                 NumeroEtape = etape.NumeroEtape,
                 TitreEtape = etape.TitreEtape,
                 DefiIndividuel = etape.DefiIndividuel,
@@ -433,6 +449,156 @@ public sealed class CohorteService(
         return (true, null);
     }
 
+    // ---- Embarquement ----
+
+    public async Task<(bool Success, string? ErrorMessage, int? CohorteId)> DemanderEmbarquementAsync(int challengeId, string utilisateurId)
+    {
+        var challenge = await dbContext.Challenges.FirstOrDefaultAsync(c => c.Id == challengeId);
+        if (challenge is null)
+        {
+            return (false, "Challenge introuvable.", null);
+        }
+
+        if (challenge.Statut != StatutChallenge.Publie)
+        {
+            return (false, "Ce Challenge n'est pas encore publié.", null);
+        }
+
+        if (challenge.Mode != ModePlateforme.BtoC)
+        {
+            return (false, "La demande d'embarquement en libre-service n'est disponible que pour les Challenges BtoC.", null);
+        }
+
+        var cohorteProposee = await dbContext.Cohortes
+            .FirstOrDefaultAsync(c => c.ChallengeId == challengeId && c.Statut == StatutCohorte.Proposee);
+
+        if (cohorteProposee is null)
+        {
+            cohorteProposee = new Cohorte
+            {
+                ChallengeId = challengeId,
+                Nom = $"Demande d'embarquement — {challenge.Titre}",
+                Statut = StatutCohorte.Proposee,
+                EtapeCourante = 0,
+            };
+            dbContext.Cohortes.Add(cohorteProposee);
+            await dbContext.SaveChangesAsync();
+        }
+
+        if (await dbContext.CohorteMembres.AnyAsync(m => m.CohorteId == cohorteProposee.Id && m.UtilisateurId == utilisateurId))
+        {
+            return (true, null, cohorteProposee.Id);
+        }
+
+        dbContext.CohorteMembres.Add(new CohorteMembre
+        {
+            CohorteId = cohorteProposee.Id,
+            UtilisateurId = utilisateurId,
+            MethodeAjout = MethodeAjoutMembre.AutoInscription,
+            DateAjout = DateTime.UtcNow,
+        });
+        await dbContext.SaveChangesAsync();
+
+        return (true, null, cohorteProposee.Id);
+    }
+
+    public async Task<List<DemandeEmbarquementInfo>> GetDemandesEmbarquementAsync()
+    {
+        var demandes = await dbContext.Cohortes
+            .Include(c => c.Challenge)
+            .Include(c => c.Membres)
+            .Where(c => c.Statut == StatutCohorte.Proposee)
+            .OrderBy(c => c.CreeLe)
+            .ToListAsync();
+
+        return demandes.Select(c => new DemandeEmbarquementInfo
+        {
+            CohorteId = c.Id,
+            ChallengeId = c.ChallengeId,
+            ChallengeTitre = c.Challenge.Titre,
+            NombreDemandeurs = c.Membres.Count,
+            DateCreation = c.CreeLe,
+        }).ToList();
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> ValiderEmbarquementAsync(int cohorteId, string nom, DateTime dateLancement, string lienFormations)
+    {
+        if (string.IsNullOrWhiteSpace(nom))
+        {
+            return (false, "Le nom de la Cohorte est obligatoire.");
+        }
+
+        var cohorte = await dbContext.Cohortes
+            .Include(c => c.Challenge)
+            .Include(c => c.Membres).ThenInclude(m => m.Utilisateur)
+            .FirstOrDefaultAsync(c => c.Id == cohorteId);
+
+        if (cohorte is null)
+        {
+            return (false, "Cohorte introuvable.");
+        }
+
+        if (cohorte.Statut != StatutCohorte.Proposee)
+        {
+            return (false, "Seule une demande d'embarquement en attente peut être validée.");
+        }
+
+        cohorte.Nom = nom.Trim();
+        cohorte.DateLancement = dateLancement;
+        cohorte.Statut = StatutCohorte.EnPreparation;
+        await dbContext.SaveChangesAsync();
+
+        var (sujet, corps) = ChallengeEmailTemplates.EmbarquementValide(cohorte.Challenge.Titre, cohorte.Nom, dateLancement, lienFormations);
+        foreach (var membre in cohorte.Membres)
+        {
+            await notificationService.CreerAsync(membre.UtilisateurId, TypeNotification.DemandeEmbarquementValidee,
+                ReferenceTypeNotification.Cohorte, cohorte.Id,
+                $"Ta session pour \"{cohorte.Challenge.Titre}\" est confirmée — viens voir les détails", lienFormations);
+
+            if (!string.IsNullOrWhiteSpace(membre.Utilisateur.Email))
+            {
+                await emailService.EnvoyerAsync(membre.Utilisateur.Email, sujet, corps);
+            }
+        }
+
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> RefuserEmbarquementAsync(int cohorteId, string lienCatalogue)
+    {
+        var cohorte = await dbContext.Cohortes
+            .Include(c => c.Challenge)
+            .Include(c => c.Membres)
+            .FirstOrDefaultAsync(c => c.Id == cohorteId);
+
+        if (cohorte is null)
+        {
+            return (false, "Cohorte introuvable.");
+        }
+
+        if (cohorte.Statut != StatutCohorte.Proposee)
+        {
+            return (false, "Seule une demande d'embarquement en attente peut être refusée.");
+        }
+
+        var demandeurIds = cohorte.Membres.Select(m => m.UtilisateurId).ToList();
+        var challengeTitre = cohorte.Challenge.Titre;
+
+        // Aucune trace utile a garder : une Cohorte Proposee n'a jamais eu de carte
+        // attribuee ni d'etape validee (cf. SupprimerAsync, meme raisonnement).
+        dbContext.Cohortes.Remove(cohorte);
+        await dbContext.SaveChangesAsync();
+
+        foreach (var demandeurId in demandeurIds)
+        {
+            await notificationService.CreerAsync(demandeurId, TypeNotification.DemandeEmbarquementRefusee,
+                ReferenceTypeNotification.Cohorte, cohorteId,
+                $"Ta demande d'embarquement pour \"{challengeTitre}\" n'a pas été retenue pour le moment.", lienCatalogue);
+        }
+
+        return (true, null);
+    }
+
     // ---- Helpers ----
 
     private static string? VerifierInscriptionPossible(Cohorte cohorte)
@@ -440,6 +606,7 @@ public sealed class CohorteService(
         return cohorte.Statut switch
         {
             StatutCohorte.Terminee => "Cette Cohorte est terminée : impossible d'y ajouter des membres.",
+            StatutCohorte.Proposee => "Cette Cohorte est encore à l'état de demande, en attente de validation : impossible d'y ajouter des membres directement.",
             _ => null,
         };
     }

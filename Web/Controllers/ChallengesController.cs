@@ -92,6 +92,7 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
             Code = challenge.Code,
             Titre = challenge.Titre,
             Slogan = challenge.Slogan,
+            Description = challenge.Description,
             NombreEtapes = challenge.NombreEtapes,
             Mode = challenge.Mode,
         });
@@ -273,6 +274,7 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
         Code = model.Code,
         Titre = model.Titre,
         Slogan = model.Slogan,
+        Description = model.Description,
         NombreEtapes = model.NombreEtapes,
         Mode = model.Mode,
     };
@@ -298,6 +300,9 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
 
         [Display(Name = "Slogan")]
         public string? Slogan { get; set; }
+
+        [Display(Name = "Description")]
+        public string? Description { get; set; }
 
         [Range(1, 52, ErrorMessage = "Le nombre d'étapes doit être compris entre 1 et 52.")]
         [Display(Name = "Nombre d'étapes")]

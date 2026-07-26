@@ -30,6 +30,15 @@ public sealed class CohorteResume
     public string? OrganisationNom { get; set; }
 }
 
+public sealed class DemandeEmbarquementInfo
+{
+    public int CohorteId { get; set; }
+    public int ChallengeId { get; set; }
+    public string ChallengeTitre { get; set; } = string.Empty;
+    public int NombreDemandeurs { get; set; }
+    public DateTime DateCreation { get; set; }
+}
+
 public sealed class CohorteMembreInfo
 {
     public int Id { get; set; }
@@ -55,6 +64,7 @@ public sealed class ParcoursEnCoursInfo
 {
     public int CohorteId { get; set; }
     public string ChallengeTitre { get; set; } = string.Empty;
+    public int ChallengeEtapeId { get; set; }
     public int NumeroEtape { get; set; }
     public string TitreEtape { get; set; } = string.Empty;
     public string? DefiIndividuel { get; set; }
@@ -120,4 +130,27 @@ public interface ICohorteService
     // carte n'a ete attribuee ni aucune etape validee via cette Cohorte, donc rien a
     // perdre du cote tracabilite - les membres deja ajoutes sont retires (cascade).
     Task<(bool Success, string? ErrorMessage)> SupprimerAsync(int id);
+
+    // ---- Embarquement (prompt section H) ----
+
+    // Cote apprenant (BtoC uniquement, meme restriction que AutoInscrireAsync) : si une
+    // Cohorte Proposee existe deja pour ce Challenge, l'apprenant y est simplement ajoute ;
+    // sinon une nouvelle Cohorte Proposee est creee avec lui comme premier membre. Ne rend
+    // JAMAIS la Cohorte visible/utilisable directement (reste soumise a validation humaine,
+    // cf. ValiderEmbarquementAsync).
+    Task<(bool Success, string? ErrorMessage, int? CohorteId)> DemanderEmbarquementAsync(int challengeId, string utilisateurId);
+
+    // Cote Gestionnaire : liste des demandes d'embarquement en attente (Cohortes Proposee),
+    // avec le nombre de demandeurs actuels.
+    Task<List<DemandeEmbarquementInfo>> GetDemandesEmbarquementAsync();
+
+    // Proposee -> EnPreparation, avec une date de lancement obligatoire : la Cohorte devient
+    // alors visible/ouverte a l'inscription publique comme n'importe quelle Cohorte
+    // EnPreparation. Notifie ET envoie un email a chaque demandeur deja membre (ils sont
+    // deja inscrits sur cette Cohorte depuis DemanderEmbarquementAsync, rien a re-inscrire).
+    Task<(bool Success, string? ErrorMessage)> ValiderEmbarquementAsync(int cohorteId, string nom, DateTime dateLancement, string lienFormations);
+
+    // Supprime la demande (jamais de Cohorte "fantome" qui trainerait en Proposee) et
+    // notifie chaque demandeur (reutilise INotificationService, cf. prompt section B).
+    Task<(bool Success, string? ErrorMessage)> RefuserEmbarquementAsync(int cohorteId, string lienCatalogue);
 }

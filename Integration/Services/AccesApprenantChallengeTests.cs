@@ -45,7 +45,7 @@ public class AccesApprenantChallengeTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService());
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
         var apprenantService = new CarteApprenantService(dbContext, userManager);
 
         var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local", Statut = StatutUtilisateur.Modere };
@@ -66,7 +66,7 @@ public class AccesApprenantChallengeTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService());
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
         var apprenantService = new CarteApprenantService(dbContext, userManager);
 
         var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local", Statut = StatutUtilisateur.Actif };
@@ -91,7 +91,7 @@ public class AccesApprenantChallengeTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService());
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
 
         var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local", Statut = StatutUtilisateur.Modere };
         dbContext.Users.Add(apprenant);
@@ -120,7 +120,7 @@ public class AccesApprenantChallengeTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService());
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
         var apprenantService = new CarteApprenantService(dbContext, userManager);
 
         var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local", Statut = StatutUtilisateur.Actif };

@@ -1,4 +1,5 @@
 @page
+@model Web.Pages.Dashboard.IndexModel
 @{
     ViewData["Title"] = "Tableau de bord";
 }
@@ -7,7 +8,6 @@
     <div class="container-fluid">
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Tableau de bord</li>
             </ol>
         </nav>
@@ -17,57 +17,120 @@
                 <p class="text-muted mb-1">Mon espace</p>
                 <h1 class="h3 mb-0">Bienvenue @(User.Identity?.Name ?? "utilisateur")</h1>
             </div>
-            <a asp-page="/Dashboard/Index" class="btn btn-primary">Voir le tableau de bord</a>
+            @if (Model.ParcoursEnCours.Count > 0)
+            {
+                <a asp-page="/Dashboard/MonParcours" class="btn btn-primary">Voir mon parcours en détail</a>
+            }
         </div>
 
-        <div class="row g-4 align-items-start">
-            <div class="col-12 col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <h2 class="h5 mb-4">Synthèse de mon espace</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@Model.Points.TotalXPSavoir</div>
+                    <div class="text-muted small">XP Savoir</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@Model.Points.TotalPointsKarma</div>
+                    <div class="text-muted small">Points Karma</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@Model.Points.TotalPointsAssiduite</div>
+                    <div class="text-muted small">Points Assiduité</div>
+                </div>
+            </div>
+        </div>
 
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <a asp-area="Identity" asp-page="/Account/Manage/Index" class="d-block h-100 text-decoration-none border rounded p-3">
-                                    <span class="fw-semibold text-dark d-block mb-1">Mes informations</span>
-                                    <span class="text-muted small">Consulter et mettre à jour le profil.</span>
-                                </a>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <a asp-page="/Dashboard/Inscriptions" class="d-block h-100 text-decoration-none border rounded p-3">
-                                    <span class="fw-semibold text-dark d-block mb-1">Mes réservations</span>
-                                    <span class="text-muted small">Suivre les inscriptions et réservations.</span>
-                                </a>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <a href="#" class="d-block h-100 text-decoration-none border rounded p-3">
-                                    <span class="fw-semibold text-dark d-block mb-1">Mes tickets</span>
-                                    <span class="text-muted small">Retrouver les demandes de support.</span>
-                                </a>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <a asp-page="/Dashboard/Preferences" class="d-block h-100 text-decoration-none border rounded p-3">
-                                    <span class="fw-semibold text-dark d-block mb-1">Mes préférences</span>
-                                    <span class="text-muted small">Adapter les réglages de l'espace.</span>
-                                </a>
-                            </div>
+        @if (Model.ParcoursEnCours.Count == 0)
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <p class="text-muted mb-0">Vous n'êtes membre d'aucun Challenge actif pour le moment. Retrouvez le catalogue des Challenges disponibles depuis <a asp-controller="Home" asp-action="Formations">Formations</a>.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4 align-items-start mb-4">
+                <div class="col-12 col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Cohorte@(Model.ParcoursEnCours.Count > 1 ? "s" : "") en cours</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            @foreach (var parcours in Model.ParcoursEnCours)
+                            {
+                                <div class="border rounded p-3 mb-3">
+                                    <p class="text-muted mb-1">@parcours.ChallengeTitre</p>
+                                    <h3 class="h6 mb-2">Étape @parcours.NumeroEtape — @parcours.TitreEtape</h3>
+                                    @if (parcours.Cartes.Count > 0)
+                                    {
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            @foreach (var carte in parcours.Cartes)
+                                            {
+                                                <span class="badge text-bg-light">@carte.TitreTheorie</span>
+                                            }
+                                        </div>
+                                    }
+                                    <a asp-page="/Dashboard/MonParcours" class="btn btn-sm btn-outline-primary">Voir le détail de l'étape</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm backend-side-card">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Mes preuves en cours</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            <ul class="list-unstyled mb-0">
+                                <li class="d-flex justify-content-between mb-2">
+                                    <span>Soumises, en attente d'avis</span>
+                                    <span class="badge text-bg-secondary">@Model.NombreSoumises</span>
+                                </li>
+                                <li class="d-flex justify-content-between mb-2">
+                                    <span>Validées par les pairs</span>
+                                    <span class="badge text-bg-success">@Model.NombreValideesParLesPairs</span>
+                                </li>
+                                <li class="d-flex justify-content-between mb-0">
+                                    <span>En attente de mon action (à revoir)</span>
+                                    <span class="badge text-bg-warning">@Model.NombreEnAttenteDeMonAction</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
+        }
 
-            <div class="col-12 col-lg-4">
-                <div class="card border-0 shadow-sm backend-side-card">
-                    <div class="card-body p-4">
-                        <h2 class="h5 mb-3">À retenir</h2>
-                        <p class="text-muted mb-3">Cette colonne peut accueillir les alertes, raccourcis, notifications ou informations utiles à l'utilisateur.</p>
-                        <div class="list-group list-group-flush">
-                            <a asp-area="Identity" asp-page="/Account/Manage/Index" class="list-group-item list-group-item-action px-0">Compléter mon profil</a>
-                            <a href="#" class="list-group-item list-group-item-action px-0">Voir mes notifications</a>
-                            <a href="#" class="list-group-item list-group-item-action px-0">Contacter le support</a>
-                        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Mes badges</h2>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.Badges.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucun badge pour le moment. Aidez vos pairs sur le forum pour décrocher un badge "Super Helper" !</p>
+                }
+                else
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var badge in Model.Badges)
+                        {
+                            <span class="badge text-bg-warning p-2">
+                                🌟 Super Helper — @badge.ChallengeTitre, étape @badge.NumeroEtape
+                            </span>
+                        }
                     </div>
-                </div>
+                }
+            </div>
+            <div class="card-footer bg-white border-top p-4">
+                <a asp-page="/Dashboard/MesPoints" class="btn btn-sm btn-outline-secondary">Voir tous mes points et badges</a>
             </div>
         </div>
     </div>

@@ -16,6 +16,11 @@ public class Challenge
     public string Titre { get; set; } = null!;
     public string? Slogan { get; set; }
 
+    // Texte long expliquant concretement ce que l'apprenant va apprendre pendant le
+    // Challenge (distinct du Slogan, accrocheur mais court) - affiche sur la page de
+    // presentation du Challenge dans le catalogue (cf. prompt section D/H).
+    public string? Description { get; set; }
+
     public int NombreEtapes { get; set; } = 8;
 
     public ModePlateforme Mode { get; set; }

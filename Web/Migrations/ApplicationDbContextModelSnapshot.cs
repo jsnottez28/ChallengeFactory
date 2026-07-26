@@ -172,6 +172,9 @@ namespace Web.Migrations
                     b.Property<DateTime>("CreeLe")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Mode")
                         .HasColumnType("int");
 
@@ -723,6 +726,42 @@ namespace Web.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Web.Data.BadgeSocialAttribution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChallengeEtapeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CohorteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateAttribution")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TypeBadge")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChallengeEtapeId");
+
+                    b.HasIndex("CohorteId");
+
+                    b.HasIndex("UtilisateurId", "CohorteId", "ChallengeEtapeId", "TypeBadge")
+                        .IsUnique();
+
+                    b.ToTable("BadgeSocialAttributions");
+                });
+
             modelBuilder.Entity("Web.Data.CarteAttribution", b =>
                 {
                     b.Property<int>("Id")
@@ -1027,6 +1066,75 @@ namespace Web.Migrations
                     b.ToTable("Scopes");
                 });
 
+            modelBuilder.Entity("Web.Data.ForumMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuteurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ChallengeEtapeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CohorteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Contenu")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("MessageParentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuteurId");
+
+                    b.HasIndex("ChallengeEtapeId");
+
+                    b.HasIndex("CohorteId");
+
+                    b.HasIndex("MessageParentId");
+
+                    b.ToTable("ForumMessages");
+                });
+
+            modelBuilder.Entity("Web.Data.ForumMessageUtile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MarqueParId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("MessageId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MarqueParId");
+
+                    b.HasIndex("MessageId", "MarqueParId")
+                        .IsUnique();
+
+                    b.ToTable("ForumMessagesUtiles");
+                });
+
             modelBuilder.Entity("Web.Data.InvitationCompte", b =>
                 {
                     b.Property<int>("Id")
@@ -1063,6 +1171,231 @@ namespace Web.Migrations
                     b.HasIndex("UtilisateurId");
 
                     b.ToTable("InvitationsComptes");
+                });
+
+            modelBuilder.Entity("Web.Data.NotificationInApp", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Lien")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Lu")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MessageCourt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReferenceType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UtilisateurId", "Lu", "DateCreation");
+
+                    b.ToTable("NotificationsInApp");
+                });
+
+            modelBuilder.Entity("Web.Data.PointsEvenement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CohorteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Montant")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Motif")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReferenceType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TypePoints")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CohorteId");
+
+                    b.HasIndex("UtilisateurId");
+
+                    b.ToTable("PointsEvenements");
+                });
+
+            modelBuilder.Entity("Web.Data.Preuve", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChallengeEtapeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CohorteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateDepot")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Statut")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChallengeEtapeId");
+
+                    b.HasIndex("CohorteId");
+
+                    b.HasIndex("UtilisateurId", "ChallengeEtapeId")
+                        .IsUnique();
+
+                    b.ToTable("Preuves");
+                });
+
+            modelBuilder.Entity("Web.Data.PreuveFichier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CheminStockage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateUpload")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NomFichier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PreuveId")
+                        .HasColumnType("int");
+
+                    b.Property<long>("TailleOctets")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("TypeFichier")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PreuveId");
+
+                    b.ToTable("PreuveFichiers");
+                });
+
+            modelBuilder.Entity("Web.Data.PreuveValidationGestionnaire", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Commentaire")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateValidation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreuveId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ValideurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PreuveId");
+
+                    b.HasIndex("ValideurId");
+
+                    b.ToTable("PreuveValidationsGestionnaire");
+                });
+
+            modelBuilder.Entity("Web.Data.PreuveValidationPair", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Commentaire")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateValidation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreuveId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ValideurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ValideurId");
+
+                    b.HasIndex("PreuveId", "ValideurId")
+                        .IsUnique();
+
+                    b.ToTable("PreuveValidationsPairs");
                 });
 
             modelBuilder.Entity("Web.Data.Rattachement", b =>
@@ -1275,6 +1608,33 @@ namespace Web.Migrations
                     b.Navigation("Civilite");
                 });
 
+            modelBuilder.Entity("Web.Data.BadgeSocialAttribution", b =>
+                {
+                    b.HasOne("Domain.Entities.ChallengeEtape", "ChallengeEtape")
+                        .WithMany()
+                        .HasForeignKey("ChallengeEtapeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.Cohorte", "Cohorte")
+                        .WithMany()
+                        .HasForeignKey("CohorteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ChallengeEtape");
+
+                    b.Navigation("Cohorte");
+
+                    b.Navigation("Utilisateur");
+                });
+
             modelBuilder.Entity("Web.Data.CarteAttribution", b =>
                 {
                     b.HasOne("Web.Data.ApplicationUser", "AttribuePar")
@@ -1390,6 +1750,59 @@ namespace Web.Migrations
                     b.Navigation("Organisation");
                 });
 
+            modelBuilder.Entity("Web.Data.ForumMessage", b =>
+                {
+                    b.HasOne("Web.Data.ApplicationUser", "Auteur")
+                        .WithMany()
+                        .HasForeignKey("AuteurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.ChallengeEtape", "ChallengeEtape")
+                        .WithMany()
+                        .HasForeignKey("ChallengeEtapeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.Cohorte", "Cohorte")
+                        .WithMany()
+                        .HasForeignKey("CohorteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.ForumMessage", "MessageParent")
+                        .WithMany("Reponses")
+                        .HasForeignKey("MessageParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Auteur");
+
+                    b.Navigation("ChallengeEtape");
+
+                    b.Navigation("Cohorte");
+
+                    b.Navigation("MessageParent");
+                });
+
+            modelBuilder.Entity("Web.Data.ForumMessageUtile", b =>
+                {
+                    b.HasOne("Web.Data.ApplicationUser", "MarquePar")
+                        .WithMany()
+                        .HasForeignKey("MarqueParId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.ForumMessage", "Message")
+                        .WithMany("MarquagesUtile")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MarquePar");
+
+                    b.Navigation("Message");
+                });
+
             modelBuilder.Entity("Web.Data.InvitationCompte", b =>
                 {
                     b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
@@ -1399,6 +1812,111 @@ namespace Web.Migrations
                         .IsRequired();
 
                     b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Web.Data.NotificationInApp", b =>
+                {
+                    b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Web.Data.PointsEvenement", b =>
+                {
+                    b.HasOne("Web.Data.Cohorte", "Cohorte")
+                        .WithMany()
+                        .HasForeignKey("CohorteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cohorte");
+
+                    b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Web.Data.Preuve", b =>
+                {
+                    b.HasOne("Domain.Entities.ChallengeEtape", "ChallengeEtape")
+                        .WithMany()
+                        .HasForeignKey("ChallengeEtapeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.Cohorte", "Cohorte")
+                        .WithMany()
+                        .HasForeignKey("CohorteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ChallengeEtape");
+
+                    b.Navigation("Cohorte");
+
+                    b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Web.Data.PreuveFichier", b =>
+                {
+                    b.HasOne("Web.Data.Preuve", "Preuve")
+                        .WithMany("Fichiers")
+                        .HasForeignKey("PreuveId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Preuve");
+                });
+
+            modelBuilder.Entity("Web.Data.PreuveValidationGestionnaire", b =>
+                {
+                    b.HasOne("Web.Data.Preuve", "Preuve")
+                        .WithMany("ValidationsGestionnaire")
+                        .HasForeignKey("PreuveId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.ApplicationUser", "Valideur")
+                        .WithMany()
+                        .HasForeignKey("ValideurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Preuve");
+
+                    b.Navigation("Valideur");
+                });
+
+            modelBuilder.Entity("Web.Data.PreuveValidationPair", b =>
+                {
+                    b.HasOne("Web.Data.Preuve", "Preuve")
+                        .WithMany("ValidationsPairs")
+                        .HasForeignKey("PreuveId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.ApplicationUser", "Valideur")
+                        .WithMany()
+                        .HasForeignKey("ValideurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Preuve");
+
+                    b.Navigation("Valideur");
                 });
 
             modelBuilder.Entity("Web.Data.Rattachement", b =>
@@ -1502,6 +2020,22 @@ namespace Web.Migrations
             modelBuilder.Entity("Web.Data.Entities.Organisation", b =>
                 {
                     b.Navigation("Rattachements");
+                });
+
+            modelBuilder.Entity("Web.Data.ForumMessage", b =>
+                {
+                    b.Navigation("MarquagesUtile");
+
+                    b.Navigation("Reponses");
+                });
+
+            modelBuilder.Entity("Web.Data.Preuve", b =>
+                {
+                    b.Navigation("Fichiers");
+
+                    b.Navigation("ValidationsGestionnaire");
+
+                    b.Navigation("ValidationsPairs");
                 });
 #pragma warning restore 612, 618
         }

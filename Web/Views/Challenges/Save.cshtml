@@ -44,6 +44,11 @@
                             <label asp-for="Slogan" class="form-label"></label>
                             <input asp-for="Slogan" class="form-control" autocomplete="off">
                         </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="6" style="font-family: monospace;"></textarea>
+                            <div class="form-text">Explique concrètement ce que l'apprenant va apprendre pendant ce Challenge — affiché tel quel sur la page de présentation du Challenge dans le catalogue. Quelques balises HTML simples sont acceptées pour la mise en forme (<code>&lt;p&gt;</code>, <code>&lt;ul&gt;&lt;li&gt;</code>, <code>&lt;strong&gt;</code>) — pas de script, ce champ n'est pas filtré donc à réserver aux personnes habilitées à créer des Challenges.</div>
+                        </div>
                         <div class="col-12 col-md-6">
                             <label asp-for="NombreEtapes" class="form-label"></label>
                             <input asp-for="NombreEtapes" type="number" min="1" max="52" class="form-control">

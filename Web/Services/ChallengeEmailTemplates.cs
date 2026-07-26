@@ -43,6 +43,46 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // 3e declencheur email (cf. prompt "Depot de preuves, points et forum", section C) :
+    // objectif explicite d'inciter au retour regulier sur la plateforme - appel a l'action
+    // direct, pas une simple information passive.
+    public static (string Sujet, string CorpsHtml) PreuveValideeParLesPairs(
+        string challengeTitre,
+        string etapeTitre,
+        string lienSuiviPreuve)
+    {
+        var sujet = $"{challengeTitre} — Ta preuve a été validée par tes pairs !";
+
+        var corps = $"""
+            <p>Bonne nouvelle,</p>
+            <p>Ta preuve pour l'étape <strong>{WebUtility.HtmlEncode(etapeTitre)}</strong> du Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> vient d'être validée par tes pairs !</p>
+            <p>Il ne reste plus que la validation finale de ton Coach pour la rendre définitive.</p>
+            <p><a href="{lienSuiviPreuve}">Voir le détail sur "Suivi de ma preuve"</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    // 4e declencheur email (demande d'embarquement acceptee, prompt section H) : meme
+    // esprit qu'ailleurs - annonce directe et appel a l'action, pas une simple information.
+    public static (string Sujet, string CorpsHtml) EmbarquementValide(
+        string challengeTitre,
+        string cohorteNom,
+        DateTime dateLancement,
+        string lienFormations)
+    {
+        var sujet = $"{challengeTitre} — Ta session est confirmée !";
+
+        var corps = $"""
+            <p>Bonne nouvelle,</p>
+            <p>Ta demande d'embarquement pour le Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> a été validée : la session <strong>{WebUtility.HtmlEncode(cohorteNom)}</strong> est confirmée, avec un lancement prévu le <strong>{dateLancement:dd/MM/yyyy}</strong>.</p>
+            <p>Tu es déjà inscrit·e : tu seras prévenu·e dès le lancement de la première étape.</p>
+            <p><a href="{lienFormations}">Voir le Challenge</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {
         const string sujet = "Bienvenue sur Challenges Factory — Définissez votre mot de passe";

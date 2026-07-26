@@ -108,9 +108,9 @@
                         <li><a class="dropdown-item" asp-page="/Dashboard/Index">Tableau de bord</a></li>
                         <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Mes informations</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/Inscriptions">Mes inscriptions</a></li>
-                        <li><a class="dropdown-item" asp-page="/Dashboard/Badges">Mes badges</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/MonParcours">Mon parcours en cours</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/Cartes">Mes cartes de compétences</a></li>
+                        <li><a class="dropdown-item" asp-page="/Dashboard/MesPoints">Mes points et badges</a></li>
                     </ul>
                 </li>
 
@@ -140,6 +140,7 @@
                         </droit-visible>
                         <droit-visible code="COHORTE.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
+                            <li><a class="dropdown-item" asp-controller="Cohortes" asp-action="Embarquement">Demandes d'embarquement</a></li>
                         </droit-visible>
                         <droit-visible code="COHORTE.MODIFIER">
                             <li><a class="dropdown-item" asp-page="/Admin/AbonnementsBtoC">Abonnements BtoC</a></li>
@@ -193,15 +194,10 @@
                     </svg>
                 </a>
 
-                <div class="dropdown">
-                    <button type="button" class="btn btn-icon btn-action-gray rounded-circle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
-                        <i class="fi fi-rr-bell fs-5"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow-sm w-300px">
-                        <h6 class="dropdown-header">Notifications</h6>
-                        <div class="dropdown-item-text text-muted">Aucune notification pour le moment.</div>
-                    </div>
-                </div>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    @await Component.InvokeAsync("NotificationBell")
+                }
 
                 <div class="dropdown">
                     <button type="button" class="btn dropdown-toggle d-flex align-items-center gap-2 border-0 bg-transparent p-0" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">

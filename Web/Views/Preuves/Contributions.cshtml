@@ -1,0 +1,68 @@
+@model List<Application.Common.Interfaces.ContributionMembreInfo>
+@using Application.Common.Interfaces
+@{
+    var cohorte = (CohorteResume)ViewData["Cohorte"]!;
+    ViewData["Title"] = "Contributions de la cohorte";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@cohorte.Id">@cohorte.Nom</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Contributions</li>
+            </ol>
+        </nav>
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">@cohorte.Nom</p>
+            <h1 class="h3 mb-0">Contributions de la cohorte</h1>
+            <p class="text-muted mb-0">Vue réservée à la gestion : jamais exposée aux apprenants (pas un classement public).</p>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @if (Model.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucun membre pour le moment.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Membre</th>
+                                    <th scope="col">XP Savoir</th>
+                                    <th scope="col">Points Karma</th>
+                                    <th scope="col">Points Assiduité</th>
+                                    <th scope="col">Revue des pairs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var membre in Model)
+                                {
+                                    <tr>
+                                        <td>@membre.NomComplet</td>
+                                        <td>@membre.XPSavoir</td>
+                                        <td>@membre.PointsKarma</td>
+                                        <td>@membre.PointsAssiduite</td>
+                                        <td>
+                                            @membre.PreuvesEvalueesParCeMembre / @membre.PreuvesAttenduesPourCeMembre
+                                            @if (membre.PreuvesAttenduesPourCeMembre > 0 && membre.PreuvesEvalueesParCeMembre == 0)
+                                            {
+                                                <span class="badge text-bg-warning ms-1">N'a encore rien évalué</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

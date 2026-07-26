@@ -178,6 +178,41 @@ public class CohortesController(
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    // ---- Demandes d'embarquement (prompt section H) ----
+
+    [HttpGet("Embarquement")]
+    [Authorize(Policy = "Droit:COHORTE.CONSULTER")]
+    public async Task<IActionResult> Embarquement()
+    {
+        var demandes = await cohorteService.GetDemandesEmbarquementAsync();
+        return View(demandes);
+    }
+
+    [HttpPost("Embarquement/{cohorteId:int}/Valider")]
+    [Authorize(Policy = "Droit:COHORTE.VALIDER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValiderEmbarquement(int cohorteId, string nom, DateTime dateLancement)
+    {
+        var lienFormations = Url.Action("Formations", "Home", null, Request.Scheme) ?? "/formations";
+        var (success, errorMessage) = await cohorteService.ValiderEmbarquementAsync(cohorteId, nom, dateLancement, lienFormations);
+        TempData["StatusMessage"] = success
+            ? "Demande validée : la Cohorte est désormais ouverte à l'inscription publique."
+            : errorMessage;
+
+        return success ? RedirectToAction(nameof(Details), new { id = cohorteId }) : RedirectToAction(nameof(Embarquement));
+    }
+
+    [HttpPost("Embarquement/{cohorteId:int}/Refuser")]
+    [Authorize(Policy = "Droit:COHORTE.SUPPRIMER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RefuserEmbarquement(int cohorteId)
+    {
+        var lienCatalogue = Url.Action("Formations", "Home", null, Request.Scheme) ?? "/formations";
+        var (success, errorMessage) = await cohorteService.RefuserEmbarquementAsync(cohorteId, lienCatalogue);
+        TempData["StatusMessage"] = success ? "Demande refusée et demandeurs notifiés." : errorMessage;
+        return RedirectToAction(nameof(Embarquement));
+    }
+
     [HttpPost("Membres/{utilisateurId}/RenvoyerInvitation")]
     [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
     [ValidateAntiForgeryToken]

@@ -44,6 +44,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
             Code = NormaliserCode(input.Code),
             Titre = input.Titre.Trim(),
             Slogan = input.Slogan,
+            Description = input.Description,
             NombreEtapes = input.NombreEtapes,
             Mode = input.Mode,
         };
@@ -79,6 +80,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
         challenge.Code = NormaliserCode(input.Code);
         challenge.Titre = input.Titre.Trim();
         challenge.Slogan = input.Slogan;
+        challenge.Description = input.Description;
         challenge.NombreEtapes = input.NombreEtapes;
         challenge.Mode = input.Mode;
 
@@ -383,6 +385,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
 
                 challenge.Titre = titre;
                 challenge.Slogan = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "slogan"));
+                challenge.Description = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "description"));
                 challenge.NombreEtapes = nombreEtapes;
                 challenge.Mode = mode;
 

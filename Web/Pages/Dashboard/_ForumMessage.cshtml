@@ -1,0 +1,54 @@
+@model Application.Common.Interfaces.ForumMessageInfo
+@{
+    var cohorteId = (int)ViewData["CohorteId"]!;
+    var challengeEtapeId = (int)ViewData["ChallengeEtapeId"]!;
+    var etapeCourante = (bool)ViewData["EstEtapeCourante"]!;
+}
+
+<div class="border rounded p-3 mb-2">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+            <strong>@Model.AuteurNomComplet</strong>
+            <span class="text-muted small ms-2">@Model.DateCreation.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small">@Model.NombreUtile utile(s)</span>
+            @if (!Model.EstAuteur && !Model.MarqueUtileParMoi)
+            {
+                <form method="post" asp-page-handler="MarquerUtile" asp-route-cohorteId="@cohorteId" asp-route-challengeEtapeId="@challengeEtapeId">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="messageId" value="@Model.Id">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Marquer utile</button>
+                </form>
+            }
+            else if (Model.MarqueUtileParMoi)
+            {
+                <span class="badge text-bg-light">Marqué utile par vous</span>
+            }
+        </div>
+    </div>
+    <p class="mb-2 mt-2">@Model.Contenu</p>
+
+    @if (etapeCourante)
+    {
+        <details>
+            <summary class="text-primary small" style="cursor: pointer;">Répondre</summary>
+            <form method="post" asp-page-handler="Poster" asp-route-cohorteId="@cohorteId" asp-route-challengeEtapeId="@challengeEtapeId" class="mt-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="MessageParentId" value="@Model.Id">
+                <textarea name="Contenu" class="form-control mb-2" rows="2" required></textarea>
+                <button type="submit" class="btn btn-sm btn-primary">Répondre</button>
+            </form>
+        </details>
+    }
+
+    @if (Model.Reponses.Count > 0)
+    {
+        <div class="ms-4 mt-3">
+            @foreach (var reponse in Model.Reponses)
+            {
+                <partial name="_ForumMessage" model="reponse" view-data="ViewData" />
+            }
+        </div>
+    }
+</div>

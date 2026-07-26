@@ -1,0 +1,139 @@
+@page
+@model Web.Pages.Dashboard.MesPointsModel
+@using Domain.Entities
+@{
+    ViewData["Title"] = "Mes points et badges";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Mes points et badges</li>
+            </ol>
+        </nav>
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Mon espace</p>
+            <h1 class="h3 mb-0">Mes points et badges</h1>
+            <p class="text-muted mb-0">Vos totaux personnels — jamais de comparaison avec les autres membres de votre Cohorte.</p>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@Model.Resume.TotalXPSavoir</div>
+                    <div class="text-muted small">XP Savoir</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@Model.Resume.TotalPointsKarma</div>
+                    <div class="text-muted small">Points Karma</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="display-6 fw-bold">@Model.Resume.TotalPointsAssiduite</div>
+                    <div class="text-muted small">Points Assiduité</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Mes badges</h2>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.Badges.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucun badge pour le moment.</p>
+                }
+                else
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var badge in Model.Badges)
+                        {
+                            <span class="badge text-bg-warning p-2">
+                                🌟 Super Helper — @badge.ChallengeTitre, étape @badge.NumeroEtape
+                            </span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Détail par étape</h2>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.Resume.DetailParEtape.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucun point gagné pour le moment.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Étape</th>
+                                    <th scope="col">XP Savoir</th>
+                                    <th scope="col">Points Karma</th>
+                                    <th scope="col">Points Assiduité</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var etape in Model.Resume.DetailParEtape)
+                                {
+                                    <tr>
+                                        <td>Étape @etape.NumeroEtape — @etape.TitreEtape</td>
+                                        <td>@etape.XPSavoir</td>
+                                        <td>@etape.PointsKarma</td>
+                                        <td>@etape.PointsAssiduite</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Historique</h2>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.Historique.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucun événement pour le moment.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var evenement in Model.Historique)
+                        {
+                            <li class="mb-2">
+                                <span class="text-muted small">@evenement.Date.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                — <strong>+@evenement.Montant</strong>
+                                @(evenement.TypePoints switch
+                                {
+                                    TypePoints.XPSavoir => "XP Savoir",
+                                    TypePoints.PointsKarma => "Points Karma",
+                                    _ => "Points Assiduité",
+                                })
+                                @if (evenement.NumeroEtape is int numero)
+                                {
+                                    <span class="text-muted">(étape @numero)</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</section>

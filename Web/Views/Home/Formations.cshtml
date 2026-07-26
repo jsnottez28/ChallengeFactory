@@ -1,4 +1,4 @@
-@model List<Application.Common.Interfaces.CohorteResume>
+@model List<Web.Controllers.FormationViewModel>
 @{
     ViewData["Title"] = "Formations";
 }
@@ -7,9 +7,9 @@
     <div class="container">
         <div class="row">
             <div class="col-xl-9">
-                <span class="cf-badge">Sessions ouvertes</span>
-                <h1 class="cf-h1 mb-3">Nos sessions <span class="cf-accent">ouvertes</span> aux inscriptions.</h1>
-                <p class="cf-lead" style="max-width:640px;">Rejoignez une Cohorte et progressez en faisant, pas en regardant.</p>
+                <span class="cf-badge">Nos Challenges</span>
+                <h1 class="cf-h1 mb-3">Rejoignez un <span class="cf-accent">Challenge</span>.</h1>
+                <p class="cf-lead" style="max-width:640px;">Progressez en faisant, pas en regardant. Choisissez un Challenge et rejoignez une session ouverte, ou demandez à en ouvrir une.</p>
             </div>
         </div>
     </div>
@@ -27,30 +27,53 @@
 
         @if (Model.Count == 0)
         {
-            <p class="text-muted">Aucune session n'est ouverte aux inscriptions pour le moment. Revenez bientôt !</p>
+            <p class="text-muted">Aucun Challenge n'est disponible pour le moment. Revenez bientôt !</p>
         }
         else
         {
-            <div class="row g-4">
-                @foreach (var cohorte in Model)
+            <div class="row g-3">
+                @foreach (var challenge in Model)
                 {
-                    <div class="col-12 col-md-6 col-lg-4">
-                        <div class="cf-card h-100 d-flex flex-column">
-                            <h3 class="cf-h3 mb-1">@cohorte.ChallengeTitre</h3>
-                            <p class="text-muted mb-2">@cohorte.Nom</p>
-                            <p class="mb-1"><strong>@cohorte.NombreEtapes</strong> étapes</p>
-                            @if (cohorte.DateLancement.HasValue)
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <a asp-controller="Home" asp-action="Formation" asp-route-challengeId="@challenge.ChallengeId" class="cf-formation-card d-block h-100 text-decoration-none">
+                            <h3 class="cf-formation-title mb-1">@challenge.Titre</h3>
+                            @if (!string.IsNullOrWhiteSpace(challenge.Slogan))
                             {
-                                <p class="text-muted small mb-3">Lancement prévu le @cohorte.DateLancement.Value.ToString("dd/MM/yyyy")</p>
+                                <p class="text-muted small mb-2">@challenge.Slogan</p>
                             }
-                            <form method="post" asp-controller="Home" asp-action="InscriptionFormation" asp-route-cohorteId="@cohorte.Id" class="mt-auto">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="cf-btn cf-btn-primary w-100">S'inscrire à cette session</button>
-                            </form>
-                        </div>
+                            @if (!string.IsNullOrWhiteSpace(challenge.DescriptionExtrait))
+                            {
+                                <p class="small mb-2">@challenge.DescriptionExtrait</p>
+                            }
+                            <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
+                                <span class="badge @(challenge.NombreCohortesOuvertes > 0 ? "text-bg-success" : "text-bg-light")">
+                                    @(challenge.NombreCohortesOuvertes > 0
+                                        ? $"{challenge.NombreCohortesOuvertes} session{(challenge.NombreCohortesOuvertes > 1 ? "s" : "")} en cours"
+                                        : "Aucune session ouverte")
+                                </span>
+                                <span class="cf-formation-cta">Découvrir →</span>
+                            </div>
+                        </a>
                     </div>
                 }
             </div>
         }
     </div>
 </section>
+
+<style>
+    .cf-formation-card {
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid var(--cf-line);
+        border-radius: var(--cf-radius-md);
+        padding: 18px 20px;
+        height: 100%;
+        color: inherit;
+        transition: all .2s ease;
+    }
+    .cf-formation-card:hover { border-color: var(--cf-orange); box-shadow: var(--cf-shadow-md); transform: translateY(-2px); }
+    .cf-formation-title { font-size: 17px; font-weight: 700; color: var(--cf-dark); }
+    .cf-formation-cta { font-size: 13px; font-weight: 600; color: var(--cf-orange); }
+</style>

@@ -1,0 +1,67 @@
+@model List<Application.Common.Interfaces.ForumMessageInfo>
+@using Application.Common.Interfaces
+@{
+    var cohorte = (CohorteResume)ViewData["Cohorte"]!;
+    var etapes = (List<EtapeForumInfo>)ViewData["Etapes"]!;
+    var etapeAffichee = (EtapeForumInfo?)ViewData["EtapeAffichee"];
+    ViewData["Title"] = "Modération du forum";
+    ViewData["CohorteId"] = cohorte.Id;
+    ViewData["ChallengeEtapeId"] = etapeAffichee?.ChallengeEtapeId ?? 0;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@cohorte.Id">@cohorte.Nom</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Forum</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">@cohorte.Nom</p>
+                <h1 class="h3 mb-0">Modération du forum — @(etapeAffichee?.TitreEtape ?? "Aucune étape")</h1>
+            </div>
+            @if (etapes.Count > 1)
+            {
+                <form method="get" class="d-flex align-items-center gap-2">
+                    <select name="challengeEtapeId" class="form-select form-select-sm" onchange="this.form.submit()">
+                        @foreach (var etape in etapes)
+                        {
+                            <option value="@etape.ChallengeEtapeId" selected="@(etapeAffichee is not null && etape.ChallengeEtapeId == etapeAffichee.ChallengeEtapeId)">
+                                Étape @etape.NumeroEtape — @etape.TitreEtape
+                            </option>
+                        }
+                    </select>
+                </form>
+            }
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @if (Model.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucun message pour cette étape.</p>
+                }
+                else
+                {
+                    @foreach (var message in Model)
+                    {
+                        <partial name="_ForumMessageAdmin" model="message" view-data="ViewData" />
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</section>

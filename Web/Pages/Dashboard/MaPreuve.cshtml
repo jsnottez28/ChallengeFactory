@@ -1,0 +1,156 @@
+@page
+@model Web.Pages.Dashboard.MaPreuveModel
+@using Domain.Entities
+@{
+    ViewData["Title"] = "Ma preuve";
+    var estFigee = Model.Preuve?.Statut == StatutPreuve.ValideeDefinitivement;
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/MonParcours">Mon parcours en cours</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Ma preuve</li>
+            </ol>
+        </nav>
+
+        @if (Model.StatusMessage is not null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Mon espace</p>
+            <h1 class="h3 mb-0">Ma preuve — @(Model.TitreEtape ?? "Étape courante")</h1>
+        </div>
+
+        @if (Model.Preuve is not null)
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <h2 class="h5 mb-0">Statut actuel</h2>
+                    @switch (Model.Preuve.Statut)
+                    {
+                        case StatutPreuve.Soumise:
+                            <span class="badge text-bg-secondary">Soumise</span>
+                            break;
+                        case StatutPreuve.ValideeParLesPairs:
+                            <span class="badge text-bg-info">Validée par les pairs</span>
+                            break;
+                        case StatutPreuve.ValideeDefinitivement:
+                            <span class="badge text-bg-success">Validée définitivement</span>
+                            break;
+                        default:
+                            <span class="badge text-bg-dark">Non validée à la clôture</span>
+                            break;
+                    }
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.Preuve.Fichiers.Count > 0)
+                    {
+                        <h3 class="h6 text-uppercase text-muted">Fichiers déposés</h3>
+                        <ul class="list-unstyled mb-4">
+                            @foreach (var fichier in Model.Preuve.Fichiers)
+                            {
+                                <li class="mb-1">
+                                    <a asp-page="/Dashboard/PreuveFichierTelecharger" asp-route-fichierId="@fichier.Id">@fichier.NomFichier</a>
+                                    <span class="text-muted small">(@fichier.TypeFichier, @((fichier.TailleOctets / 1024.0 / 1024.0).ToString("0.0")) Mo)</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Preuve.Description))
+                    {
+                        <h3 class="h6 text-uppercase text-muted">Description</h3>
+                        <p class="mb-4">@Model.Preuve.Description</p>
+                    }
+
+                    <h3 class="h6 text-uppercase text-muted">Retours reçus (@Model.Preuve.Retours.Count)</h3>
+                    @if (Model.Preuve.Retours.Count == 0)
+                    {
+                        <p class="text-muted mb-0">Aucun retour pour le moment.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var retour in Model.Preuve.Retours)
+                            {
+                                <li class="mb-3">
+                                    <strong>@retour.ValideurNomComplet</strong>
+                                    @if (retour.EstGestionnaire)
+                                    {
+                                        <span class="badge text-bg-dark ms-1">Gestionnaire</span>
+                                    }
+                                    <span class="badge @(retour.Decision == "Validé" ? "text-bg-success" : "text-bg-warning") ms-1">@retour.Decision</span>
+                                    <span class="d-block text-muted small">@retour.Date.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                    @if (!string.IsNullOrWhiteSpace(retour.Commentaire))
+                                    {
+                                        <p class="mb-0 mt-1">@retour.Commentaire</p>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (estFigee)
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <p class="text-success mb-0">Cette preuve est validée définitivement : elle ne peut plus être modifiée.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-0">@(Model.Preuve is null ? "Déposer ma preuve" : "Modifier ma preuve")</h2>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.Preuve is not null)
+                    {
+                        <p class="text-muted small">Toute modification remet la preuve au statut "Soumise" : les pairs devront revalider la nouvelle version.</p>
+                    }
+                    <form method="post" enctype="multipart/form-data" asp-route-cohorteId="@Model.CohorteId" asp-route-challengeEtapeId="@Model.ChallengeEtapeId">
+                        @Html.AntiForgeryToken()
+
+                        @if (Model.Preuve is { Fichiers.Count: > 0 })
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Retirer des fichiers existants</label>
+                                @foreach (var fichier in Model.Preuve.Fichiers)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="FichierIdsARetirer" value="@fichier.Id" id="retirer-@fichier.Id">
+                                        <label class="form-check-label" for="retirer-@fichier.Id">@fichier.NomFichier</label>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description (optionnel si au moins un fichier)</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ajouter des fichiers (doc, docx, pdf, jpg, jpeg, png, webp, mp4, mov — 50 Mo max par fichier)</label>
+                            <input type="file" name="Fichiers" class="form-control" multiple accept=".doc,.docx,.pdf,.jpg,.jpeg,.png,.webp,.mp4,.mov">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Enregistrer ma preuve</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</section>

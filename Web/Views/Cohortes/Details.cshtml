@@ -47,6 +47,13 @@
                         break;
                 }
 
+                @if (Model.Statut == StatutCohorte.Active)
+                {
+                    <droit-visible code="PREUVE.CONSULTER">
+                        <a asp-controller="Preuves" asp-action="Etape" asp-route-cohorteId="@Model.Id" class="btn btn-outline-secondary align-self-center">Preuves de l'étape</a>
+                    </droit-visible>
+                }
+
                 <droit-visible code="COHORTE.VALIDER">
                     @if (Model.Statut == StatutCohorte.EnPreparation)
                     {
@@ -56,7 +63,7 @@
                     }
                     else if (Model.Statut == StatutCohorte.Active)
                     {
-                        <form method="post" asp-controller="Cohortes" asp-action="ValiderEtape" asp-route-id="@Model.Id" onsubmit="return confirm('Confirmer la validation de cette étape ?');">
+                        <form method="post" asp-controller="Cohortes" asp-action="ValiderEtape" asp-route-id="@Model.Id" onsubmit="return confirm('Confirmer la validation de cette étape ? Consultez le résumé sur la page \'Preuves de l\'étape\' avant de continuer si besoin.');">
                             <button type="submit" class="btn btn-primary">
                                 @(derniereEtape ? "Valider la dernière étape et clôturer le Challenge" : "Valider l'étape en cours et passer à la suivante")
                             </button>

@@ -1,0 +1,60 @@
+@page
+@model Web.Pages.Dashboard.PreuvesAValiderModel
+@{
+    ViewData["Title"] = "Preuves à valider";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/MonParcours">Mon parcours en cours</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Preuves à valider</li>
+            </ol>
+        </nav>
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Mon espace</p>
+            <h1 class="h3 mb-0">Preuves à valider</h1>
+            <p class="text-muted mb-0">Chaque décision — "Validé" ou "À revoir" — vous rapporte des Points Karma.</p>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @if (Model.Preuves.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucune preuve en attente de votre avis pour le moment.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Auteur</th>
+                                    <th scope="col">Étape</th>
+                                    <th scope="col">Déposée le</th>
+                                    <th scope="col" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var preuve in Model.Preuves)
+                                {
+                                    <tr>
+                                        <td>@preuve.AuteurNomComplet</td>
+                                        <td>@preuve.TitreEtape</td>
+                                        <td>@preuve.DateDepot.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="text-end">
+                                            <a asp-page="/Dashboard/ValiderPreuve" asp-route-preuveId="@preuve.PreuveId" asp-route-cohorteId="@Model.CohorteId" class="btn btn-sm btn-primary">Évaluer</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
