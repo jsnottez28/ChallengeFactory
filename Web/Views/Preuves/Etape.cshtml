@@ -113,6 +113,7 @@
                                         <td>@preuve.NombreDecisionsValidePairs / @preuve.NombreDecisionsPairs</td>
                                         <td>@preuve.DateDepot.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                                         <td class="text-end">
+                                            <a asp-controller="Preuves" asp-action="Detail" asp-route-preuveId="@preuve.PreuveId" asp-route-cohorteId="@cohorte.Id" class="btn btn-sm btn-outline-secondary me-2">Voir le détail</a>
                                             <droit-visible code="PREUVE.VALIDER">
                                                 @if (preuve.Statut != StatutPreuve.ValideeDefinitivement)
                                                 {

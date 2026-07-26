@@ -38,6 +38,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ForumMessageUtile> ForumMessagesUtiles { get; set; }
     public DbSet<PointsEvenement> PointsEvenements { get; set; }
     public DbSet<BadgeSocialAttribution> BadgeSocialAttributions { get; set; }
+    public DbSet<NotificationInApp> NotificationsInApp { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -95,6 +96,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         ConfigureCartesCompetences(builder);
         ConfigureChallenges(builder);
         ConfigurePreuvesPointsEtForum(builder);
+        ConfigureNotifications(builder);
     }
 
     private static void ConfigureDroitsEtPermissions(ModelBuilder builder)
@@ -490,5 +492,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(b => b.ChallengeEtapeId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigureNotifications(ModelBuilder builder)
+    {
+        builder.Entity<NotificationInApp>()
+            .HasIndex(n => new { n.UtilisateurId, n.Lu, n.DateCreation });
+
+        builder.Entity<NotificationInApp>()
+            .HasOne(n => n.Utilisateur)
+            .WithMany()
+            .HasForeignKey(n => n.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

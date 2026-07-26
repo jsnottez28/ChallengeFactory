@@ -34,14 +34,30 @@ public class PreuvesController(
         return View(preuves);
     }
 
+    [HttpGet("{preuveId:int}/Detail")]
+    [Authorize(Policy = "Droit:PREUVE.CONSULTER")]
+    public async Task<IActionResult> Detail(int preuveId, int cohorteId)
+    {
+        var cohorte = await cohorteService.GetResumeAsync(cohorteId);
+        var detail = await preuveService.GetDetailPourGestionnaireAsync(preuveId);
+        if (cohorte is null || detail is null)
+        {
+            return NotFound();
+        }
+
+        ViewData["Cohorte"] = cohorte;
+        return View(detail);
+    }
+
     [HttpPost("{preuveId:int}/Valider")]
     [Authorize(Policy = "Droit:PREUVE.VALIDER")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Valider(int preuveId, int cohorteId, string? commentaire)
     {
         var valideurId = userManager.GetUserId(User)!;
+        var lienSuiviPreuve = await ConstruireLienSuiviPreuveAsync(preuveId, cohorteId);
         var (success, errorMessage) = await preuveService.ValiderParGestionnaireAsync(
-            preuveId, valideurId, DecisionValidationGestionnaire.Valide, commentaire);
+            preuveId, valideurId, DecisionValidationGestionnaire.Valide, commentaire, lienSuiviPreuve);
 
         TempData["StatusMessage"] = success ? "Preuve validée." : errorMessage;
         return RedirectToAction(nameof(Etape), new { cohorteId });
@@ -53,11 +69,20 @@ public class PreuvesController(
     public async Task<IActionResult> Refuser(int preuveId, int cohorteId, string commentaire)
     {
         var valideurId = userManager.GetUserId(User)!;
+        var lienSuiviPreuve = await ConstruireLienSuiviPreuveAsync(preuveId, cohorteId);
         var (success, errorMessage) = await preuveService.ValiderParGestionnaireAsync(
-            preuveId, valideurId, DecisionValidationGestionnaire.Refuse, commentaire);
+            preuveId, valideurId, DecisionValidationGestionnaire.Refuse, commentaire, lienSuiviPreuve);
 
         TempData["StatusMessage"] = success ? "Preuve refusée." : errorMessage;
         return RedirectToAction(nameof(Etape), new { cohorteId });
+    }
+
+    private async Task<string> ConstruireLienSuiviPreuveAsync(int preuveId, int cohorteId)
+    {
+        var detail = await preuveService.GetDetailPourGestionnaireAsync(preuveId);
+        return (detail is not null
+            ? Url.Page("/Dashboard/MaPreuve", null, new { CohorteId = cohorteId, ChallengeEtapeId = detail.ChallengeEtapeId }, Request.Scheme)
+            : null) ?? "/Dashboard/MaPreuve";
     }
 
     [HttpGet("Contributions/{cohorteId:int}")]

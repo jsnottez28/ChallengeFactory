@@ -52,7 +52,7 @@ public class PreuveServiceTests
     {
         var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService());
+        var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService());
         var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService);
         return (dbContext, cohorteService, preuveService);
     }
@@ -82,7 +82,7 @@ public class PreuveServiceTests
         Assert.Equal(2, preuve!.Fichiers.Count);
         Assert.Equal(StatutPreuve.Soumise, preuve.Statut);
 
-        var (voteSuccess, voteError) = await preuveService.ValiderParPairAsync(preuveId!.Value, pair.Id, DecisionValidationPair.Valide, null);
+        var (voteSuccess, voteError) = await preuveService.ValiderParPairAsync(preuveId!.Value, pair.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
         Assert.True(voteSuccess, voteError);
 
         var apresVote = await preuveService.GetMaPreuveAsync(auteur.Id, etapeId);
@@ -114,7 +114,7 @@ public class PreuveServiceTests
 
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "Description", [], null);
 
-        var (success, errorMessage) = await preuveService.ValiderParPairAsync(preuveId!.Value, auteur.Id, DecisionValidationPair.Valide, null);
+        var (success, errorMessage) = await preuveService.ValiderParPairAsync(preuveId!.Value, auteur.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
 
         Assert.False(success);
         Assert.NotNull(errorMessage);
@@ -134,8 +134,8 @@ public class PreuveServiceTests
         var (_, _, preuve1Id) = await preuveService.DeposerOuModifierAsync(auteur1.Id, cohorteId, etapeId, "D1", [], null);
         var (_, _, preuve2Id) = await preuveService.DeposerOuModifierAsync(auteur2.Id, cohorteId, etapeId, "D2", [], null);
 
-        await preuveService.ValiderParPairAsync(preuve1Id!.Value, pair.Id, DecisionValidationPair.Valide, null);
-        await preuveService.ValiderParPairAsync(preuve2Id!.Value, pair.Id, DecisionValidationPair.ARevoir, "À préciser");
+        await preuveService.ValiderParPairAsync(preuve1Id!.Value, pair.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
+        await preuveService.ValiderParPairAsync(preuve2Id!.Value, pair.Id, DecisionValidationPair.ARevoir, "À préciser", "https://test.local/suivi-preuve");
 
         var points = await preuveService.GetMesPointsAsync(pair.Id);
         Assert.Equal(2 * Application.Common.PointsConfig.PointsKarmaDecisionPair, points.TotalPointsKarma);
@@ -153,8 +153,8 @@ public class PreuveServiceTests
 
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "D", [], null);
 
-        await preuveService.ValiderParPairAsync(preuveId!.Value, pair.Id, DecisionValidationPair.ARevoir, "Premier avis");
-        await preuveService.ValiderParPairAsync(preuveId.Value, pair.Id, DecisionValidationPair.Valide, null);
+        await preuveService.ValiderParPairAsync(preuveId!.Value, pair.Id, DecisionValidationPair.ARevoir, "Premier avis", "https://test.local/suivi-preuve");
+        await preuveService.ValiderParPairAsync(preuveId.Value, pair.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
 
         var nombreValidations = await dbContext.PreuveValidationsPairs.CountAsync(v => v.PreuveId == preuveId.Value && v.ValideurId == pair.Id);
         Assert.Equal(1, nombreValidations);
@@ -184,7 +184,7 @@ public class PreuveServiceTests
         {
             var decision = i < nombreValide ? DecisionValidationPair.Valide : DecisionValidationPair.ARevoir;
             var commentaire = decision == DecisionValidationPair.ARevoir ? "À revoir" : null;
-            await preuveService.ValiderParPairAsync(preuveId!.Value, pairs[i].Id, decision, commentaire);
+            await preuveService.ValiderParPairAsync(preuveId!.Value, pairs[i].Id, decision, commentaire, "https://test.local/suivi-preuve");
         }
 
         var preuve = await dbContext.Preuves.FirstAsync(p => p.Id == preuveId);
@@ -206,17 +206,17 @@ public class PreuveServiceTests
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "D", [], null);
 
         // 1 Valide / 1 = 100% -> franchit le seuil.
-        await preuveService.ValiderParPairAsync(preuveId!.Value, pair1.Id, DecisionValidationPair.Valide, null);
+        await preuveService.ValiderParPairAsync(preuveId!.Value, pair1.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
         var apresPremierVote = await dbContext.Preuves.FirstAsync(p => p.Id == preuveId);
         Assert.Equal(StatutPreuve.ValideeParLesPairs, apresPremierVote.Statut);
 
         // 1 Valide / 2 = 50% -> encore au seuil, reste ValideeParLesPairs.
-        await preuveService.ValiderParPairAsync(preuveId.Value, pair2.Id, DecisionValidationPair.ARevoir, "Pas convaincant");
+        await preuveService.ValiderParPairAsync(preuveId.Value, pair2.Id, DecisionValidationPair.ARevoir, "Pas convaincant", "https://test.local/suivi-preuve");
         var apresDeuxiemeVote = await dbContext.Preuves.FirstAsync(p => p.Id == preuveId);
         Assert.Equal(StatutPreuve.ValideeParLesPairs, apresDeuxiemeVote.Statut);
 
         // 1 Valide / 3 = 33% -> repasse sous le seuil : reversion vers Soumise.
-        await preuveService.ValiderParPairAsync(preuveId.Value, pair3.Id, DecisionValidationPair.ARevoir, "Pas convaincant non plus");
+        await preuveService.ValiderParPairAsync(preuveId.Value, pair3.Id, DecisionValidationPair.ARevoir, "Pas convaincant non plus", "https://test.local/suivi-preuve");
         var apresTroisiemeVote = await dbContext.Preuves.FirstAsync(p => p.Id == preuveId);
         Assert.Equal(StatutPreuve.Soumise, apresTroisiemeVote.Statut);
     }
@@ -238,10 +238,10 @@ public class PreuveServiceTests
 
         // Preuve 1 : validee par un AUTRE pair (pas encore par pairObserve) -> doit rester
         // dans la file de pairObserve (chacun doit voir chaque preuve, meme deja validee).
-        await preuveService.ValiderParPairAsync(preuve1Id!.Value, pairQuiVoteDeja.Id, DecisionValidationPair.Valide, null);
+        await preuveService.ValiderParPairAsync(preuve1Id!.Value, pairQuiVoteDeja.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
 
         // Preuve 2 : finalisee directement par le Gestionnaire -> ne doit plus apparaitre.
-        await preuveService.ValiderParGestionnaireAsync(preuve2Id!.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null);
+        await preuveService.ValiderParGestionnaireAsync(preuve2Id!.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null, "https://test.local/suivi-preuve");
 
         var file = await preuveService.GetPreuvesAValiderAsync(pairObserve.Id, cohorteId);
 
@@ -262,14 +262,14 @@ public class PreuveServiceTests
 
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "D", [], null);
 
-        await preuveService.ValiderParPairAsync(preuveId!.Value, pairA.Id, DecisionValidationPair.ARevoir, "Avis de pairA, secret");
+        await preuveService.ValiderParPairAsync(preuveId!.Value, pairA.Id, DecisionValidationPair.ARevoir, "Avis de pairA, secret", "https://test.local/suivi-preuve");
 
         // pairB n'a pas encore vote : ne doit voir ni statut agrege ni l'avis de pairA.
         var apercuAvantVote = await preuveService.GetApercuPourPairAsync(preuveId.Value, pairB.Id);
         Assert.NotNull(apercuAvantVote);
         Assert.Null(apercuAvantVote!.MaDecisionPrecedente);
 
-        await preuveService.ValiderParPairAsync(preuveId.Value, pairB.Id, DecisionValidationPair.Valide, null);
+        await preuveService.ValiderParPairAsync(preuveId.Value, pairB.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
 
         // pairB a maintenant vote : voit seulement SON propre avis precedent, jamais celui de pairA.
         var apercuApresVote = await preuveService.GetApercuPourPairAsync(preuveId.Value, pairB.Id);
@@ -291,7 +291,7 @@ public class PreuveServiceTests
 
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "D", [], null);
 
-        var (success, errorMessage) = await preuveService.ValiderParGestionnaireAsync(preuveId!.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null);
+        var (success, errorMessage) = await preuveService.ValiderParGestionnaireAsync(preuveId!.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null, "https://test.local/suivi-preuve");
         Assert.True(success, errorMessage);
 
         var preuve = await dbContext.Preuves.FirstAsync(p => p.Id == preuveId);
@@ -301,7 +301,7 @@ public class PreuveServiceTests
         Assert.Equal(Application.Common.PointsConfig.XPSavoirPreuveValidee, points.TotalXPSavoir);
 
         // Re-validation : doit echouer (deja definitive), pas de second XP.
-        var (secondSuccess, _) = await preuveService.ValiderParGestionnaireAsync(preuveId.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null);
+        var (secondSuccess, _) = await preuveService.ValiderParGestionnaireAsync(preuveId.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null, "https://test.local/suivi-preuve");
         Assert.False(secondSuccess);
 
         var pointsApres = await preuveService.GetMesPointsAsync(auteur.Id);
@@ -319,11 +319,11 @@ public class PreuveServiceTests
 
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "D", [], null);
 
-        var (echecSansCommentaire, erreur) = await preuveService.ValiderParGestionnaireAsync(preuveId!.Value, gestionnaireId, DecisionValidationGestionnaire.Refuse, null);
+        var (echecSansCommentaire, erreur) = await preuveService.ValiderParGestionnaireAsync(preuveId!.Value, gestionnaireId, DecisionValidationGestionnaire.Refuse, null, "https://test.local/suivi-preuve");
         Assert.False(echecSansCommentaire);
         Assert.NotNull(erreur);
 
-        var (success, _) = await preuveService.ValiderParGestionnaireAsync(preuveId.Value, gestionnaireId, DecisionValidationGestionnaire.Refuse, "À corriger");
+        var (success, _) = await preuveService.ValiderParGestionnaireAsync(preuveId.Value, gestionnaireId, DecisionValidationGestionnaire.Refuse, "À corriger", "https://test.local/suivi-preuve");
         Assert.True(success);
 
         var preuve = await dbContext.Preuves.FirstAsync(p => p.Id == preuveId);
@@ -349,8 +349,8 @@ public class PreuveServiceTests
         var (_, _, preuve2Id) = await preuveService.DeposerOuModifierAsync(auteurDejaValideeDirectement.Id, cohorteId, etapeId, "D2", [], null);
         await preuveService.DeposerOuModifierAsync(auteurSoumise.Id, cohorteId, etapeId, "D3", [], null);
 
-        await preuveService.ValiderParPairAsync(preuve1Id!.Value, pair.Id, DecisionValidationPair.Valide, null);
-        await preuveService.ValiderParGestionnaireAsync(preuve2Id!.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null);
+        await preuveService.ValiderParPairAsync(preuve1Id!.Value, pair.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
+        await preuveService.ValiderParGestionnaireAsync(preuve2Id!.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null, "https://test.local/suivi-preuve");
 
         await preuveService.ClorePreuvesEtapeAsync(cohorteId, 1);
 
@@ -380,10 +380,10 @@ public class PreuveServiceTests
         var pair = membres[1];
 
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "D", [], null);
-        await preuveService.ValiderParGestionnaireAsync(preuveId!.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null);
+        await preuveService.ValiderParGestionnaireAsync(preuveId!.Value, gestionnaireId, DecisionValidationGestionnaire.Valide, null, "https://test.local/suivi-preuve");
 
         // Un pair vote APRES la finalisation : enregistre, mais ne change pas le statut.
-        var (success, _) = await preuveService.ValiderParPairAsync(preuveId.Value, pair.Id, DecisionValidationPair.ARevoir, "Trop tard");
+        var (success, _) = await preuveService.ValiderParPairAsync(preuveId.Value, pair.Id, DecisionValidationPair.ARevoir, "Trop tard", "https://test.local/suivi-preuve");
         Assert.True(success);
 
         var preuve = await dbContext.Preuves.FirstAsync(p => p.Id == preuveId);
@@ -407,7 +407,7 @@ public class PreuveServiceTests
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "D", [], null);
 
         // superHelper est le seul a voter -> le plus de Karma.
-        await preuveService.ValiderParPairAsync(preuveId!.Value, superHelper.Id, DecisionValidationPair.Valide, null);
+        await preuveService.ValiderParPairAsync(preuveId!.Value, superHelper.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
 
         await preuveService.ClorePreuvesEtapeAsync(cohorteId, 1);
         await preuveService.AttribuerBadgeSuperHelperAsync(cohorteId, 1);
@@ -432,7 +432,7 @@ public class PreuveServiceTests
         var pairInactif = membres[2];
 
         var (_, _, preuveId) = await preuveService.DeposerOuModifierAsync(auteur.Id, cohorteId, etapeId, "D", [], null);
-        await preuveService.ValiderParPairAsync(preuveId!.Value, pairActif.Id, DecisionValidationPair.Valide, null);
+        await preuveService.ValiderParPairAsync(preuveId!.Value, pairActif.Id, DecisionValidationPair.Valide, null, "https://test.local/suivi-preuve");
 
         var pointsPairActif = await preuveService.GetMesPointsAsync(pairActif.Id);
         var pointsPairInactif = await preuveService.GetMesPointsAsync(pairInactif.Id);

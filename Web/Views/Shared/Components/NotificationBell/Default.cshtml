@@ -1,0 +1,44 @@
+@model Web.ViewComponents.NotificationBellViewModel
+
+<div class="dropdown">
+    <button type="button" class="btn btn-icon btn-action-gray rounded-circle position-relative" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+        <i class="fi fi-rr-bell fs-5"></i>
+        @if (Model.NombreNonLues > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @(Model.NombreNonLues > 9 ? "9+" : Model.NombreNonLues.ToString())
+                <span class="visually-hidden">notifications non lues</span>
+            </span>
+        }
+    </button>
+    <div class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 340px;">
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+            <h6 class="m-0">Notifications</h6>
+            @if (Model.NombreNonLues > 0)
+            {
+                <form asp-controller="Notifications" asp-action="ToutesLues" method="post" class="m-0">
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path)@(Context.Request.QueryString)" />
+                    <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">Tout marquer comme lu</button>
+                </form>
+            }
+        </div>
+        <div style="max-height: 360px; overflow-y: auto;">
+            @if (Model.Notifications.Count == 0)
+            {
+                <div class="px-3 py-3 text-muted small">Aucune notification pour le moment.</div>
+            }
+            else
+            {
+                foreach (var notification in Model.Notifications)
+                {
+                    <a class="dropdown-item px-3 py-2 border-bottom @(notification.Lu ? "" : "bg-light")"
+                       asp-controller="Notifications" asp-action="Ouvrir" asp-route-id="@notification.Id"
+                       style="white-space: normal;">
+                        <div class="small @(notification.Lu ? "" : "fw-semibold")">@notification.MessageCourt</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">@notification.DateCreation.ToString("dd/MM à HH:mm")</div>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+</div>

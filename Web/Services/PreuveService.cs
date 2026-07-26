@@ -10,7 +10,9 @@ namespace Web.Services;
 public sealed class PreuveService(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
-    IPreuveFichierStockageService stockageService) : IPreuveService
+    IPreuveFichierStockageService stockageService,
+    INotificationService notificationService,
+    IEmailService emailService) : IPreuveService
 {
     // Hypothese posee dans le prompt d'origine, a confirmer/ajuster selon la capacite de
     // stockage reelle retenue (cf. resume de livraison).
@@ -156,6 +158,18 @@ public sealed class PreuveService(
         return preuve is null ? null : VersDetail(preuve);
     }
 
+    public async Task<PreuveDetailInfo?> GetDetailPourGestionnaireAsync(int preuveId)
+    {
+        var preuve = await dbContext.Preuves
+            .Include(p => p.ChallengeEtape)
+            .Include(p => p.Fichiers)
+            .Include(p => p.ValidationsPairs).ThenInclude(v => v.Valideur)
+            .Include(p => p.ValidationsGestionnaire).ThenInclude(v => v.Valideur)
+            .FirstOrDefaultAsync(p => p.Id == preuveId);
+
+        return preuve is null ? null : VersDetail(preuve);
+    }
+
     // ---- Validation par les pairs ----
 
     public async Task<List<PreuveAValiderInfo>> GetPreuvesAValiderAsync(string valideurId, int cohorteId)
@@ -209,6 +223,8 @@ public sealed class PreuveService(
         return new PreuveApercuPourPairInfo
         {
             Id = preuve.Id,
+            CohorteId = preuve.CohorteId,
+            ChallengeEtapeId = preuve.ChallengeEtapeId,
             AuteurNomComplet = NomComplet(preuve.Utilisateur),
             TitreEtape = preuve.ChallengeEtape.TitreEtape,
             Description = preuve.Description,
@@ -219,10 +235,11 @@ public sealed class PreuveService(
     }
 
     public async Task<(bool Success, string? ErrorMessage)> ValiderParPairAsync(
-        int preuveId, string valideurId, DecisionValidationPair decision, string? commentaire)
+        int preuveId, string valideurId, DecisionValidationPair decision, string? commentaire, string lienSuiviPreuve)
     {
         var preuve = await dbContext.Preuves
             .Include(p => p.ValidationsPairs)
+            .Include(p => p.ChallengeEtape).ThenInclude(e => e.Challenge)
             .FirstOrDefaultAsync(p => p.Id == preuveId);
 
         if (preuve is null)
@@ -274,6 +291,7 @@ public sealed class PreuveService(
 
         // Statut fige une fois finalise (ValideeDefinitivement ou NonValideeALaCloture) :
         // le vote reste enregistre (cf. ci-dessus) mais ne recalcule plus le statut.
+        var statutAvant = preuve.Statut;
         if (preuve.Statut != StatutPreuve.ValideeDefinitivement && preuve.Statut != StatutPreuve.NonValideeALaCloture)
         {
             var total = preuve.ValidationsPairs.Count;
@@ -286,6 +304,30 @@ public sealed class PreuveService(
         }
 
         await dbContext.SaveChangesAsync();
+
+        var messageDecision = decision == DecisionValidationPair.Valide
+            ? "Un pair a validé ta preuve — viens voir son retour"
+            : "Un pair te propose de revoir ta preuve — viens voir ce qu'il en pense";
+        await notificationService.CreerAsync(preuve.UtilisateurId, TypeNotification.DecisionSurMaPreuve,
+            ReferenceTypeNotification.Preuve, preuve.Id, messageDecision, lienSuiviPreuve);
+
+        // "Une seule fois par passage" (cf. prompt section C) : uniquement sur le
+        // FRANCHISSEMENT du seuil, jamais sur un recalcul qui reste/repasse au meme statut
+        // (evite le spam si le ratio oscille autour de 50%).
+        if (statutAvant != StatutPreuve.ValideeParLesPairs && preuve.Statut == StatutPreuve.ValideeParLesPairs)
+        {
+            await notificationService.CreerAsync(preuve.UtilisateurId, TypeNotification.PreuveValideeParLesPairs,
+                ReferenceTypeNotification.Preuve, preuve.Id,
+                "Ta preuve a été validée par tes pairs — encore une étape avant la validation finale !", lienSuiviPreuve);
+
+            var auteur = await userManager.FindByIdAsync(preuve.UtilisateurId);
+            if (!string.IsNullOrWhiteSpace(auteur?.Email))
+            {
+                var (sujet, corps) = ChallengeEmailTemplates.PreuveValideeParLesPairs(
+                    preuve.ChallengeEtape.Challenge.Titre, preuve.ChallengeEtape.TitreEtape, lienSuiviPreuve);
+                await emailService.EnvoyerAsync(auteur.Email, sujet, corps);
+            }
+        }
 
         return (true, null);
     }
@@ -357,7 +399,7 @@ public sealed class PreuveService(
     }
 
     public async Task<(bool Success, string? ErrorMessage)> ValiderParGestionnaireAsync(
-        int preuveId, string valideurId, DecisionValidationGestionnaire decision, string? commentaire)
+        int preuveId, string valideurId, DecisionValidationGestionnaire decision, string? commentaire, string lienSuiviPreuve)
     {
         var preuve = await dbContext.Preuves.FirstOrDefaultAsync(p => p.Id == preuveId);
         if (preuve is null)
@@ -400,6 +442,12 @@ public sealed class PreuveService(
             preuve.Statut = StatutPreuve.Soumise;
             await dbContext.SaveChangesAsync();
         }
+
+        var messageDecision = decision == DecisionValidationGestionnaire.Valide
+            ? "Ton Coach a validé ta preuve — bravo !"
+            : "Ton Coach te propose de revoir ta preuve — viens voir ce qu'il en pense";
+        await notificationService.CreerAsync(preuve.UtilisateurId, TypeNotification.DecisionSurMaPreuve,
+            ReferenceTypeNotification.Preuve, preuve.Id, messageDecision, lienSuiviPreuve);
 
         return (true, null);
     }
@@ -617,7 +665,7 @@ public sealed class PreuveService(
 
     // ---- Fichiers ----
 
-    public async Task<(Stream Contenu, string NomFichier)?> TelechargerFichierAsync(int fichierId, string utilisateurId, bool aLeDroitPreuveValider)
+    public async Task<(Stream Contenu, string NomFichier)?> TelechargerFichierAsync(int fichierId, string utilisateurId, bool aLeDroitAdmin)
     {
         var fichier = await dbContext.PreuveFichiers
             .Include(f => f.Preuve)
@@ -628,7 +676,11 @@ public sealed class PreuveService(
             return null;
         }
 
-        var estAutorise = aLeDroitPreuveValider
+        // aLeDroitAdmin couvre PREUVE.CONSULTER comme PREUVE.VALIDER (calcule par
+        // l'appelant) : un Gestionnaire/Coach/Chef de Projet en lecture seule doit pouvoir
+        // consulter les fichiers deposes, pas seulement celui qui peut valider (correction
+        // A.1 - avant cette correction, seul PREUVE.VALIDER donnait acces).
+        var estAutorise = aLeDroitAdmin
             || fichier.Preuve.UtilisateurId == utilisateurId
             || await dbContext.CohorteMembres.AnyAsync(m => m.CohorteId == fichier.Preuve.CohorteId && m.UtilisateurId == utilisateurId);
 

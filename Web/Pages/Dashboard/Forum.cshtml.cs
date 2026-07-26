@@ -54,7 +54,8 @@ public class ForumModel(IForumService forumService, UserManager<ApplicationUser>
             return BadRequest();
         }
 
-        var (success, errorMessage) = await forumService.PosterMessageAsync(userId, CohorteId, ChallengeEtapeId.Value, Contenu, MessageParentId);
+        var lienForum = Url.Page("/Dashboard/Forum", null, new { CohorteId, ChallengeEtapeId }, Request.Scheme) ?? "/Dashboard/Forum";
+        var (success, errorMessage) = await forumService.PosterMessageAsync(userId, CohorteId, ChallengeEtapeId.Value, Contenu, MessageParentId, lienForum);
         StatusMessage = success ? null : errorMessage;
 
         return RedirectToPage(new { CohorteId, ChallengeEtapeId });
@@ -68,7 +69,8 @@ public class ForumModel(IForumService forumService, UserManager<ApplicationUser>
             return Forbid();
         }
 
-        var (success, errorMessage) = await forumService.MarquerUtileAsync(messageId, userId);
+        var lienForum = Url.Page("/Dashboard/Forum", null, new { CohorteId, ChallengeEtapeId }, Request.Scheme) ?? "/Dashboard/Forum";
+        var (success, errorMessage) = await forumService.MarquerUtileAsync(messageId, userId, lienForum);
         StatusMessage = success ? "Message marqué comme utile." : errorMessage;
 
         return RedirectToPage(new { CohorteId, ChallengeEtapeId });

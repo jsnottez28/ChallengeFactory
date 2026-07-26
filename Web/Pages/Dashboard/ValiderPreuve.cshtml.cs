@@ -53,7 +53,15 @@ public class ValiderPreuveModel(IPreuveService preuveService, UserManager<Applic
             return Forbid();
         }
 
-        var (success, errorMessage) = await preuveService.ValiderParPairAsync(PreuveId, userId, Decision, Commentaire);
+        var apercuAvantVote = await preuveService.GetApercuPourPairAsync(PreuveId, userId);
+        if (apercuAvantVote is null)
+        {
+            return NotFound();
+        }
+
+        var lienSuiviPreuve = Url.Page("/Dashboard/MaPreuve", null, new { CohorteId = apercuAvantVote.CohorteId, ChallengeEtapeId = apercuAvantVote.ChallengeEtapeId }, Request.Scheme)
+            ?? "/Dashboard/MaPreuve";
+        var (success, errorMessage) = await preuveService.ValiderParPairAsync(PreuveId, userId, Decision, Commentaire, lienSuiviPreuve);
 
         if (!success)
         {

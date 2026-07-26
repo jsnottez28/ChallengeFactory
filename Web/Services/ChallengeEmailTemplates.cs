@@ -43,6 +43,26 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // 3e declencheur email (cf. prompt "Depot de preuves, points et forum", section C) :
+    // objectif explicite d'inciter au retour regulier sur la plateforme - appel a l'action
+    // direct, pas une simple information passive.
+    public static (string Sujet, string CorpsHtml) PreuveValideeParLesPairs(
+        string challengeTitre,
+        string etapeTitre,
+        string lienSuiviPreuve)
+    {
+        var sujet = $"{challengeTitre} — Ta preuve a été validée par tes pairs !";
+
+        var corps = $"""
+            <p>Bonne nouvelle,</p>
+            <p>Ta preuve pour l'étape <strong>{WebUtility.HtmlEncode(etapeTitre)}</strong> du Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> vient d'être validée par tes pairs !</p>
+            <p>Il ne reste plus que la validation finale de ton Coach pour la rendre définitive.</p>
+            <p><a href="{lienSuiviPreuve}">Voir le détail sur "Suivi de ma preuve"</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {
         const string sujet = "Bienvenue sur Challenges Factory — Définissez votre mot de passe";

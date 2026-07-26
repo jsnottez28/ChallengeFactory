@@ -52,7 +52,7 @@ public class CohorteServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var challengeService = new ChallengeService(dbContext);
-        var cohorteService = new CohorteService(dbContext, TestUserManagerFactory.Create(dbContext), new FakeEmailService(), new PreuveService(dbContext, TestUserManagerFactory.Create(dbContext), new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, TestUserManagerFactory.Create(dbContext), new FakeEmailService(), new PreuveService(dbContext, TestUserManagerFactory.Create(dbContext), new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (_, _, challenge) = await challengeService.CreateAsync(new ChallengeInput { Titre = "Brouillon", Mode = ModePlateforme.BtoC });
 
@@ -68,7 +68,7 @@ public class CohorteServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var emailService = new FakeEmailService();
-        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, etapes, cartes) = await PreparerChallengePublieAsync(dbContext);
 
@@ -105,7 +105,7 @@ public class CohorteServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var emailService = new FakeEmailService();
-        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, etapes, cartes) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 2);
 
@@ -145,7 +145,7 @@ public class CohorteServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var emailService = new FakeEmailService();
-        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1);
 
@@ -177,7 +177,7 @@ public class CohorteServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, etapes, cartes) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1);
 
@@ -220,7 +220,7 @@ public class CohorteServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, etapes, cartes) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 3);
 
@@ -256,7 +256,7 @@ public class CohorteServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var emailService = new FakeEmailService();
-        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1, mode: ModePlateforme.BtoB);
 
@@ -302,7 +302,7 @@ public class CohorteServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var emailService = new FakeEmailService();
-        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1, mode: ModePlateforme.BtoB);
 
@@ -341,7 +341,7 @@ public class CohorteServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1);
         var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local" };
@@ -363,7 +363,7 @@ public class CohorteServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService()));
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()));
 
         var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1);
         var gestionnaire = new ApplicationUser { UserName = "coach@test.local", Email = "coach@test.local" };

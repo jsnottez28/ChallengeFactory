@@ -49,6 +49,8 @@ public sealed class PreuveDetailInfo
 public sealed class PreuveApercuPourPairInfo
 {
     public int Id { get; set; }
+    public int CohorteId { get; set; }
+    public int ChallengeEtapeId { get; set; }
     public string AuteurNomComplet { get; set; } = string.Empty;
     public string TitreEtape { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -171,21 +173,31 @@ public interface IPreuveService
     // Refuse si valideurId == auteur de la Preuve (controle serveur, jamais seulement
     // cote UI). Recalcule le statut agrege (seuil 50%, reversion possible) sauf si deja
     // ValideeDefinitivement (statut fige). Genere toujours des Points_Karma pour le pair,
-    // que la decision soit Valide ou ARevoir.
+    // que la decision soit Valide ou ARevoir. lienSuiviPreuve (construit par l'appelant)
+    // alimente les notifications in-app (decision recue, et passage a ValideeParLesPairs)
+    // et l'email "preuve validee par les pairs" (envoye une seule fois par franchissement
+    // du seuil, jamais a chaque recalcul si le ratio oscille).
     Task<(bool Success, string? ErrorMessage)> ValiderParPairAsync(
-        int preuveId, string valideurId, DecisionValidationPair decision, string? commentaire);
+        int preuveId, string valideurId, DecisionValidationPair decision, string? commentaire, string lienSuiviPreuve);
 
     // ---- Cote gestionnaire (droit PREUVE.VALIDER) ----
 
     Task<List<PreuveEtapeInfo>> GetPreuvesEtapeAsync(int cohorteId);
 
+    // Vue complete (fichiers, description, fil des retours pairs + Gestionnaire) pour un
+    // Gestionnaire/Coach/Chef de Projet (droit PREUVE.CONSULTER) - meme forme que
+    // GetMaPreuveAsync mais sans restriction d'auteur, puisque l'acces est deja controle
+    // par le droit au niveau du controleur (cf. correction A.1 : la liste "Preuves de
+    // l'etape" n'exposait avant que des compteurs agreges, jamais les fichiers/le detail).
+    Task<PreuveDetailInfo?> GetDetailPourGestionnaireAsync(int preuveId);
+
     Task<ResumeClotureEtapeInfo> GetResumeAvantClotureAsync(int cohorteId);
 
     // Valide -> ValideeDefinitivement immediat + XP_Savoir (une seule fois par Preuve).
     // Refuse -> repasse a Soumise, commentaire obligatoire. Refuse si la Preuve est deja
-    // ValideeDefinitivement (figee).
+    // ValideeDefinitivement (figee). Notifie l'auteur dans les deux cas (lienSuiviPreuve).
     Task<(bool Success, string? ErrorMessage)> ValiderParGestionnaireAsync(
-        int preuveId, string valideurId, DecisionValidationGestionnaire decision, string? commentaire);
+        int preuveId, string valideurId, DecisionValidationGestionnaire decision, string? commentaire, string lienSuiviPreuve);
 
     // Appele par ICohorteService.ValiderEtapeAsync au moment de la cloture d'une etape :
     // finalise les Preuves de cette etape - ValideeParLesPairs -> ValideeDefinitivement
@@ -211,6 +223,7 @@ public interface IPreuveService
     // ---- Fichiers ----
 
     // Controle d'acces : auteur de la Preuve, pair membre de la meme cohorte, ou
-    // detenteur du droit PREUVE.VALIDER - jamais une URL publique directe.
-    Task<(Stream Contenu, string NomFichier)?> TelechargerFichierAsync(int fichierId, string utilisateurId, bool aLeDroitPreuveValider);
+    // Gestionnaire/Coach/Chef de Projet (droit PREUVE.CONSULTER ou PREUVE.VALIDER) sur
+    // n'importe quelle Cohorte dont il a la charge - jamais une URL publique directe.
+    Task<(Stream Contenu, string NomFichier)?> TelechargerFichierAsync(int fichierId, string utilisateurId, bool aLeDroitAdmin);
 }

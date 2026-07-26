@@ -9,7 +9,9 @@ namespace Web.Pages.Dashboard;
 
 // Jamais de lien statique public vers un fichier de Preuve (cf. IPreuveFichierStockageService) :
 // cette action verifie l'acces (auteur, pair membre de la cohorte, ou droit
-// PREUVE.VALIDER) avant de streamer le contenu.
+// PREUVE.CONSULTER/PREUVE.VALIDER) avant de streamer le contenu. Les deux droits donnent
+// acces en lecture (correction A.1 : un Gestionnaire en lecture seule, sans VALIDER,
+// doit pouvoir consulter les fichiers deposes).
 [Authorize]
 public class PreuveFichierTelechargerModel(
     IPreuveService preuveService,
@@ -24,9 +26,10 @@ public class PreuveFichierTelechargerModel(
             return Forbid();
         }
 
-        var aLeDroit = (await authorizationService.AuthorizeAsync(User, "Droit:PREUVE.VALIDER")).Succeeded;
+        var aLeDroitConsulter = (await authorizationService.AuthorizeAsync(User, "Droit:PREUVE.CONSULTER")).Succeeded;
+        var aLeDroitValider = (await authorizationService.AuthorizeAsync(User, "Droit:PREUVE.VALIDER")).Succeeded;
 
-        var resultat = await preuveService.TelechargerFichierAsync(fichierId, userId, aLeDroit);
+        var resultat = await preuveService.TelechargerFichierAsync(fichierId, userId, aLeDroitConsulter || aLeDroitValider);
         if (resultat is null)
         {
             return NotFound();

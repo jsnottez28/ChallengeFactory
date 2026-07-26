@@ -44,9 +44,9 @@ public class ForumServiceTests
     {
         var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService());
+        var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService());
         var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService);
-        var forumService = new ForumService(dbContext);
+        var forumService = new ForumService(dbContext, new NotificationService(dbContext));
         return (dbContext, cohorteService, forumService);
     }
 
@@ -60,11 +60,11 @@ public class ForumServiceTests
         var auteur = membres[0];
         var repondant = membres[1];
 
-        var (success, errorMessage) = await forumService.PosterMessageAsync(auteur.Id, cohorteId, etapeId, "Message racine", null);
+        var (success, errorMessage) = await forumService.PosterMessageAsync(auteur.Id, cohorteId, etapeId, "Message racine", null, "https://test.local/forum");
         Assert.True(success, errorMessage);
 
         var racine = await dbContext.ForumMessages.SingleAsync(m => m.AuteurId == auteur.Id);
-        await forumService.PosterMessageAsync(repondant.Id, cohorteId, etapeId, "Une réponse", racine.Id);
+        await forumService.PosterMessageAsync(repondant.Id, cohorteId, etapeId, "Une réponse", racine.Id, "https://test.local/forum");
 
         var messages = await forumService.GetMessagesEtapeAsync(etapeId, cohorteId, auteur.Id);
         var messageRacine = Assert.Single(messages);
@@ -81,10 +81,10 @@ public class ForumServiceTests
         var (cohorteId, etapeId, membres) = await CreerCohorteActiveAsync(dbContext, cohorteService);
         var auteur = membres[0];
 
-        await forumService.PosterMessageAsync(auteur.Id, cohorteId, etapeId, "Mon message", null);
+        await forumService.PosterMessageAsync(auteur.Id, cohorteId, etapeId, "Mon message", null, "https://test.local/forum");
         var message = await dbContext.ForumMessages.SingleAsync();
 
-        var (success, errorMessage) = await forumService.MarquerUtileAsync(message.Id, auteur.Id);
+        var (success, errorMessage) = await forumService.MarquerUtileAsync(message.Id, auteur.Id, "https://test.local/forum");
 
         Assert.False(success);
         Assert.NotNull(errorMessage);
@@ -100,13 +100,13 @@ public class ForumServiceTests
         var auteur = membres[0];
         var marqueur = membres[1];
 
-        await forumService.PosterMessageAsync(auteur.Id, cohorteId, etapeId, "Message utile", null);
+        await forumService.PosterMessageAsync(auteur.Id, cohorteId, etapeId, "Message utile", null, "https://test.local/forum");
         var message = await dbContext.ForumMessages.SingleAsync();
 
-        var (premierSuccess, _) = await forumService.MarquerUtileAsync(message.Id, marqueur.Id);
+        var (premierSuccess, _) = await forumService.MarquerUtileAsync(message.Id, marqueur.Id, "https://test.local/forum");
         Assert.True(premierSuccess);
 
-        var (deuxiemeSuccess, deuxiemeErreur) = await forumService.MarquerUtileAsync(message.Id, marqueur.Id);
+        var (deuxiemeSuccess, deuxiemeErreur) = await forumService.MarquerUtileAsync(message.Id, marqueur.Id, "https://test.local/forum");
         Assert.False(deuxiemeSuccess);
         Assert.NotNull(deuxiemeErreur);
 
@@ -131,7 +131,7 @@ public class ForumServiceTests
         var gestionnaire = await dbContext.Users.FirstAsync(u => u.Email == "coach@test.local");
         await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque");
 
-        var (success, errorMessage) = await forumService.PosterMessageAsync(membre.Id, cohorteId, etapeId, "Trop tard", null);
+        var (success, errorMessage) = await forumService.PosterMessageAsync(membre.Id, cohorteId, etapeId, "Trop tard", null, "https://test.local/forum");
 
         Assert.False(success);
         Assert.NotNull(errorMessage);
@@ -144,7 +144,7 @@ public class ForumServiceTests
         await using var _ = dbContext;
 
         var (cohorteId, etapeId, membres) = await CreerCohorteActiveAsync(dbContext, cohorteService, nombreMembres: 1);
-        await forumService.PosterMessageAsync(membres[0].Id, cohorteId, etapeId, "Message", null);
+        await forumService.PosterMessageAsync(membres[0].Id, cohorteId, etapeId, "Message", null, "https://test.local/forum");
 
         var nonMembre = new ApplicationUser { UserName = "exterieur@test.local", Email = "exterieur@test.local" };
         dbContext.Users.Add(nonMembre);
@@ -167,9 +167,9 @@ public class ForumServiceTests
         var auteur = membres[0];
         var repondant = membres[1];
 
-        await forumService.PosterMessageAsync(auteur.Id, cohorteId, etapeId, "Racine", null);
+        await forumService.PosterMessageAsync(auteur.Id, cohorteId, etapeId, "Racine", null, "https://test.local/forum");
         var racine = await dbContext.ForumMessages.SingleAsync(m => m.AuteurId == auteur.Id);
-        await forumService.PosterMessageAsync(repondant.Id, cohorteId, etapeId, "Réponse", racine.Id);
+        await forumService.PosterMessageAsync(repondant.Id, cohorteId, etapeId, "Réponse", racine.Id, "https://test.local/forum");
 
         var (success, errorMessage) = await forumService.SupprimerMessageAsync(racine.Id);
         Assert.True(success, errorMessage);

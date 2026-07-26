@@ -6,7 +6,7 @@ using Web.Data;
 
 namespace Web.Services;
 
-public sealed class ForumService(ApplicationDbContext dbContext) : IForumService
+public sealed class ForumService(ApplicationDbContext dbContext, INotificationService notificationService) : IForumService
 {
     public async Task<List<EtapeForumInfo>> GetEtapesAccessiblesAsync(int cohorteId, string utilisateurId, bool estAdmin = false)
     {
@@ -78,7 +78,7 @@ public sealed class ForumService(ApplicationDbContext dbContext) : IForumService
     }
 
     public async Task<(bool Success, string? ErrorMessage)> PosterMessageAsync(
-        string auteurId, int cohorteId, int challengeEtapeId, string contenu, int? messageParentId)
+        string auteurId, int cohorteId, int challengeEtapeId, string contenu, int? messageParentId, string lienForum)
     {
         if (string.IsNullOrWhiteSpace(contenu))
         {
@@ -97,26 +97,58 @@ public sealed class ForumService(ApplicationDbContext dbContext) : IForumService
             return (false, "Ce forum est celui d'une étape déjà clôturée : lecture seule.");
         }
 
-        if (messageParentId is int parentId
-            && !await dbContext.ForumMessages.AnyAsync(m => m.Id == parentId && m.CohorteId == cohorteId && m.ChallengeEtapeId == challengeEtapeId))
+        ForumMessage? messageParent = null;
+        if (messageParentId is int parentId)
         {
-            return (false, "Message parent introuvable.");
+            messageParent = await dbContext.ForumMessages.FirstOrDefaultAsync(m => m.Id == parentId && m.CohorteId == cohorteId && m.ChallengeEtapeId == challengeEtapeId);
+            if (messageParent is null)
+            {
+                return (false, "Message parent introuvable.");
+            }
         }
 
-        dbContext.ForumMessages.Add(new ForumMessage
+        var message = new ForumMessage
         {
             CohorteId = cohorteId,
             ChallengeEtapeId = challengeEtapeId,
             AuteurId = auteurId,
             Contenu = contenu.Trim(),
             MessageParentId = messageParentId,
-        });
+        };
+        dbContext.ForumMessages.Add(message);
         await dbContext.SaveChangesAsync();
+
+        if (messageParent is not null)
+        {
+            // Reponse en fil : uniquement l'auteur du message parent, notification
+            // specifique - pas la notification generique "nouveau message" en plus (evite
+            // une double notification pour le meme evenement, cf. resume de livraison).
+            if (messageParent.AuteurId != auteurId)
+            {
+                await notificationService.CreerAsync(messageParent.AuteurId, TypeNotification.ReponseAMonMessage,
+                    ReferenceTypeNotification.ForumMessage, message.Id,
+                    "Quelqu'un a répondu à ton message — viens lire sa réponse", lienForum);
+            }
+        }
+        else
+        {
+            var autresMembres = await dbContext.CohorteMembres
+                .Where(m => m.CohorteId == cohorteId && m.UtilisateurId != auteurId)
+                .Select(m => m.UtilisateurId)
+                .ToListAsync();
+
+            foreach (var destinataireId in autresMembres)
+            {
+                await notificationService.CreerAsync(destinataireId, TypeNotification.NouveauMessageForum,
+                    ReferenceTypeNotification.ForumMessage, message.Id,
+                    "Nouveau message dans le forum de ton étape — viens voir !", lienForum);
+            }
+        }
 
         return (true, null);
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> MarquerUtileAsync(int messageId, string marqueParId)
+    public async Task<(bool Success, string? ErrorMessage)> MarquerUtileAsync(int messageId, string marqueParId, string lienForum)
     {
         var message = await dbContext.ForumMessages.FirstOrDefaultAsync(m => m.Id == messageId);
         if (message is null)
@@ -155,6 +187,10 @@ public sealed class ForumService(ApplicationDbContext dbContext) : IForumService
             Date = DateTime.UtcNow,
         });
         await dbContext.SaveChangesAsync();
+
+        await notificationService.CreerAsync(message.AuteurId, TypeNotification.MessageMarqueUtile,
+            ReferenceTypeNotification.ForumMessage, message.Id,
+            "Un pair a trouvé ton message utile — bravo pour ta contribution !", lienForum);
 
         return (true, null);
     }

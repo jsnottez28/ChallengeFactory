@@ -33,13 +33,17 @@ public interface IForumService
 
     // Refuse si l'etape n'est pas l'etape courante de la Cohorte (les forums d'etapes
     // passees restent lisibles mais ne recoivent plus de nouveaux messages, cf. prompt
-    // section 6, "historique").
+    // section 6, "historique"). lienForum (construit par l'appelant, cf. Url.Page - le
+    // service ne construit jamais d'URL lui-meme) sert aux notifications in-app generees :
+    // message racine -> tous les autres membres de la cohorte ; reponse -> uniquement
+    // l'auteur du message parent (evite une double notification pour le meme evenement).
     Task<(bool Success, string? ErrorMessage)> PosterMessageAsync(
-        string auteurId, int cohorteId, int challengeEtapeId, string contenu, int? messageParentId);
+        string auteurId, int cohorteId, int challengeEtapeId, string contenu, int? messageParentId, string lienForum);
 
     // Refuse si marqueParId == auteur du message (controle serveur). Genere des
-    // Points_Karma pour l'auteur du message, une seule fois par (message, marqueur).
-    Task<(bool Success, string? ErrorMessage)> MarquerUtileAsync(int messageId, string marqueParId);
+    // Points_Karma et une notification in-app pour l'auteur du message, une seule fois
+    // par (message, marqueur).
+    Task<(bool Success, string? ErrorMessage)> MarquerUtileAsync(int messageId, string marqueParId, string lienForum);
 
     // Moderation (droit FORUM.SUPPRIMER) : supprime le message et ses reponses en fil.
     Task<(bool Success, string? ErrorMessage)> SupprimerMessageAsync(int messageId);

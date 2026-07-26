@@ -194,15 +194,10 @@
                     </svg>
                 </a>
 
-                <div class="dropdown">
-                    <button type="button" class="btn btn-icon btn-action-gray rounded-circle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
-                        <i class="fi fi-rr-bell fs-5"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow-sm w-300px">
-                        <h6 class="dropdown-header">Notifications</h6>
-                        <div class="dropdown-item-text text-muted">Aucune notification pour le moment.</div>
-                    </div>
-                </div>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    @await Component.InvokeAsync("NotificationBell")
+                }
 
                 <div class="dropdown">
                     <button type="button" class="btn dropdown-toggle d-flex align-items-center gap-2 border-0 bg-transparent p-0" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">

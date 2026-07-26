@@ -1,0 +1,138 @@
+@model Application.Common.Interfaces.PreuveDetailInfo
+@using Application.Common.Interfaces
+@using Domain.Entities
+@{
+    var cohorte = (CohorteResume)ViewData["Cohorte"]!;
+    ViewData["Title"] = "Détail de la preuve";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@cohorte.Id">@cohorte.Nom</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Preuves" asp-action="Etape" asp-route-cohorteId="@cohorte.Id">Preuves de l'étape</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Détail</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">@cohorte.Nom — @Model.TitreEtape</p>
+                <h1 class="h3 mb-0">Preuve déposée</h1>
+            </div>
+            @switch (Model.Statut)
+            {
+                case StatutPreuve.Soumise:
+                    <span class="badge text-bg-secondary">Soumise</span>
+                    break;
+                case StatutPreuve.ValideeParLesPairs:
+                    <span class="badge text-bg-info">Validée par les pairs</span>
+                    break;
+                case StatutPreuve.ValideeDefinitivement:
+                    <span class="badge text-bg-success">Validée définitivement</span>
+                    break;
+                default:
+                    <span class="badge text-bg-dark">Non validée à la clôture</span>
+                    break;
+            }
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                @if (Model.Fichiers.Count > 0)
+                {
+                    <h3 class="h6 text-uppercase text-muted">Fichiers déposés</h3>
+                    <ul class="list-unstyled mb-4">
+                        @foreach (var fichier in Model.Fichiers)
+                        {
+                            <li class="mb-1">
+                                <a asp-page="/Dashboard/PreuveFichierTelecharger" asp-route-fichierId="@fichier.Id">@fichier.NomFichier</a>
+                                <span class="text-muted small">(@fichier.TypeFichier, @((fichier.TailleOctets / 1024.0 / 1024.0).ToString("0.0")) Mo)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">Aucun fichier déposé.</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <h3 class="h6 text-uppercase text-muted">Description</h3>
+                    <p class="mb-0">@Model.Description</p>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Retours reçus (@Model.Retours.Count)</h2>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.Retours.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucun retour pour le moment.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var retour in Model.Retours)
+                        {
+                            <li class="mb-3">
+                                <strong>@retour.ValideurNomComplet</strong>
+                                @if (retour.EstGestionnaire)
+                                {
+                                    <span class="badge text-bg-dark ms-1">Gestionnaire</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-light ms-1">Pair</span>
+                                }
+                                <span class="badge @(retour.Decision == "Validé" ? "text-bg-success" : "text-bg-warning") ms-1">@retour.Decision</span>
+                                <span class="d-block text-muted small">@retour.Date.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                @if (!string.IsNullOrWhiteSpace(retour.Commentaire))
+                                {
+                                    <p class="mb-0 mt-1">@retour.Commentaire</p>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+
+        <droit-visible code="PREUVE.VALIDER">
+            @if (Model.Statut != StatutPreuve.ValideeDefinitivement)
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Validation directe</h2>
+                    </div>
+                    <div class="card-body p-4 d-flex flex-wrap gap-3">
+                        <form method="post" asp-controller="Preuves" asp-action="Valider" asp-route-preuveId="@Model.Id" asp-route-cohorteId="@cohorte.Id" onsubmit="return confirm('Valider définitivement cette preuve ?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success">Valider</button>
+                        </form>
+                        <form method="post" asp-controller="Preuves" asp-action="Refuser" asp-route-preuveId="@Model.Id" asp-route-cohorteId="@cohorte.Id" class="d-flex gap-2 flex-grow-1">
+                            @Html.AntiForgeryToken()
+                            <input type="text" name="commentaire" class="form-control" placeholder="Commentaire obligatoire pour un refus" required>
+                            <button type="submit" class="btn btn-outline-danger text-nowrap">Refuser</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </droit-visible>
+    </div>
+</section>
