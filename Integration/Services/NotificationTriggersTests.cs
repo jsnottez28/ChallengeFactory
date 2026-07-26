@@ -20,7 +20,7 @@ public class NotificationTriggersTests
         var emailService = new FakeEmailService();
         var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), notificationService, emailService);
         var forumService = new ForumService(dbContext, notificationService);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService);
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService, new NotificationService(dbContext));
 
         var challengeService = new ChallengeService(dbContext);
         var (_, _, challenge) = await challengeService.CreateAsync(new ChallengeInput { Titre = "Challenge Notifications", NombreEtapes = 1, Mode = ModePlateforme.BtoC });

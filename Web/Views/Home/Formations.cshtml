@@ -1,4 +1,4 @@
-@model List<Application.Common.Interfaces.CohorteResume>
+@model List<Web.Controllers.FormationViewModel>
 @{
     ViewData["Title"] = "Formations";
 }
@@ -7,9 +7,9 @@
     <div class="container">
         <div class="row">
             <div class="col-xl-9">
-                <span class="cf-badge">Sessions ouvertes</span>
-                <h1 class="cf-h1 mb-3">Nos sessions <span class="cf-accent">ouvertes</span> aux inscriptions.</h1>
-                <p class="cf-lead" style="max-width:640px;">Rejoignez une Cohorte et progressez en faisant, pas en regardant.</p>
+                <span class="cf-badge">Nos Challenges</span>
+                <h1 class="cf-h1 mb-3">Rejoignez un <span class="cf-accent">Challenge</span>.</h1>
+                <p class="cf-lead" style="max-width:640px;">Progressez en faisant, pas en regardant. Choisissez un Challenge et rejoignez une session ouverte, ou demandez à en ouvrir une.</p>
             </div>
         </div>
     </div>
@@ -27,26 +27,55 @@
 
         @if (Model.Count == 0)
         {
-            <p class="text-muted">Aucune session n'est ouverte aux inscriptions pour le moment. Revenez bientôt !</p>
+            <p class="text-muted">Aucun Challenge n'est disponible pour le moment. Revenez bientôt !</p>
         }
         else
         {
             <div class="row g-4">
-                @foreach (var cohorte in Model)
+                @foreach (var challenge in Model)
                 {
-                    <div class="col-12 col-md-6 col-lg-4">
+                    <div class="col-12 col-lg-6">
                         <div class="cf-card h-100 d-flex flex-column">
-                            <h3 class="cf-h3 mb-1">@cohorte.ChallengeTitre</h3>
-                            <p class="text-muted mb-2">@cohorte.Nom</p>
-                            <p class="mb-1"><strong>@cohorte.NombreEtapes</strong> étapes</p>
-                            @if (cohorte.DateLancement.HasValue)
+                            <h3 class="cf-h3 mb-1">@challenge.Titre</h3>
+                            @if (!string.IsNullOrWhiteSpace(challenge.Slogan))
                             {
-                                <p class="text-muted small mb-3">Lancement prévu le @cohorte.DateLancement.Value.ToString("dd/MM/yyyy")</p>
+                                <p class="text-muted mb-2">@challenge.Slogan</p>
                             }
-                            <form method="post" asp-controller="Home" asp-action="InscriptionFormation" asp-route-cohorteId="@cohorte.Id" class="mt-auto">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="cf-btn cf-btn-primary w-100">S'inscrire à cette session</button>
-                            </form>
+                            @if (!string.IsNullOrWhiteSpace(challenge.Description))
+                            {
+                                <p class="mb-2" style="white-space: pre-line;">@challenge.Description</p>
+                            }
+                            <p class="mb-3"><strong>@challenge.NombreEtapes</strong> étapes</p>
+
+                            @if (challenge.CohortesOuvertes.Count > 0)
+                            {
+                                <div class="mt-auto d-flex flex-column gap-2">
+                                    @foreach (var cohorte in challenge.CohortesOuvertes)
+                                    {
+                                        <form method="post" asp-controller="Home" asp-action="InscriptionFormation" asp-route-cohorteId="@cohorte.Id">
+                                            @Html.AntiForgeryToken()
+                                            <div class="d-flex align-items-center justify-content-between gap-2 border rounded p-2">
+                                                <span class="small">
+                                                    @cohorte.Nom
+                                                    @if (cohorte.DateLancement.HasValue)
+                                                    {
+                                                        <span class="text-muted d-block">Lancement prévu le @cohorte.DateLancement.Value.ToString("dd/MM/yyyy")</span>
+                                                    }
+                                                </span>
+                                                <button type="submit" class="cf-btn cf-btn-primary flex-shrink-0">S'inscrire</button>
+                                            </div>
+                                        </form>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <form method="post" asp-controller="Home" asp-action="DemanderEmbarquement" asp-route-challengeId="@challenge.ChallengeId" class="mt-auto">
+                                    @Html.AntiForgeryToken()
+                                    <p class="text-muted small mb-2">Aucune session ouverte pour ce Challenge pour le moment.</p>
+                                    <button type="submit" class="cf-btn cf-btn-outline w-100">Demander un embarquement pour ce Challenge</button>
+                                </form>
+                            }
                         </div>
                     </div>
                 }

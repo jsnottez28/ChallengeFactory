@@ -50,7 +50,7 @@ public class PreuveGestionnaireEtHistoriqueTests
         await using var dbContext = InMemoryDbContextFactory.Create(nomBase);
         var userManager = TestUserManagerFactory.Create(dbContext);
         var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService());
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService);
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService, new NotificationService(dbContext));
 
         var (cohorteId, etapeId, membres, gestionnaireId) = await CreerCohorteActiveAsync(dbContext, cohorteService);
         var auteur = membres[0];
@@ -83,7 +83,7 @@ public class PreuveGestionnaireEtHistoriqueTests
         await using var dbContext = InMemoryDbContextFactory.Create(nomBase);
         var userManager = TestUserManagerFactory.Create(dbContext);
         var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService());
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService);
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService, new NotificationService(dbContext));
 
         var (cohorteId, etapeId, membres, _) = await CreerCohorteActiveAsync(dbContext, cohorteService);
         var auteur = membres[0];
@@ -113,7 +113,7 @@ public class PreuveGestionnaireEtHistoriqueTests
         await using var dbContext = InMemoryDbContextFactory.Create(nomBase);
         var userManager = TestUserManagerFactory.Create(dbContext);
         var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService());
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService);
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService, new NotificationService(dbContext));
 
         var (cohorteId, etapeId, membres, _) = await CreerCohorteActiveAsync(dbContext, cohorteService);
         var auteur = membres[0];
@@ -146,7 +146,7 @@ public class PreuveGestionnaireEtHistoriqueTests
         {
             var userManager1 = TestUserManagerFactory.Create(dbContext1);
             var preuveService1 = new PreuveService(dbContext1, userManager1, new FakePreuveFichierStockageService(), new NotificationService(dbContext1), new FakeEmailService());
-            var cohorteService1 = new CohorteService(dbContext1, userManager1, new FakeEmailService(), preuveService1);
+            var cohorteService1 = new CohorteService(dbContext1, userManager1, new FakeEmailService(), preuveService1, new NotificationService(dbContext1));
 
             var (cId, eId, membres, gId) = await CreerCohorteActiveAsync(dbContext1, cohorteService1, nombreMembres: 3);
             cohorteId = cId;

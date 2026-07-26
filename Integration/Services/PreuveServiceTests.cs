@@ -53,7 +53,7 @@ public class PreuveServiceTests
         var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService());
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService);
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService, new NotificationService(dbContext));
         return (dbContext, cohorteService, preuveService);
     }
 

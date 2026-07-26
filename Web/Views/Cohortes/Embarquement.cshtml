@@ -1,0 +1,84 @@
+@model List<Application.Common.Interfaces.DemandeEmbarquementInfo>
+@{
+    ViewData["Title"] = "Demandes d'embarquement";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Demandes d'embarquement</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Administration</p>
+            <h1 class="h3 mb-0">Demandes d'embarquement</h1>
+            <p class="text-muted mb-0">Challenges pour lesquels des apprenants ont demandé une session, mais aucune Cohorte n'est encore ouverte. Valider crée une vraie session publique ; refuser supprime la demande et notifie les demandeurs.</p>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @if (Model.Count == 0)
+                {
+                    <p class="text-muted text-center py-4 mb-0">Aucune demande d'embarquement en attente.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Challenge</th>
+                                    <th scope="col">Demandeurs</th>
+                                    <th scope="col">Demande depuis le</th>
+                                    <th scope="col">Valider</th>
+                                    <th scope="col" class="text-end">Refuser</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var demande in Model)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@demande.ChallengeTitre</td>
+                                        <td><span class="badge text-bg-light">@demande.NombreDemandeurs</span></td>
+                                        <td>@demande.DateCreation.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <droit-visible code="COHORTE.VALIDER">
+                                                <form method="post" asp-controller="Cohortes" asp-action="ValiderEmbarquement" asp-route-cohorteId="@demande.CohorteId" class="d-flex flex-wrap gap-2 align-items-center">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="text" name="nom" class="form-control form-control-sm" style="width: 220px;" placeholder="Nom de la Cohorte" value="@($"{demande.ChallengeTitre} — Session")" required>
+                                                    <input type="date" name="dateLancement" class="form-control form-control-sm" style="width: 160px;" required>
+                                                    <button type="submit" class="btn btn-sm btn-primary">Valider</button>
+                                                </form>
+                                            </droit-visible>
+                                        </td>
+                                        <td class="text-end">
+                                            <droit-visible code="COHORTE.SUPPRIMER">
+                                                <form method="post" asp-controller="Cohortes" asp-action="RefuserEmbarquement" asp-route-cohorteId="@demande.CohorteId" onsubmit="return confirm('Refuser cette demande d\'embarquement ? Les demandeurs seront notifiés.');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Refuser</button>
+                                                </form>
+                                            </droit-visible>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

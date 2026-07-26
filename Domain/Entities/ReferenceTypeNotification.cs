@@ -4,4 +4,5 @@ public enum ReferenceTypeNotification
 {
     ForumMessage,
     Preuve,
+    Cohorte,
 }

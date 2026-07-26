@@ -45,7 +45,7 @@ public class ForumServiceTests
         var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var preuveService = new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService());
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService);
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveService, new NotificationService(dbContext));
         var forumService = new ForumService(dbContext, new NotificationService(dbContext));
         return (dbContext, cohorteService, forumService);
     }

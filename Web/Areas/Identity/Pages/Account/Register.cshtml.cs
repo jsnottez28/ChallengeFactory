@@ -71,6 +71,10 @@ public class RegisterModel : PageModel
     // BtoC sur une Cohorte En preparation) - voir HomeController.InscriptionFormation.
     public int? CohorteId { get; set; }
 
+    // Renseigne quand l'inscription part d'une demande d'embarquement sur un Challenge sans
+    // Cohorte encore ouverte - voir HomeController.DemanderEmbarquement (prompt section H).
+    public int? ChallengeId { get; set; }
+
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
     ///     directly from your code. This API may change or be removed in future releases.
@@ -121,16 +125,18 @@ public class RegisterModel : PageModel
     }
 
 
-    public async Task OnGetAsync(string? returnUrl = null, int? cohorteId = null)
+    public async Task OnGetAsync(string? returnUrl = null, int? cohorteId = null, int? challengeId = null)
     {
         ReturnUrl = returnUrl;
         CohorteId = cohorteId;
+        ChallengeId = challengeId;
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
     }
 
-    public async Task<IActionResult> OnPostAsync(string? returnUrl = null, int? cohorteId = null)
+    public async Task<IActionResult> OnPostAsync(string? returnUrl = null, int? cohorteId = null, int? challengeId = null)
     {
         CohorteId = cohorteId;
+        ChallengeId = challengeId;
         var localReturnUrl = returnUrl ?? Url.Content("~/")!;
         if (localReturnUrl == Url.Content("~/"))
         {
@@ -167,6 +173,13 @@ public class RegisterModel : PageModel
                     // d'email a venir : seul l'acces au contenu depend du statut d'acces
                     // plateforme (voir ICohorteService.AutoInscrireAsync et CLAUDE.md).
                     await _cohorteService.AutoInscrireAsync(cohorteId.Value, userId);
+                }
+                else if (challengeId.HasValue)
+                {
+                    // Meme logique que ci-dessus, pour la demande d'embarquement (Cohorte
+                    // Proposee, cf. ICohorteService.DemanderEmbarquementAsync) : ne bloque
+                    // jamais sur la confirmation d'email a venir.
+                    await _cohorteService.DemanderEmbarquementAsync(challengeId.Value, userId);
                 }
 
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

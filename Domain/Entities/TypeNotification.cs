@@ -7,4 +7,5 @@ public enum TypeNotification
     DecisionSurMaPreuve,
     PreuveValideeParLesPairs,
     MessageMarqueUtile,
+    DemandeEmbarquementRefusee,
 }
