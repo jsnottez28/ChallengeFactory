@@ -103,6 +103,47 @@ public class PreuveServiceTests
         Assert.Empty(apresModification.Retours);
     }
 
+    // Simule une panne technique du stockage (ex : permissions disque insuffisantes en
+    // production, cf. LocalDiskPreuveFichierStockageService) - DeposerOuModifierAsync doit
+    // renvoyer une erreur exploitable par l'UI plutot que de laisser l'exception remonter
+    // en 500 (regression du 2026-08-19 : incident production ou un depot avec fichier
+    // faisait planter la page).
+    private sealed class StockageEnPanneFake : IPreuveFichierStockageService
+    {
+        public Task<string> EnregistrerAsync(Stream contenu, string nomFichier, CancellationToken cancellationToken = default) =>
+            throw new PreuveStockageIndisponibleException("Stockage indisponible (test).", new UnauthorizedAccessException());
+
+        public Task<Stream?> TelechargerAsync(string cheminStockage, CancellationToken cancellationToken = default) =>
+            Task.FromResult<Stream?>(null);
+
+        public Task SupprimerAsync(string cheminStockage, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task DeposerOuModifierAsync_RenvoieUneErreurClaire_SiLeStockageDuFichierEchoueTechniquement()
+    {
+        var dbContext = InMemoryDbContextFactory.Create();
+        await using var _ = dbContext;
+        var userManager = TestUserManagerFactory.Create(dbContext);
+        var notificationService = new NotificationService(dbContext);
+        var preuveServiceAvecStockageEnPanne = new PreuveService(
+            dbContext, userManager, new StockageEnPanneFake(), notificationService, new FakeEmailService());
+        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), preuveServiceAvecStockageEnPanne, notificationService);
+
+        var (cohorteId, etapeId, membres, _) = await CreerCohorteActiveAsync(dbContext, cohorteService);
+        var auteur = membres[0];
+
+        var (success, errorMessage, preuveId) = await preuveServiceAvecStockageEnPanne.DeposerOuModifierAsync(
+            auteur.Id, cohorteId, etapeId, "Description", [CreerFichier()], null);
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+        Assert.Null(preuveId);
+        // Rien n'a ete persiste : ni la Preuve, ni un fichier orphelin.
+        Assert.Empty(dbContext.Preuves);
+    }
+
     [Fact]
     public async Task ValiderParPairAsync_Echoue_SiLeValideurEstLAuteur()
     {

@@ -1,5 +1,6 @@
 using Application.Common.Interfaces;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.ExternalServices.Stockage;
@@ -10,20 +11,36 @@ namespace Infrastructure.ExternalServices.Stockage;
 // sans changer IPreuveService ni les controleurs qui l'utilisent.
 public class LocalDiskPreuveFichierStockageService(
     IWebHostEnvironment webHostEnvironment,
-    IOptions<PreuveFichierStockageSettings> options) : IPreuveFichierStockageService
+    IOptions<PreuveFichierStockageSettings> options,
+    ILogger<LocalDiskPreuveFichierStockageService> logger) : IPreuveFichierStockageService
 {
     private string RacineAbsolue => Path.Combine(webHostEnvironment.ContentRootPath, options.Value.RacineLocale);
 
     public async Task<string> EnregistrerAsync(Stream contenu, string nomFichier, CancellationToken cancellationToken = default)
     {
-        Directory.CreateDirectory(RacineAbsolue);
-
         var extension = Path.GetExtension(nomFichier);
         var nomStocke = $"{Guid.NewGuid():N}{extension}";
         var cheminComplet = Path.Combine(RacineAbsolue, nomStocke);
 
-        await using var flux = new FileStream(cheminComplet, FileMode.Create);
-        await contenu.CopyToAsync(flux, cancellationToken);
+        try
+        {
+            Directory.CreateDirectory(RacineAbsolue);
+
+            await using var flux = new FileStream(cheminComplet, FileMode.Create);
+            await contenu.CopyToAsync(flux, cancellationToken);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            // Cas type : permissions NTFS insuffisantes pour l'identite du site sur le
+            // dossier de stockage (App_Data/preuves ou son parent). On journalise le detail
+            // technique/chemin ici - jamais expose a l'apprenant, cf.
+            // PreuveStockageIndisponibleException.
+            logger.LogError(ex,
+                "Echec d'ecriture du fichier de preuve sur disque local (racine : {RacineAbsolue})",
+                RacineAbsolue);
+            throw new PreuveStockageIndisponibleException(
+                "Le stockage des fichiers de preuve est indisponible.", ex);
+        }
 
         return nomStocke;
     }

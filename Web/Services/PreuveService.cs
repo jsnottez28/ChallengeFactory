@@ -91,30 +91,41 @@ public sealed class PreuveService(
             ChallengeEtapeId = challengeEtapeId,
         };
 
-        if (fichierIdsARetirer is { Count: > 0 })
+        try
         {
-            var aRetirer = preuve.Fichiers.Where(f => fichierIdsARetirer.Contains(f.Id)).ToList();
-            foreach (var fichier in aRetirer)
+            if (fichierIdsARetirer is { Count: > 0 })
             {
-                await stockageService.SupprimerAsync(fichier.CheminStockage);
-                preuve.Fichiers.Remove(fichier);
-                dbContext.PreuveFichiers.Remove(fichier);
+                var aRetirer = preuve.Fichiers.Where(f => fichierIdsARetirer.Contains(f.Id)).ToList();
+                foreach (var fichier in aRetirer)
+                {
+                    await stockageService.SupprimerAsync(fichier.CheminStockage);
+                    preuve.Fichiers.Remove(fichier);
+                    dbContext.PreuveFichiers.Remove(fichier);
+                }
+            }
+
+            foreach (var fichier in fichiersAAjouter)
+            {
+                var extension = Path.GetExtension(fichier.NomFichier);
+                var typeFichier = ExtensionsAutorisees[extension];
+                var cheminStockage = await stockageService.EnregistrerAsync(fichier.Contenu, fichier.NomFichier);
+
+                preuve.Fichiers.Add(new PreuveFichier
+                {
+                    TypeFichier = typeFichier,
+                    NomFichier = fichier.NomFichier,
+                    CheminStockage = cheminStockage,
+                    TailleOctets = fichier.TailleOctets,
+                });
             }
         }
-
-        foreach (var fichier in fichiersAAjouter)
+        catch (PreuveStockageIndisponibleException)
         {
-            var extension = Path.GetExtension(fichier.NomFichier);
-            var typeFichier = ExtensionsAutorisees[extension];
-            var cheminStockage = await stockageService.EnregistrerAsync(fichier.Contenu, fichier.NomFichier);
-
-            preuve.Fichiers.Add(new PreuveFichier
-            {
-                TypeFichier = typeFichier,
-                NomFichier = fichier.NomFichier,
-                CheminStockage = cheminStockage,
-                TailleOctets = fichier.TailleOctets,
-            });
+            // Rien n'a ete sauvegarde en base a ce stade (SaveChangesAsync plus bas) : on
+            // peut renvoyer une erreur propre sans laisser la Preuve dans un etat
+            // incoherent. Le detail technique est deja journalise par l'implementation de
+            // stockage (cf. PreuveStockageIndisponibleException).
+            return (false, "Le dépôt de votre preuve a échoué pour une raison technique. Réessayez dans quelques instants ou contactez le support si le problème persiste.", null);
         }
 
         var descriptionNormalisee = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
