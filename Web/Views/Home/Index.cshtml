@@ -1,5 +1,9 @@
 @{
     ViewData["Title"] = "Accueil";
+
+    // Lien de reservation reutilise tel quel depuis Contact.cshtml (meme agenda Google
+    // Calendar) - centralise ici pour eviter les divergences entre les boutons de la page.
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
 }
 
 <!-- hero -->
@@ -7,35 +11,35 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-xl-8 col-lg-10">
-                <span class="cf-badge">Le Strava des Soft Skills</span>
+                <span class="cf-badge">Bilan Carbone® + Challenges d'équipe</span>
                 <h1 class="cf-h1 mb-4">
-                    Vous n'apprenez pas en regardant.<br>
-                    Vous apprenez en <span class="cf-accent">faisant</span>.
+                    Mesurez vos émissions.<br>
+                    Vos équipes les <span class="cf-accent">réduisent</span>.
                 </h1>
-                <p class="cf-lead mb-4" style="max-width:560px;">
-                    Sur Challenges Factory, pas de vidéos à consommer ni de QCM à cocher. Vous rejoignez une
-                    <strong>Cohorte</strong>, vous relevez des <strong>Défis</strong> sur le terrain, et vous
-                    validez vos compétences par la <strong>Preuve</strong> — pas par le hasard d'un quiz.
+                <p class="cf-lead mb-4" style="max-width:620px;">
+                    Pour les PME et ETI : Challenges Factory réalise votre <strong>Bilan Carbone®</strong>, puis
+                    transforme votre plan de transition en <strong>défis terrain de 9 semaines</strong>. De la
+                    mesure à l'action, preuves à l'appui.
                 </p>
                 <div class="d-flex flex-wrap gap-3 mb-2">
-                    <a class="cf-btn cf-btn-primary" asp-area="Identity" asp-page="/Account/Register">
-                        Créer mon compte gratuitement →
+                    <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                        📅 Réserver mon pré-diagnostic carbone (30 min)
                     </a>
-                    <a class="cf-btn cf-btn-outline" href="#comment-ca-marche">Découvrir la méthode</a>
+                    <a class="cf-btn cf-btn-outline" href="#notre-approche">Découvrir la méthode</a>
                 </div>
 
                 <div class="cf-hero-proof">
                     <div>
-                        <div class="cf-hero-proof-num">75%</div>
-                        <div class="cf-hero-proof-label">de rétention en plus qu'une formation classique</div>
+                        <div class="cf-hero-proof-num">500</div>
+                        <div class="cf-hero-proof-label">salariés : seuil à partir duquel le BEGES est obligatoire (tous les 4 ans, plan de transition inclus)</div>
                     </div>
                     <div>
-                        <div class="cf-hero-proof-num">8</div>
-                        <div class="cf-hero-proof-label">semaines pour ancrer une compétence, preuves à l'appui</div>
+                        <div class="cf-hero-proof-num">40%</div>
+                        <div class="cf-hero-proof-label">du Diag Décarbon'Action pris en charge par Bpifrance pour les PME et ETI de moins de 500 salariés</div>
                     </div>
                     <div>
-                        <div class="cf-hero-proof-num">0</div>
-                        <div class="cf-hero-proof-label">QCM comme validateur — uniquement des preuves d'action</div>
+                        <div class="cf-hero-proof-num">9</div>
+                        <div class="cf-hero-proof-label">semaines pour passer du bilan à l'action</div>
                     </div>
                 </div>
             </div>
@@ -49,27 +53,28 @@
     <div class="container">
         <div class="text-center mb-5">
             <span class="cf-eyebrow">Le constat</span>
-            <h2 class="cf-h2 mb-3">Le problème n'est pas votre motivation.<br>C'est la méthode.</h2>
+            <h2 class="cf-h2 mb-3">Un bilan carbone qui dort dans un tiroir<br>ne réduit rien</h2>
         </div>
-        <div class="row g-4 justify-content-center">
-            <div class="col-lg-5">
-                <div class="cf-flip-card cf-flip-before">
-                    <h5 class="mb-3">😴 La formation qu'on oublie</h5>
-                    <ul class="mb-0 ps-3 cf-flip-list">
-                        <li class="mb-2">On regarde une vidéo, on répond à un quiz, on ferme l'onglet.</li>
-                        <li class="mb-2">La majorité des apprenants décrochent avant la fin du parcours.</li>
-                        <li>Ce qu'on retient d'un contenu passif se compte en jours, pas en mois.</li>
-                    </ul>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">📁</div>
+                    <h5>Des chiffres que personne ne s'approprie</h5>
+                    <p>Le bilan est restitué, puis oublié par les équipes qui font les émissions au quotidien.</p>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <div class="cf-flip-card cf-flip-after">
-                    <h5 class="mb-3">⚡ Le Défi qu'on retient</h5>
-                    <ul class="mb-0 ps-3 cf-flip-list">
-                        <li class="mb-2">Vous recevez un Défi concret à résoudre sur le terrain, cette semaine.</li>
-                        <li class="mb-2">Vous déposez une <strong>Preuve</strong> (photo, vidéo, témoignage) de ce que vous avez vraiment fait.</li>
-                        <li>Un pair ou un Tuteur valide — la compétence s'ancre parce qu'elle a servi.</li>
-                    </ul>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🧭</div>
+                    <h5>Un plan de transition sans pilote</h5>
+                    <p>Les actions sont listées, rarement lancées, encore plus rarement suivies.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">📊</div>
+                    <h5>Des clients qui demandent des preuves</h5>
+                    <p>Donneurs d'ordres, appels d'offres, banques : on vous demande des données et une trajectoire, pas des intentions.</p>
                 </div>
             </div>
         </div>
@@ -77,157 +82,270 @@
 </section>
 <!-- /le constat -->
 
-<!-- equation -->
-<section class="cf-section cf-section--grey">
+<!-- notre approche -->
+<section class="cf-section cf-section--grey" id="notre-approche">
     <div class="container">
         <div class="text-center mb-5">
-            <span class="cf-eyebrow">L'équation Challenges Factory</span>
-            <h2 class="cf-h2 mb-3">Défis + Cartes + Action</h2>
-            <p class="cf-lead mx-auto" style="max-width:560px;">Trois objets simples suffisent pour transformer une intention en compétence prouvée.</p>
+            <span class="cf-eyebrow">Notre approche</span>
+            <h2 class="cf-h2 mb-3">De la mesure à l'action : un seul parcours, une seule équipe</h2>
+            <p class="cf-lead mx-auto" style="max-width:620px;">Trois étapes pour transformer un constat en trajectoire de décarbonation réellement suivie.</p>
         </div>
         <div class="row g-4">
             <div class="col-md-4">
-                <div class="cf-card">
-                    <span class="cf-code-tag">MAN-C23</span>
-                    <h5>🗂️ Carte de Compétences</h5>
-                    <p>Une compétence, une carte : objectif, mantra, exemple concret et astuces actionnables. Votre Cohorte débloque progressivement les cartes utiles à son Défi.</p>
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">01</span>
+                    <h5>📏 Mesurer</h5>
+                    <p>Bilan Carbone® selon la méthode V9 (cadrage, périmètres, collecte, comptabilisation), avec les facteurs d'émission de la Base Empreinte de l'ADEME.</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="cf-card">
-                    <span class="cf-code-tag">DÉFI</span>
-                    <h5>🎯 Défi individuel ou en Squad</h5>
-                    <p>Une mission à réaliser sur le terrain, seul ou avec votre équipe. Certains Défis ne se résolvent qu'ensemble.</p>
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">02</span>
+                    <h5>🤝 Mobiliser</h5>
+                    <p>La collecte des données devient un défi d'équipe. Plus rapide, et vos équipes sont embarquées dès le départ.</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="cf-card">
-                    <span class="cf-code-tag">PREUVE</span>
-                    <h5>📸 Preuve d'action</h5>
-                    <p>Photo, vidéo, témoignage ou capture : la preuve que vous avez agi. Validée par un pair, un Tuteur ou un Coach — jamais par un simple QCM.</p>
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">03</span>
+                    <h5>⚡ Réduire</h5>
+                    <p>Le challenge « Cap Bas Carbone ». Pendant 9 semaines, des équipes par poste d'émission testent des actions, les chiffrent, les font valider par leurs pairs et les présentent à la direction.</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- /equation -->
+<!-- /notre approche -->
 
-<!-- comment ca marche -->
-<section class="cf-section" id="comment-ca-marche">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="cf-eyebrow">Chaque semaine, en Cohorte</span>
-            <h2 class="cf-h2 mb-3">Comment ça marche</h2>
-            <p class="cf-lead mx-auto" style="max-width:560px;">Le rythme d'une Cohorte : 8 semaines de contenu, une boucle simple répétée chaque semaine.</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="cf-process-step">
-                    <span class="cf-process-num">01</span>
-                    <h5 class="mb-2">🔍 S'engager <small class="text-muted d-block fw-normal" style="font-size:13px;">Début de semaine</small></h5>
-                    <p class="text-muted mb-0">Vous recevez le Défi de la semaine et les Cartes de Compétences qui vont avec. Vous comprenez pourquoi ça compte.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="cf-process-step">
-                    <span class="cf-process-num">02</span>
-                    <h5 class="mb-2">🌍 Investiguer <small class="text-muted d-block fw-normal" style="font-size:13px;">Milieu de semaine</small></h5>
-                    <p class="text-muted mb-0">Vous testez sur le terrain, seul ou en Squad, avec votre Coach IA disponible 24/7 pour vous débloquer.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="cf-process-step">
-                    <span class="cf-process-num">03</span>
-                    <h5 class="mb-2">⚡ Agir <small class="text-muted d-block fw-normal" style="font-size:13px;">Fin de semaine</small></h5>
-                    <p class="text-muted mb-0">Vous déposez votre Preuve, vous recevez le retour d'un pair ou d'un Tuteur, et vous débloquez votre badge de la semaine.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-<!-- /comment ca marche -->
-
-<!-- bandeau stats -->
-<section class="cf-stats-band">
-    <div class="container">
-        <div class="cf-stats-grid">
-            <div class="cf-stat-item">
-                <div class="cf-stat-num">75%</div>
-                <div class="cf-stat-label">de rétention en plus qu'une formation passive</div>
-            </div>
-            <div class="cf-stat-item">
-                <div class="cf-stat-num">8S</div>
-                <div class="cf-stat-label">la durée d'une Cohorte, du premier au dernier Défi</div>
-            </div>
-            <div class="cf-stat-item">
-                <div class="cf-stat-num">0</div>
-                <div class="cf-stat-label">QCM comme validateur de compétence</div>
-            </div>
-        </div>
-    </div>
-</section>
-<!-- /bandeau stats -->
-
-<!-- manifeste -->
-<section class="cf-section cf-section--grey">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="cf-eyebrow">Notre manifeste</span>
-            <h2 class="cf-h2 mb-3">Une aventure collective, pas une compétition</h2>
-            <p class="cf-lead mx-auto" style="max-width:620px;">Pas de classement individuel qui oppose les apprenants. On progresse ensemble, on s'entraide, et ça compte double.</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card">
-                    <div class="cf-card-icon">✅</div>
-                    <h5>La preuve remplace le QCM</h5>
-                    <p>Une compétence se valide par une action réelle sur le terrain, jamais par un quiz.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card">
-                    <div class="cf-card-icon">🤝</div>
-                    <h5>L'équipe avant l'individu</h5>
-                    <p>Aider un pair rapporte plus de points que performer seul. Pas de leaderboard qui oppose les apprenants.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card">
-                    <div class="cf-card-icon">🧑‍🏫</div>
-                    <h5>L'humain valide, l'IA assiste</h5>
-                    <p>Votre Coach IA répond 24/7, mais c'est toujours un pair ou un Tuteur qui valide votre compétence.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card">
-                    <div class="cf-card-icon">🌱</div>
-                    <h5>Un rythme à votre mesure</h5>
-                    <p>Les Cartes se débloquent semaine après semaine, au rythme de votre Cohorte — jamais tout d'un coup.</p>
-                </div>
-            </div>
-        </div>
-        <div class="row justify-content-center">
-            <div class="col-lg-8 text-center">
-                <p class="mt-5 mb-0 text-muted">
-                    Et après ? Les apprenants les plus investis deviennent <strong>Tuteurs</strong>, puis
-                    <strong>Mentors</strong> en accompagnant à leur tour une nouvelle Cohorte.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-<!-- /manifeste -->
-
-<!-- cta final -->
+<!-- pour qui -->
 <section class="cf-section">
     <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Pour qui ?</span>
+            <h2 class="cf-h2 mb-3">Pensé pour les PME et les ETI</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🏢</div>
+                    <h5>PME</h5>
+                    <p>Un premier bilan carbone à votre mesure, finançable via le Diag Décarbon'Action.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🏭</div>
+                    <h5>ETI</h5>
+                    <p>Dès 500 salariés, un BEGES réglementaire et un plan de transition qui avance réellement. En dessous de 500 salariés, le Diag Décarbon'Action reste accessible.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🔗</div>
+                    <h5>PME et ETI sous-traitantes</h5>
+                    <p>Répondre aux demandes de données carbone de vos donneurs d'ordres et aux critères des appels d'offres.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /pour qui -->
+
+<!-- piliers -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">✅</div>
+                    <h5>Conformité</h5>
+                    <p>BEGES, exigences clients et appels d'offres.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">📐</div>
+                    <h5>Données fiabilisées</h5>
+                    <p>Une collecte documentée, source par source.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🌱</div>
+                    <h5>tCO2e évitées</h5>
+                    <p>Estimées pendant le challenge, vérifiées à la mise à jour annuelle du bilan.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🤝</div>
+                    <h5>Équipes embarquées</h5>
+                    <p>Chaque service agit sur les émissions qu'il maîtrise.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /piliers -->
+
+<!-- parcours mis en avant -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Le parcours</span>
+            <h2 class="cf-h2 mb-3">Cap Bas Carbone</h2>
+            <p class="cf-lead mx-auto" style="max-width:600px;">9 semaines pour passer du bilan carbone à l'action, en équipe.</p>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="cf-card h-100 text-center">
+                    <span class="cf-code-tag">8 thématiques · 9 semaines calendaires</span>
+                    <h5 class="mt-2">Des équipes par poste d'émission testent, chiffrent et présentent leurs actions de réduction à la direction.</h5>
+                    @* [À CONFIRMER] Ce parcours est decrit en detail dans content/a-saisir/parcours-cap-bas-carbone.md,
+                       a saisir dans le back-office (Admin > Challenges). Le lien ci-dessous vers /formations reste
+                       generique tant que la fiche n'est pas publiee avec un ChallengeId reel - a remplacer par un
+                       lien direct vers /formations/{challengeId} une fois la fiche saisie. *@
+                    <a class="cf-btn cf-btn-primary mt-3" asp-controller="Home" asp-action="Formations">Découvrir le parcours →</a>
+                </div>
+            </div>
+        </div>
+        <p class="text-center mt-4 mb-0">
+            <a class="cf-btn cf-btn-outline" asp-controller="Home" asp-action="Formations">Voir aussi nos parcours Compétences &amp; IA</a>
+        </p>
+    </div>
+</section>
+<!-- /parcours mis en avant -->
+
+@* [À DÉFINIR : témoignage client carbone]
+   Aucun témoignage client "carbone" n'existe encore. Le "cas Sigebene" mentionné sur la page
+   À propos n'est qu'une ligne de frise chronologique ("cas Sigebene (ancrage mémoriel)"), pas
+   une citation exploitable - impossible de "garder" un témoignage qui n'existe pas sans en
+   inventer le contenu (interdit, cf. consignes). Structure prete a activer des qu'une vraie
+   citation sera fournie (role, entreprise, citation, precision "a propos de la methode
+   Challenge Based Learning") :
+
+<section class="cf-section cf-section--grey">
+    <div class="container text-center">
+        <blockquote class="mb-3">
+            <p class="cf-h2" style="max-width:760px;margin:0 auto;">
+                « [CITATION A DEFINIR] »
+            </p>
+        </blockquote>
+        <p class="text-muted mb-0">[Nom, fonction] — [Entreprise], à propos de la méthode Challenge Based Learning</p>
+    </div>
+</section>
+*@
+
+<!-- offres -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Nos offres</span>
+            <h2 class="cf-h2 mb-3">Bilan Carbone® &amp; décarbonation</h2>
+            <p class="cf-lead mx-auto" style="max-width:600px;">Tarifs à partir de, hors taxes.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">PME</span>
+                    <h5>Bilan Carbone® PME</h5>
+                    <p class="text-muted small mb-2">Scopes 1, 2, 3 + plan de transition · 3 à 4 mois</p>
+                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">À partir de 8 500 € HT</strong></p>
+                    <p class="text-muted small mb-3">Moins de 50 salariés : à partir de 5 500 € HT.</p>
+                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">ETI</span>
+                    <h5>Bilan Carbone® ETI</h5>
+                    <p class="text-muted small mb-2">BEGES réglementaire + plan de transition</p>
+                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">À partir de 18 000 € HT</strong></p>
+                    <p class="text-muted small mb-3">Sur devis selon le nombre de sites.</p>
+                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100" style="border-color:var(--cf-orange);">
+                    <span class="cf-code-tag">Recommandé</span>
+                    <h5>Pack Bilan + Challenge Cap Bas Carbone</h5>
+                    <p class="text-muted small mb-2">PME · Bilan Carbone® + challenge d'équipe</p>
+                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">À partir de 11 900 € HT</strong></p>
+                    <p class="text-muted small mb-3">Au lieu de 12 400 € achetés séparément.</p>
+                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">Starter</span>
+                    <h5>Challenge Cap Bas Carbone seul</h5>
+                    <p class="text-muted small mb-2">1 cycle · 10 participants max</p>
+                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">3 900 € HT</strong></p>
+                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="cf-card h-100">
+                    <span class="cf-code-tag">Suivi</span>
+                    <h5>Suivi annuel</h5>
+                    <p class="text-muted small mb-2">Mise à jour du bilan</p>
+                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">À partir de 4 500 € HT/an</strong></p>
+                    <p class="text-muted small mb-3">Mise à jour + nouveau challenge : à partir de 7 900 € HT/an.</p>
+                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
+                </div>
+            </div>
+        </div>
+
+        @* [À CONFIRMER] "Programme PME 1 490 EUR/mois" et "Licence interne" ne figuraient sur
+           aucune page du site avant cette evolution (absent de Home/Index.cshtml, absent
+           ailleurs) - seuls chiffres trouves dans CLAUDE.md (plan produit). Repris ici tels
+           quels en sous-section demotee, a confirmer avant mise en ligne. *@
+        <div class="row justify-content-center mt-4">
+            <div class="col-lg-10">
+                <div class="text-center mb-4">
+                    <span class="cf-eyebrow">Activité secondaire</span>
+                    <h3 class="cf-h3">Compétences &amp; IA</h3>
+                    <p class="text-muted small mx-auto" style="max-width:600px;">Nos parcours historiques (soft skills, IA, management) restent disponibles. [À CONFIRMER] Tarifs ci-dessous non vérifiés à ce jour.</p>
+                </div>
+                <div class="row g-4 justify-content-center">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="cf-card h-100">
+                            <h5>Programme PME</h5>
+                            <p class="mb-1"><strong style="font-size:20px;">1 490 € HT/mois</strong></p>
+                            <p class="text-muted small mb-0">[À CONFIRMER]</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="cf-card h-100">
+                            <h5>Licence interne</h5>
+                            <p class="mb-1"><strong style="font-size:20px;">Sur devis</strong></p>
+                            <p class="text-muted small mb-0">[À CONFIRMER]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /offres -->
+
+<!-- cta final -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
         <div class="cf-cta-band">
-            <h2 class="cf-h2 mb-3" style="color:#fff;">Prêt à arrêter de regarder,<br>et à commencer à faire ?</h2>
-            <p class="mb-4" style="color:rgba(255,255,255,.65);">Créez votre compte, rejoignez une Cohorte, relevez votre premier Défi cette semaine.</p>
-            <a class="cf-btn cf-btn-primary" asp-area="Identity" asp-page="/Account/Register">
-                Créer mon compte gratuitement →
+            <h2 class="cf-h2 mb-3" style="color:#fff;">Prêt à mesurer, puis à agir ?</h2>
+            <p class="mb-4" style="color:rgba(255,255,255,.65);">En 30 minutes, faisons le point sur votre situation et la meilleure façon de démarrer.</p>
+            <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                📅 Réserver mon pré-diagnostic carbone (30 min)
             </a>
         </div>
     </div>
 </section>
 <!-- /cta final -->
+
+<style>
+    /* .cf-btn impose white-space: nowrap (pense pour des CTA courts) : le libelle plus long
+       "Reserver mon pre-diagnostic carbone (30 min)" deborderait sinon sur mobile - meme
+       correctif que celui deja utilise dans FormationDetail.cshtml. */
+    .cf-btn-wrap { white-space: normal; line-height: 1.3; }
+</style>
