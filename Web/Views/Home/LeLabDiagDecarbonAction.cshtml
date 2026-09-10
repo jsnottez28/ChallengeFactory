@@ -1,0 +1,111 @@
+@{
+    ViewData["Title"] = "Financer son bilan carbone avec le Diag Décarbon'Action";
+
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+}
+
+<section class="cf-hero-home" style="padding-bottom:40px;">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <a class="cf-badge text-decoration-none" asp-controller="Home" asp-action="LeLab">← Le Lab · Financement</a>
+                <h1 class="cf-h1 mb-3 mt-3">Financer son bilan carbone avec le Diag Décarbon'Action</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="cf-article-body">
+                    <p>
+                        Le coût est souvent la première objection qu'on entend quand on parle de bilan carbone à
+                        une PME. « On n'a pas le budget pour ça cette année. » C'est une objection légitime —
+                        et c'est justement pour y répondre qu'existe le Diag Décarbon'Action, un dispositif porté
+                        par Bpifrance qui prend en charge une partie significative du coût du premier bilan.
+                    </p>
+
+                    <h2>Un dispositif pensé pour les entreprises qui n'ont pas d'obligation légale</h2>
+                    <p>
+                        Contrairement au BEGES, qui est une obligation réglementaire dès 500 salariés, le Diag
+                        Décarbon'Action s'adresse aux entreprises qui n'ont <em>pas</em> cette obligation : il
+                        cible les PME et ETI de moins de 500 salariés, sur l'ensemble du territoire français,
+                        outre-mer inclus, tous secteurs d'activité confondus.
+                    </p>
+                    <p>Trois conditions d'éligibilité :</p>
+                    <ul>
+                        <li><strong>Moins de 500 salariés</strong> — les micro-entreprises sont exclues du dispositif ;</li>
+                        <li><strong>Au moins 1 an d'activité</strong> — une entreprise tout juste créée n'est pas éligible ;</li>
+                        <li><strong>Aucun bilan d'émissions de gaz à effet de serre réalisé au cours des 5 dernières années</strong> — le dispositif finance un <em>premier</em> bilan, pas une mise à jour.</li>
+                    </ul>
+
+                    <h2>Ce que ça coûte réellement</h2>
+                    <p>
+                        La prestation complète est chiffrée à 10 000 € HT. Bpifrance en prend en charge 40 %, ce
+                        qui laisse 6 000 € HT à la charge de l'entreprise — soit une réduction de 4 000 € sur le
+                        prix plein. Pour une PME qui hésite entre « on verra plus tard » et « on s'y met
+                        maintenant », c'est souvent l'élément qui fait basculer la décision.
+                    </p>
+                    <p>
+                        L'accompagnement se déroule sur 12 jours de prestation, répartis sur une période de 6 à 8
+                        mois. Cette durée peut surprendre : elle s'explique par le fait que la collecte de
+                        données auprès des différents services de l'entreprise prend du temps, et qu'un bilan
+                        carbone sérieux ne se fait pas en accéléré.
+                    </p>
+
+                    <h2>Ce que le dispositif ne finance pas</h2>
+                    <p>
+                        Le Diag Décarbon'Action finance le diagnostic — la mesure. Il ne finance pas, en tant que
+                        tel, la mise en œuvre des actions de réduction qui en découlent : former les équipes,
+                        changer des pratiques, investir dans des équipements moins émetteurs. C'est une nuance
+                        importante, car le risque classique — documenté par ailleurs dans
+                        <a asp-controller="Home" asp-action="LeLabPlansTransition">notre article sur les plans de
+                        transition qui restent dans un tiroir</a> — est justement de s'arrêter à la mesure sans
+                        jamais transformer le plan d'action en résultats concrets.
+                    </p>
+                    <p>
+                        C'est pour cette raison que nous proposons, en complément du bilan carbone, un format qui
+                        embarque directement les équipes dans l'action : le challenge « Cap Bas Carbone », où
+                        chaque service teste, chiffre et présente une action de réduction sur son propre poste
+                        d'émission, plutôt que de laisser le plan de transition à la seule main de la direction.
+                    </p>
+
+                    <h2>Comment candidater</h2>
+                    <p>
+                        Le dispositif est géré par Bpifrance, qui certifie les experts habilités à réaliser le
+                        diagnostic dans ce cadre.
+                        <em>[À CONFIRMER] Nous ne pouvons pas, à ce stade, affirmer que Challenges Factory est
+                        référencé par Bpifrance pour ce dispositif — c'est un point que nous devons vérifier et
+                        confirmer avant toute communication publique le mentionnant explicitement.</em>
+                        Ce que nous pouvons en revanche faire dès aujourd'hui : réaliser avec vous un
+                        pré-diagnostic gratuit de 30 minutes pour évaluer votre éligibilité et vous orienter, que
+                        ce soit vers ce dispositif ou vers une offre de bilan carbone classique mieux adaptée à
+                        votre situation.
+                    </p>
+
+                    <h2>Ce qu'il faut retenir</h2>
+                    <p>
+                        Le Diag Décarbon'Action lève l'obstacle budgétaire pour une grande partie des PME et ETI
+                        françaises qui n'ont pas d'obligation légale de bilan carbone, mais qui ont tout intérêt
+                        à l'anticiper — ne serait-ce que parce que leurs clients, leurs appels d'offres ou leurs
+                        partenaires bancaires leur demandent déjà des comptes sur le sujet. À 6 000 € HT et 12
+                        jours de prestation sur 6 à 8 mois, le dispositif rend l'exercice accessible à des
+                        structures qui, autrement, l'auraient sans doute repoussé encore une année.
+                    </p>
+                </div>
+
+                <div class="text-center my-5">
+                    <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                        📅 Réserver mon pré-diagnostic carbone (30 min)
+                    </a>
+                </div>
+
+                <p class="text-muted small">
+                    Source : <a href="https://mission-transition-ecologique.beta.gouv.fr/aides-entreprise/diag-decarbon-action" target="_blank" rel="noopener">Diag Décarbon'Action — Mission Transition Écologique</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>

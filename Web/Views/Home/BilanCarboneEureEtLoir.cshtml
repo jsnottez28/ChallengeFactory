@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Bilan Carbone en Eure-et-Loir";
+
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+}
+
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">Eure-et-Loir</span>
+                <h1 class="cf-h1 mb-3">Le Bilan Carbone® des entreprises<br>de Chartres, Dreux et du Perche</h1>
+                <p class="cf-lead mb-4" style="max-width:640px;">
+                    Challenges Factory accompagne les PME et ETI d'Eure-et-Loir dans leur Bilan Carbone®,
+                    puis transforme leur plan de transition en actions réellement suivies par leurs équipes.
+                </p>
+                <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                    📅 Réserver mon pré-diagnostic carbone (30 min)
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /hero -->
+
+<!-- trois bassins -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Un territoire, trois réalités</span>
+            <h2 class="cf-h2 mb-3">Chartres, Dreux, le Perche : des enjeux différents</h2>
+            <p class="cf-lead mx-auto" style="max-width:640px;">
+                Le Bilan Carbone® ne se lit pas de la même façon selon l'activité de votre entreprise.
+                Voici ce que nous observons localement.
+            </p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🧴</div>
+                    <h5>Chartres — cosmétique, services, industrie</h5>
+                    <p class="mb-0">
+                        Chartres accueille le siège de la Cosmetic Valley, pôle de compétitivité mondial de la
+                        filière parfumerie-cosmétique qui rassemble plusieurs centaines d'entreprises membres.
+                        Pour ces entreprises et leurs sous-traitants, les enjeux carbone touchent autant la
+                        formulation et le conditionnement que la logistique et les attentes de traçabilité des
+                        marques donneuses d'ordres.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🏭</div>
+                    <h5>Dreux — industrie et automobile</h5>
+                    <p class="mb-0">
+                        Le bassin drouais se distingue par un tissu industriel dense, avec une présence marquée
+                        du secteur automobile, et une position stratégique proche de Paris (axe A11). Pour ces
+                        entreprises, souvent sous-traitantes de donneurs d'ordres qui leur demandent déjà des
+                        données carbone, le Bilan Carbone® devient un prérequis commercial autant qu'une
+                        obligation potentielle.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🐴</div>
+                    <h5>Le Perche — agriculture et élevage</h5>
+                    <p class="mb-0">
+                        À l'ouest du département, le Perche reste marqué par la polyculture-élevage — bovin
+                        laitier et allaitant, cheval percheron — sur un bocage où l'agriculture occupe une part
+                        majeure du territoire. Pour les exploitations et PME agroalimentaires de la zone, le
+                        Bilan Carbone® aide à objectiver ce qui vient réellement des intrants, du cheptel et du
+                        transport — plutôt que de subir des idées reçues sur le sujet.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /trois bassins -->
+
+<!-- meme methode -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 text-center">
+                <span class="cf-eyebrow">La méthode</span>
+                <h2 class="cf-h2 mb-3">Le même Bilan Carbone® V9, partout dans le département</h2>
+                <p class="cf-lead mb-4">
+                    Quelle que soit votre activité ou votre zone d'implantation en Eure-et-Loir, nous appliquons
+                    la même méthode Bilan Carbone® V9 (cadrage, périmètres, mobilisation, comptabilisation, plan
+                    de transition) avec les facteurs d'émission de la Base Empreinte de l'ADEME — le détail
+                    complet est sur notre page <a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a>.
+                </p>
+                <a class="cf-btn cf-btn-outline" asp-controller="Home" asp-action="BilanCarbone">Voir la méthode complète →</a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /meme methode -->
+
+<!-- cta final -->
+<section class="cf-section">
+    <div class="container">
+        <div class="cf-cta-band">
+            <h2 class="cf-h2 mb-3" style="color:#fff;">Une entreprise en Eure-et-Loir ?</h2>
+            <p class="mb-4" style="color:rgba(255,255,255,.65);">En 30 minutes, faisons le point sur votre situation et la meilleure façon de démarrer.</p>
+            <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                📅 Réserver mon pré-diagnostic carbone (30 min)
+            </a>
+        </div>
+    </div>
+</section>
+<!-- /cta final -->

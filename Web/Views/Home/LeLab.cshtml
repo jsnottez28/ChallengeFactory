@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Le Lab";
+
+    var articles = new (string Url, string Thematique, string Titre, string Extrait)[]
+    {
+        ("beges-obligatoire-2026", "Réglementation",
+            "BEGES obligatoire en 2026 : qui est concerné et que risquez-vous ?",
+            "Le bilan d'émissions de gaz à effet de serre est obligatoire dès 500 salariés, avec un plan de transition inclus depuis 2023. Amendes, exclusion des marchés publics : ce qui change concrètement."),
+        ("diag-decarbon-action", "Financement",
+            "Financer son bilan carbone avec le Diag Décarbon'Action",
+            "Un dispositif Bpifrance permet aux PME et ETI de moins de 500 salariés de financer 40 % de leur premier bilan carbone. Conditions, montants et durée."),
+        ("plans-de-transition-dans-un-tiroir", "Décarbonation",
+            "Pourquoi les plans de transition restent dans un tiroir (et comment en sortir)",
+            "De plus en plus d'entreprises mesurent leurs émissions. Beaucoup moins passent réellement à l'action. Voici pourquoi — et ce qui permet d'y échapper."),
+    };
+}
+
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">Le Lab</span>
+                <h1 class="cf-h1 mb-3">Décarbonation et compétences,<br>expliquées <span class="cf-accent">simplement</span>.</h1>
+                <p class="cf-lead" style="max-width:640px;">
+                    Réglementation, financement, méthode : nos analyses factuelles pour avancer sans se
+                    perdre dans le jargon.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /hero -->
+
+<!-- liste des articles -->
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="row g-4">
+            @foreach (var article in articles)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <a class="cf-article-card cf-card h-100" asp-controller="Home" asp-action="@ActionPourSlug(article.Url)">
+                        <span class="cf-code-tag">@article.Thematique</span>
+                        <h3 class="h5 mb-2 cf-article-card-title">@article.Titre</h3>
+                        <p class="mb-0 small text-muted">@article.Extrait</p>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /liste des articles -->
+
+@functions {
+    // Les 3 articles sont des actions dediees (pas de systeme de slug generique, cf.
+    // HomeController) - cette petite table de correspondance evite de repeter les noms
+    // d'action en dur dans la boucle ci-dessus.
+    private static string ActionPourSlug(string slug) => slug switch
+    {
+        "beges-obligatoire-2026" => nameof(Web.Controllers.HomeController.LeLabBegesObligatoire),
+        "diag-decarbon-action" => nameof(Web.Controllers.HomeController.LeLabDiagDecarbonAction),
+        "plans-de-transition-dans-un-tiroir" => nameof(Web.Controllers.HomeController.LeLabPlansTransition),
+        _ => throw new ArgumentOutOfRangeException(nameof(slug)),
+    };
+}

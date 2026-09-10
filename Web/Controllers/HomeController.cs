@@ -46,6 +46,40 @@ namespace Web.Controllers
             return View();
         }
 
+        [Route("bilan-carbone-eure-et-loir")]
+        public IActionResult BilanCarboneEureEtLoir()
+        {
+            return View();
+        }
+
+        // Le Lab : pas de modele Article en base (aucune migration sans accord explicite,
+        // cf. mission) - contenu statique, meme technique que La methode/A propos. Chaque
+        // article est une action/vue dediee plutot qu'un systeme de slug generique, le
+        // volume (3 articles fixes) ne justifie pas plus.
+        [Route("le-lab")]
+        public IActionResult LeLab()
+        {
+            return View();
+        }
+
+        [Route("le-lab/beges-obligatoire-2026")]
+        public IActionResult LeLabBegesObligatoire()
+        {
+            return View();
+        }
+
+        [Route("le-lab/diag-decarbon-action")]
+        public IActionResult LeLabDiagDecarbonAction()
+        {
+            return View();
+        }
+
+        [Route("le-lab/plans-de-transition-dans-un-tiroir")]
+        public IActionResult LeLabPlansTransition()
+        {
+            return View();
+        }
+
         [Route("la-methode")]
         public IActionResult Methode()
         {
