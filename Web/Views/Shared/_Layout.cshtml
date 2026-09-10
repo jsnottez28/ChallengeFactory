@@ -43,7 +43,8 @@
                         <div class="tdmenu__navbar-wrap tdmenu__main-menu">
                             <ul class="navigation">
                                 <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
-                                <li><a asp-controller="Home" asp-action="Formations">Formations</a></li>
+                                <li><a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a></li>
+                                <li><a asp-controller="Home" asp-action="Formations">Nos parcours</a></li>
                                 <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
                                 <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
                                 <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
@@ -55,22 +56,19 @@
                            chevauchement/retour a la ligne signale, y compris juste sous ce palier ou logo+menu+
                            boutons ne tiennent plus sur une seule ligne) : ils rejoignent le menu mobile offcanvas
                            ci-dessous, ouvert par le meme bouton hamburger - une seule ligne d'entete, toujours. *@
-                        @if (!SignInManager.IsSignedIn(User))
-                        {
-                            <div class="header-auth d-none d-xxl-flex align-items-center gap-2">
-                                <a asp-area="Identity" asp-page="/Account/Login" class="cf-btn cf-btn-outline">Se connecter</a>
-                                <a asp-area="Identity" asp-page="/Account/Register" class="cf-btn cf-btn-primary">S'inscrire</a>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="header-auth d-none d-xxl-flex align-items-center gap-2">
+                        <div class="header-auth d-none d-xxl-flex align-items-center gap-2">
+                            @if (!SignInManager.IsSignedIn(User))
+                            {
+                                <a class="cf-btn cf-btn-primary" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Pré-diagnostic</a>
+                            }
+                            else
+                            {
                                 <a asp-area="" asp-page="/Dashboard/Index" class="cf-btn cf-btn-outline">Dashboard</a>
                                 <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline-flex align-items-center">
                                     <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
                                 </form>
-                            </div>
-                        }
+                            }
+                        </div>
                         <div class="td-header-menu-bar lh-1 p-relative ms-3 d-block d-xxl-none">
                             <button class="tdmenu-offcanvas-open-btn mobile-nav-toggler">
                                 <span></span>
@@ -98,7 +96,8 @@
                     <nav class="tdmenu__main-menu">
                         <ul class="navigation">
                             <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
-                            <li><a asp-controller="Home" asp-action="Formations">Formations</a></li>
+                            <li><a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a></li>
+                            <li><a asp-controller="Home" asp-action="Formations">Nos parcours</a></li>
                             <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
                             <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
                             <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
@@ -109,8 +108,9 @@
                     @if (!SignInManager.IsSignedIn(User))
                     {
                         <ul class="list-wrap flex-column align-items-stretch gap-2 px-4 pb-4">
+                            <li><a class="cf-btn cf-btn-primary cf-btn-wrap w-100 justify-content-center" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Pré-diagnostic carbone</a></li>
                             <li><a asp-area="Identity" asp-page="/Account/Login" class="cf-btn cf-btn-outline w-100 justify-content-center">Se connecter</a></li>
-                            <li><a asp-area="Identity" asp-page="/Account/Register" class="cf-btn cf-btn-primary w-100 justify-content-center">S'inscrire</a></li>
+                            <li><a asp-area="Identity" asp-page="/Account/Register" class="cf-btn cf-btn-outline w-100 justify-content-center">S'inscrire</a></li>
                         </ul>
                     }
                     else

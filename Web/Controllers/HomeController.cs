@@ -40,6 +40,12 @@ namespace Web.Controllers
             return View();
         }
 
+        [Route("bilan-carbone")]
+        public IActionResult BilanCarbone()
+        {
+            return View();
+        }
+
         [Route("la-methode")]
         public IActionResult Methode()
         {

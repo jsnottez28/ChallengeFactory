@@ -1,0 +1,262 @@
+@{
+    ViewData["Title"] = "Bilan Carbone";
+
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+
+    var etapes = new (string Numero, string Titre, string Description)[]
+    {
+        ("01", "Cadrage", "Définir le périmètre organisationnel, les objectifs et les moyens de l'exercice."),
+        ("02", "Périmètres", "Choisir les scopes 1, 2 et 3 à couvrir et les postes d'émission concernés."),
+        ("03", "Mobilisation", "Identifier les données à collecter et embarquer les équipes qui les détiennent."),
+        ("04", "Comptabilisation", "Collecter les données et calculer les émissions avec les facteurs de la Base Empreinte (ADEME)."),
+        ("05", "Plan de transition", "Chiffrer des objectifs de réduction et planifier des actions concrètes, poste par poste."),
+    };
+
+    var postes = new[]
+    {
+        "Énergie", "Autres émissions directes", "Déchets directs", "Immobilisations",
+        "Intrants — biens et matières", "Intrants — services", "Fret", "Déplacements",
+        "Utilisation", "Fin de vie",
+    };
+
+    var livrables = new[]
+    {
+        "Fiche de cadrage",
+        "Cartographie des flux",
+        "Matrice de collecte",
+        "Résultats par poste d'émission",
+        "Plan de transition",
+        "Challenge d'équipe en option",
+    };
+}
+
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">Bilan Carbone®</span>
+                <h1 class="cf-h1 mb-3">Le Bilan Carbone® des PME et ETI,<br>jusqu'au passage à l'action</h1>
+                <p class="cf-lead mb-4" style="max-width:640px;">
+                    Mesurer vos émissions selon la méthode officielle, puis transformer votre plan de transition
+                    en actions réellement suivies par vos équipes.
+                </p>
+                <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                    📅 Réserver mon pré-diagnostic carbone (30 min)
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /hero -->
+
+<!-- la methode -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">La méthode</span>
+            <h2 class="cf-h2 mb-3">5 étapes, méthode Bilan Carbone® V9</h2>
+        </div>
+        <div class="row g-4">
+            @foreach (var etape in etapes)
+            {
+                <div class="col-md-4 col-lg">
+                    <div class="cf-card h-100">
+                        <span class="cf-code-tag">@etape.Numero</span>
+                        <h5>@etape.Titre</h5>
+                        <p class="mb-0 small">@etape.Description</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /la methode -->
+
+<!-- postes d'emission -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Le périmètre</span>
+            <h2 class="cf-h2 mb-3">10 postes d'émission couverts</h2>
+            <p class="cf-lead mx-auto" style="max-width:600px;">Les 10 postes de la méthode Bilan Carbone®, couvrant les scopes 1, 2 et 3.</p>
+        </div>
+        <div class="row g-3 justify-content-center">
+            @foreach (var poste in postes)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="cf-card h-100 text-center py-3">
+                        <p class="mb-0 small fw-medium">@poste</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /postes d'emission -->
+
+<!-- livrables -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Ce que vous recevez</span>
+            <h2 class="cf-h2 mb-3">Les livrables</h2>
+        </div>
+        <div class="row g-4">
+            @foreach (var livrable in livrables)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="cf-card h-100">
+                        <div class="cf-card-icon">📄</div>
+                        <h5 class="mb-0">@livrable</h5>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /livrables -->
+
+<!-- qui realise le bilan -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-6">
+                <span class="cf-eyebrow">Qui réalise votre bilan</span>
+                <h2 class="cf-h2 mb-3">Jean-Sébastien Nottez</h2>
+                <p class="mb-3">
+                    Formé à la méthode Bilan Carbone® par l'ABC (Association pour la transition Bas Carbone).
+                    @* [À CONFIRMER : référencement Bpifrance] Ne pas affirmer un statut d'expert référencé
+                       Bpifrance tant que ce n'est pas confirmé — cf. section Financement ci-dessous. *@
+                </p>
+            </div>
+            <div class="col-lg-6">
+                <div class="cf-card h-100">
+                    <h5 class="mb-3">Ce qui nous différencie d'un bureau d'études</h5>
+                    <p class="mb-0">
+                        La conduite du changement. Plus de 20 ans de gestion de projet et de formation, et des
+                        équipes qui passent réellement à l'action — pas seulement un rapport de mesure.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /qui realise le bilan -->
+
+<!-- financement -->
+<section class="cf-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="text-center mb-5">
+                    <span class="cf-eyebrow">Financement</span>
+                    <h2 class="cf-h2 mb-3">Le Diag Décarbon'Action</h2>
+                </div>
+                <div class="cf-card">
+                    <p class="mb-2">Dispositif Bpifrance, ouvert aux entreprises qui remplissent ces conditions :</p>
+                    <ul class="mb-3">
+                        <li>Moins de 500 salariés</li>
+                        <li>Au moins 1 an d'activité</li>
+                        <li>Aucun bilan GES réalisé au cours des 5 dernières années</li>
+                    </ul>
+                    <p class="mb-2">Prestation de 10 000 € HT, dont <strong>40 % pris en charge par Bpifrance</strong> — 6 000 € HT restant à votre charge.</p>
+                    <p class="mb-0">Accompagnement de 12 jours de prestation, répartis sur 6 à 8 mois.</p>
+                    @* [À CONFIRMER : référencement Bpifrance] Je n'affirme pas que Jean-Sebastien Nottez est
+                       "expert référencé Bpifrance" tant que ce statut n'est pas confirmé. *@
+                    <p class="text-muted small mb-0 mt-3">[À CONFIRMER] Statut de référencement Bpifrance de Challenges Factory pour ce dispositif.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /financement -->
+
+<!-- faq -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="text-center mb-5">
+                    <span class="cf-eyebrow">Questions fréquentes</span>
+                    <h2 class="cf-h2">FAQ</h2>
+                </div>
+                <div class="accordion" id="faqBilanCarbone">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                Suis-je obligé de faire un bilan carbone ?
+                            </button>
+                        </h3>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqBilanCarbone">
+                            <div class="accordion-body">
+                                Le BEGES (bilan d'émissions de gaz à effet de serre) est obligatoire dès 500 salariés
+                                en métropole (250 en outre-mer), avec une mise à jour tous les 4 ans, plan de
+                                transition inclus. Une entreprise non conforme s'expose à une amende de 50 000 €
+                                (100 000 € en cas de récidive) et peut être exclue des marchés publics.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Et la CSRD ?
+                            </button>
+                        </h3>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqBilanCarbone">
+                            <div class="accordion-body">
+                                La directive Omnibus (adoptée en mars 2026) relève les seuils européens de la CSRD à
+                                1 000 salariés et 450 M€ de chiffre d'affaires : la plupart des PME et ETI en
+                                sortiraient. Ces nouveaux seuils doivent encore être transposés en droit français
+                                (attendu au plus tard le 19 mars 2027). En attendant — et indépendamment de la CSRD
+                                — le BEGES reste dû dès 500 salariés, et vos donneurs d'ordres continuent de vous
+                                demander des données.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Combien de temps ça prend ?
+                            </button>
+                        </h3>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqBilanCarbone">
+                            <div class="accordion-body">
+                                3 à 4 mois pour une PME, 4 à 8 mois pour une ETI multi-sites.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                Combien ça coûte ?
+                            </button>
+                        </h3>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqBilanCarbone">
+                            <div class="accordion-body">
+                                <p class="mb-2">Bilan Carbone® PME : à partir de 8 500 € HT (5 500 € HT pour moins de 50 salariés).</p>
+                                <p class="mb-2">Bilan Carbone® ETI : à partir de 18 000 € HT, sur devis selon le nombre de sites.</p>
+                                <p class="mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /faq -->
+
+<!-- cta final -->
+<section class="cf-section">
+    <div class="container">
+        <div class="cf-cta-band">
+            <h2 class="cf-h2 mb-3" style="color:#fff;">Prêt à mesurer, puis à agir ?</h2>
+            <p class="mb-4" style="color:rgba(255,255,255,.65);">En 30 minutes, faisons le point sur votre situation et la meilleure façon de démarrer.</p>
+            <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                📅 Réserver mon pré-diagnostic carbone (30 min)
+            </a>
+        </div>
+    </div>
+</section>
+<!-- /cta final -->

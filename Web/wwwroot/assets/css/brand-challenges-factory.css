@@ -140,6 +140,12 @@
 .cf-btn-primary:hover { background: var(--cf-orange-light); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,80,10,.3); }
 .cf-btn-outline { background: transparent; color: var(--cf-dark); border: 1.5px solid var(--cf-line); font-size: 12px; padding: 11px 20px; }
 .cf-btn-outline:hover { border-color: var(--cf-orange); color: var(--cf-orange); }
+/* .cf-btn impose white-space: nowrap (pense pour des CTA courts) : a ajouter sur tout
+   bouton dont le libelle est plus long (ex. "Reserver mon pre-diagnostic carbone (30
+   min)") pour eviter qu'il ne deborde sur mobile/menu offcanvas etroit. Centralise ici
+   (etait duplique independamment dans plusieurs vues) - reutiliser cette classe plutot
+   que de la re-dupliquer. */
+.cf-btn-wrap { white-space: normal; line-height: 1.3; }
 .cf-btn-ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.3); }
 .cf-btn-ghost:hover { border-color: #fff; background: rgba(255,255,255,.08); color: #fff; }
 
