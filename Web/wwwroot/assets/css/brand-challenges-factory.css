@@ -221,25 +221,28 @@
 
 /* Degagement sous le header transparent (position: absolute, donc hors du flux -
    toute premiere section de page doit reserver assez d'espace en haut pour ne pas se
-   faire recouvrir). Le menu principal et les boutons Se connecter/S'inscrire ne
-   s'affichent qu'a partir du palier xxl (voir .header-auth et .tdmenu__wrap dans
-   _Layout.cshtml) : en dessous, le header ne montre que logo + hamburger (une seule
-   ligne, plus basse) et le degagement necessaire est donc plus faible qu'au-dessus.
-   Le palier suit celui du header (xxl = 1400px, breakpoint Bootstrap). */
+   faire recouvrir). Le menu principal et les boutons Pre-diagnostic ne s'affichent
+   qu'a partir du palier xl (voir .header-auth et .tdmenu__wrap dans _Layout.cshtml,
+   xl = 1200px, breakpoint Bootstrap) : trois etats mesures empiriquement (Playwright,
+   cf. session du 2026-09-11 - la barre horizontale d'origine exigeait >=1400px pour
+   afficher le menu, ce qui masquait le menu desktop sur une grande partie des largeurs
+   PC reelles, ex. 1366px ou 1920px avec mise a l'echelle systeme) :
+   - < 1200px : logo + hamburger seuls, une ligne (mode mobile/offcanvas) ;
+   - 1200-1399px : logo + hamburger disparaissent, le menu complet + bouton
+     apparaissent mais ne tiennent plus sur une seule ligne (flex-wrap) -> 2 lignes
+     (logo, puis nav+bouton), hauteur mesuree stable ~226px sur toute la plage ;
+   - >= 1400px : tout tient sur une seule ligne (~90px). */
 :root {
   --cf-header-clearance: 110px;
 }
-@media (max-width: 1399.98px) {
+@media (max-width: 1199.98px) {
   :root {
     --cf-header-clearance: 190px;
   }
 }
-/* main.css n'applique le padding vertical supplementaire du mode hamburger (voir
-   .header-mobile-spacing) qu'en-dessous de 1200px ; on l'etend a 1399.98px pour
-   rester coherent avec le nouveau palier xxl du header (cf. ci-dessus). */
 @media (min-width: 1200px) and (max-width: 1399.98px) {
-  .header-mobile-spacing {
-    padding: 20px 0px;
+  :root {
+    --cf-header-clearance: 250px;
   }
 }
 

@@ -72,14 +72,16 @@
                             <span class="cf-logo-tagline">De la mesure à l'action</span>
                         </a>
                     </div>
-                    <nav class="tdmenu__nav tdmenu__wrap tdmenu-2 tdmenu-4 d-none d-xxl-flex flex-shrink-1">
+                    <nav class="tdmenu__nav tdmenu__wrap tdmenu-2 tdmenu-4 d-none d-xl-flex flex-shrink-1">
                         <div class="tdmenu__navbar-wrap tdmenu__main-menu">
                             <ul class="navigation">
                                 <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
                                 @* Sous-menu CSS pur (survole = affiche, cf. main.css .sub-menu / li:hover) : le
                                    theme le supporte nativement, pas de JS a charger. Regroupe Bilan Carbone et
                                    Bilan de competences pour eviter d'ajouter un 8e lien de premier niveau - le
-                                   palier xxl (1400px) etait deja calibre au pixel pres pour 7 (cf. historique). *@
+                                   palier xl (1200px) reste calibre pour 7 items, avec repli sur 2 lignes (logo
+                                   puis nav+bouton) entre 1200 et 1399px plutot qu'une seule ligne stricte -
+                                   cf. commentaire de --cf-header-clearance dans brand-challenges-factory.css. *@
                                 <li class="menu-item-has-children">
                                     <a href="#">Nos bilans</a>
                                     <ul class="sub-menu">
@@ -96,11 +98,10 @@
                         </div>
                     </nav>
                     <div class="td-menu-right-action td-menu-right-action-2 d-flex align-items-center flex-shrink-0">
-                        @* En dessous du palier xxl, ces liens ne restent pas sur la ligne du header (source du
-                           chevauchement/retour a la ligne signale, y compris juste sous ce palier ou logo+menu+
-                           boutons ne tiennent plus sur une seule ligne) : ils rejoignent le menu mobile offcanvas
-                           ci-dessous, ouvert par le meme bouton hamburger - une seule ligne d'entete, toujours. *@
-                        <div class="header-auth d-none d-xxl-flex align-items-center gap-2">
+                        @* En dessous du palier xl (1200px), ce bouton rejoint le menu mobile offcanvas
+                           ci-dessous, ouvert par le bouton hamburger - la aussi, au-dessus de 992px environ,
+                           le hamburger reste la seule chose visible en une ligne (logo + bouton). *@
+                        <div class="header-auth d-none d-xl-flex align-items-center gap-2">
                             @if (!SignInManager.IsSignedIn(User))
                             {
                                 <a class="cf-btn cf-btn-primary" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Pré-diagnostic</a>
@@ -113,7 +114,7 @@
                                 </form>
                             }
                         </div>
-                        <div class="td-header-menu-bar lh-1 p-relative ms-3 d-block d-xxl-none">
+                        <div class="td-header-menu-bar lh-1 p-relative ms-3 d-block d-xl-none">
                             <button class="tdmenu-offcanvas-open-btn mobile-nav-toggler">
                                 <span></span>
                                 <span></span>
@@ -126,7 +127,7 @@
         </div>
     </header>
 
-    <div class="tdmobile__menu-wrapper d-xxl-none">
+    <div class="tdmobile__menu-wrapper d-xl-none">
         <div class="tdmobile__menu-backdrop"></div>
         <div class="tdmobile__menu">
             <div class="tdmobile__menu-box">
