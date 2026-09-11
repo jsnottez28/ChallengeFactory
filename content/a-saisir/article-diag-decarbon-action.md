@@ -63,12 +63,9 @@ plutôt que de laisser le plan de transition à la seule main de la direction.
 ### Comment candidater
 
 Le dispositif est géré par Bpifrance, qui certifie les experts habilités à réaliser le diagnostic
-dans ce cadre. *[À CONFIRMER] Nous ne pouvons pas, à ce stade, affirmer que Challenges Factory est
-référencé par Bpifrance pour ce dispositif — c'est un point que nous devons vérifier et confirmer
-avant toute communication publique le mentionnant explicitement.* Ce que nous pouvons en revanche
-faire dès aujourd'hui : réaliser avec vous un pré-diagnostic gratuit de 30 minutes pour évaluer
-votre éligibilité et vous orienter, que ce soit vers ce dispositif ou vers une offre de bilan
-carbone classique mieux adaptée à votre situation.
+dans ce cadre. Challenges Factory est référencé par Bpifrance pour réaliser le Diag
+Décarbon'Action. Nous pouvons dès aujourd'hui réaliser avec vous un pré-diagnostic gratuit de 30
+minutes pour évaluer votre éligibilité et enclencher la démarche.
 
 ### Ce qu'il faut retenir
 

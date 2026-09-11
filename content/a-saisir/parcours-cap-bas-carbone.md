@@ -17,7 +17,23 @@ migration ni un script SQL.
 | **Titre** | Cap Bas Carbone |
 | **Slogan** | 9 semaines pour passer du bilan carbone à l'action, en équipe |
 | **Nombre d'étapes** | 8 *(les 8 thématiques de contenu ; la cérémonie finale de la semaine 9 n'est pas une étape à part — elle a lieu à la clôture de l'étape 8, comme le fait déjà le système pour toute clôture de Challenge)* |
-| **Mode** | BtoB *(offre entreprise — [À CONFIRMER] si un mode BtoC doit aussi être ouvert)* |
+| **Mode** | BtoC *(confirmé — cf. note technique ci-dessous)* |
+
+> **Note technique — `Challenge.Mode` (`Domain/Entities/ModePlateforme.cs`) est un enum
+> exclusif (`BtoB` ou `BtoC`, jamais les deux) : impossible d'ouvrir un même Challenge aux
+> deux modes sans modifier le schéma, ce qui est hors périmètre de cette mission (règle
+> "aucune migration/changement de schéma sans accord explicite"). Or `HomeController.Formations()`
+> — la page publique vers laquelle pointe le bouton "Découvrir le parcours" de l'Accueil —
+> ne liste **que** les Challenges `Mode == BtoC`. Pour que ce Challenge soit effectivement
+> visible sur ce lien déjà publié, il doit donc être saisi en `BtoC`.
+>
+> Cela ne couvre cependant pas l'offre commerciale packagée vendue sur l'Accueil ("Pack
+> Bilan + Challenge Cap Bas Carbone", "Challenge Cap Bas Carbone seul" — devis PME/ETI,
+> cohorte fermée à l'organisation cliente) : cette offre-là est par nature BtoB. **Une
+> seconde fiche Challenge, en `Mode = BtoB`**, sera donc nécessaire pour la vente aux
+> entreprises — même titre/contenu pédagogique, cohorte restreinte à l'organisation
+> cliente plutôt qu'ouverte au catalogue public. À saisir séparément le moment venu ; ce
+> fichier ne prépare que la version `BtoC` du catalogue public.
 
 ### Description (champ HTML — à coller tel quel)
 
@@ -41,49 +57,53 @@ les font valider par leurs pairs et les présentent à la direction.</p>
 
 ## Étapes (8)
 
-Seuls les **titres de semaine** ont été fournis dans la mission — je n'ai pas inventé
-d'objectif pédagogique, de compétence cible ni de défi individuel détaillé pour chacune :
-ces trois champs sont marqués **[À DÉFINIR]** ci-dessous, à compléter avant publication.
+Les titres de semaine venaient de la mission d'origine ; objectif pédagogique, compétence
+cible et défi individuel ont été rédigés en cohérence avec la boucle CBL Engagement (S1-2)
+→ Investigation (S3-4) → Action (S5-8) et avec l'illustration déjà publiée sur
+`/la-methode` ("Cap Bas Carbone, en équipe" : défi S1 = lister les postes qui émettent le
+plus, résultat S8 = action testée, chiffrée, présentée à la direction). Ce sont des choix
+de conception pédagogique, pas des faits à vérifier — à ajuster librement en back-office
+si une autre formulation convient mieux.
 
 ### Étape 1 — S1 : Notre empreinte à la loupe
-- **Objectif pédagogique** : [À DÉFINIR]
-- **Compétence cible** : [À DÉFINIR]
-- **Défi individuel** : [À DÉFINIR]
+- **Objectif pédagogique** : Comprendre à quoi correspond un bilan carbone et repérer ce qui, dans son propre poste, émet le plus.
+- **Compétence cible** : Lire et interpréter les grandes lignes d'un bilan carbone (scopes, postes d'émission).
+- **Défi individuel** : Lister les postes de son activité qui émettent le plus et noter ses hypothèses, à vérifier ensuite.
 
 ### Étape 2 — S2 : Pourquoi nous ?
-- **Objectif pédagogique** : [À DÉFINIR]
-- **Compétence cible** : [À DÉFINIR]
-- **Défi individuel** : [À DÉFINIR]
+- **Objectif pédagogique** : Relier l'enjeu de décarbonation de l'entreprise à son propre poste de travail, au-delà de l'obligation réglementaire.
+- **Compétence cible** : Situer son activité quotidienne dans la trajectoire carbone de l'entreprise.
+- **Défi individuel** : Formuler en une phrase ce que la décarbonation change concrètement pour son propre poste.
 
 ### Étape 3 — S3 : Enquête terrain
-- **Objectif pédagogique** : [À DÉFINIR]
-- **Compétence cible** : [À DÉFINIR]
-- **Défi individuel** : [À DÉFINIR]
+- **Objectif pédagogique** : Aller chercher les données réelles de son poste d'émission plutôt que de s'appuyer sur des estimations générales.
+- **Compétence cible** : Collecter et documenter une donnée d'émission, source par source.
+- **Défi individuel** : Recenser les sources réelles d'émission de son poste (factures, déplacements, consommations) et les données à remonter.
 
 ### Étape 4 — S4 : Chasseurs de causes
-- **Objectif pédagogique** : [À DÉFINIR]
-- **Compétence cible** : [À DÉFINIR]
-- **Défi individuel** : [À DÉFINIR]
+- **Objectif pédagogique** : Identifier les causes réelles des émissions de son poste, pas seulement les symptômes visibles.
+- **Compétence cible** : Distinguer un levier de réduction réel d'une fausse bonne idée.
+- **Défi individuel** : Identifier avec son équipe 2 à 3 causes principales des émissions de son poste et les leviers de réduction associés.
 
 ### Étape 5 — S5 : Prototype bas carbone
-- **Objectif pédagogique** : [À DÉFINIR]
-- **Compétence cible** : [À DÉFINIR]
-- **Défi individuel** : [À DÉFINIR]
+- **Objectif pédagogique** : Passer de l'idée à une action testable, même à petite échelle.
+- **Compétence cible** : Construire et tester une action de réduction concrète sur son poste d'émission.
+- **Défi individuel** : Tester une action de réduction pendant une semaine et noter ce qui fonctionne ou non.
 
 ### Étape 6 — S6 : Embarquer les autres
-- **Objectif pédagogique** : [À DÉFINIR]
-- **Compétence cible** : [À DÉFINIR]
-- **Défi individuel** : [À DÉFINIR]
+- **Objectif pédagogique** : Convaincre ses collègues d'adopter l'action testée, sans la leur imposer.
+- **Compétence cible** : Mobiliser ses pairs autour d'un changement de pratique (savoir-être, posture).
+- **Défi individuel** : Présenter son action testée à au moins deux collègues et recueillir leur retour.
 
 ### Étape 7 — S7 : Négocier le changement
-- **Objectif pédagogique** : [À DÉFINIR]
-- **Compétence cible** : [À DÉFINIR]
-- **Défi individuel** : [À DÉFINIR]
+- **Objectif pédagogique** : Chiffrer une action de réduction pour pouvoir la défendre auprès de la direction.
+- **Compétence cible** : Construire un argumentaire chiffré (tCO2e, coût, gain) pour une décision de transition.
+- **Défi individuel** : Chiffrer son action de réduction (tCO2e évitées, coût, gain) et préparer sa présentation.
 
 ### Étape 8 — S8 : Ancrer dans la durée
-- **Objectif pédagogique** : [À DÉFINIR]
-- **Compétence cible** : [À DÉFINIR]
-- **Défi individuel** : [À DÉFINIR]
+- **Objectif pédagogique** : Transformer une action ponctuelle en nouvelle pratique durable de l'équipe.
+- **Compétence cible** : Pérenniser un changement de pratique au-delà du Challenge.
+- **Défi individuel** : Présenter son action de réduction testée et chiffrée à la direction, et proposer comment la pérenniser.
 
 ---
 

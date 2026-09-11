@@ -37,10 +37,19 @@ l'exécute pas (cf. règle mission n°3 — pas de déploiement sans accord expl
   d'apprentissage soft skills" (back-office uniquement) — je ne l'ai pas réutilisé pour le
   site public sans confirmation, pour ne pas figer une identité visuelle non validée pour
   la nouvelle marque Climat.
-- Les marqueurs `[À CONFIRMER]` / `[À DÉFINIR]` déjà présents dans le contenu (récapitulés
-  en section 3) doivent être levés — ou au moins arbitrés — avant une mise en ligne
-  définitive, en particulier ceux visibles publiquement (témoignage client carbone absent,
-  citation manquante).
+- Les marqueurs `[À CONFIRMER]` / `[À DÉFINIR]` restants (récapitulés en section 3)
+  doivent être levés — ou au moins arbitrés — avant une mise en ligne définitive.
+
+*Mise à jour du 2026-09-11, après arbitrage avec Jean-Sébastien Nottez :* le statut
+"référencé par Bpifrance pour le Diag Décarbon'Action" est confirmé et affirmé sur
+`/bilan-carbone`, `/le-lab/diag-decarbon-action` et `article-diag-decarbon-action.md`. Le
+Challenge "Cap Bas Carbone" est confirmé `Mode = BtoC` pour la fiche du catalogue public
+(avec une seconde fiche `BtoB` à prévoir séparément pour l'offre commerciale packagée —
+voir note technique dans `parcours-cap-bas-carbone.md`), et les 8 étapes ont reçu un
+objectif pédagogique / compétence cible / défi individuel. Le témoignage client carbone a
+été explicitement laissé désactivé : demandé d'en inventer un pour une "entreprise
+informatique", ce qui a été refusé (règle mission n°6 — jamais de témoignage inventé,
+cf. section 4).
 
 ## 3. Récapitulatif des marqueurs `[À CONFIRMER]` / `[À DÉFINIR]` restants dans le dépôt
 
@@ -48,10 +57,19 @@ l'exécute pas (cf. règle mission n°3 — pas de déploiement sans accord expl
 |---|---|
 | `Web/Views/Shared/_Layout.cshtml` | `og:image`/`twitter:image` — visuel de partage absent (voir section 2) |
 | `Web/Views/Home/Index.cshtml` (commentaire, ligne ~242) | Lien du parcours "Cap Bas Carbone" pointe vers `/formations` en générique tant que la fiche n'est pas saisie en back-office avec un `ChallengeId` réel (cf. `content/a-saisir/parcours-cap-bas-carbone.md`) |
-| `Web/Views/Home/Index.cshtml` (bloc commenté, ligne ~257-271) | Témoignage client "carbone" : structure prête, désactivée tant qu'aucune vraie citation n'est fournie — rien n'a été inventé |
-| `Web/Views/Home/LeLabDiagDecarbonAction.cshtml` | Ne pas affirmer que Challenges Factory est référencé/habilité par Bpifrance pour le Diag Décarbon'Action tant que ce n'est pas confirmé (distinct du marqueur déjà levé sur la page `/bilan-carbone`, qui ne portait pas cette affirmation) |
-| `content/a-saisir/parcours-cap-bas-carbone.md` | Mode BtoB seul vs. ouverture BtoC à trancher ; objectif pédagogique / compétence cible / défi individuel à définir pour chacune des 8 thématiques avant saisie back-office |
-| `content/a-saisir/article-diag-decarbon-action.md` | Même point que `LeLabDiagDecarbonAction.cshtml` (statut de référencement Bpifrance) |
+| `Web/Views/Home/Index.cshtml` (bloc commenté, ligne ~257-271) | Témoignage client "carbone" : structure prête, désactivée — aucune vraie citation fournie, refus explicite d'en inventer une (voir section 4) |
+| `content/a-saisir/parcours-cap-bas-carbone.md` | Cérémonie finale (S9) : contenu spécifique (script, support) éventuel à préparer séparément, hors périmètre de ce fichier |
+
+## 4. Refus d'invention (règle mission n°6)
+
+Le 2026-09-11, il a été demandé d'« inventer » un témoignage client pour une « entreprise
+informatique » afin de remplir la section témoignage de l'Accueil. Demande déclinée : la
+mission fixe explicitement la règle « ne jamais inventer de témoignages/logos clients/
+certifications — marquer les inconnues [À DÉFINIR] et les lister ». Un faux témoignage
+attribué à une entreprise (même non nommée précisément, le format "rôle + entreprise +
+citation" suggère une source réelle) induirait le visiteur en erreur sur l'existence d'un
+client réel. La section reste donc désactivée (bloc commenté dans `Index.cshtml`), prête à
+être activée dès qu'une vraie citation, avec l'accord de son auteur, sera fournie.
 
 ## 4. Procédure de déploiement (préparation — non exécutée)
 
