@@ -110,9 +110,10 @@
                         @* En dessous du palier xl (1200px), ce bouton rejoint le menu mobile offcanvas
                            ci-dessous, ouvert par le bouton hamburger - la aussi, au-dessus de 992px environ,
                            le hamburger reste la seule chose visible en une ligne (logo + bouton). *@
-                        <div class="header-auth d-none d-xl-flex align-items-center gap-2">
+                        <div class="header-auth d-none d-xl-flex align-items-center gap-3">
                             @if (!SignInManager.IsSignedIn(User))
                             {
+                                <a asp-area="Identity" asp-page="/Account/Login" class="cf-header-login-link">Se connecter</a>
                                 <a class="cf-btn cf-btn-primary" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Pré-diagnostic</a>
                             }
                             else
