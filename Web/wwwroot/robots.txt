@@ -1,0 +1,12 @@
+# Challenges Factory - robots.txt
+# Pages vitrine publiques (marketing) indexables ; toute surface applicative
+# (back-office, espace connecte, comptes) exclue de l'exploration.
+
+User-agent: *
+Allow: /
+Disallow: /Administration/
+Disallow: /Admin/
+Disallow: /Identity/
+Disallow: /Notifications
+
+Sitemap: https://challenges-factory.com/sitemap.xml

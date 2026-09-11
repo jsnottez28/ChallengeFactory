@@ -9,6 +9,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Challenges Factory</title>
 
+    @{
+        // SEO (Phase 5) : chaque vue publique renseigne ViewData["MetaDescription"] dans son
+        // bloc @{ } - description de repli generique si une page l'omet. Domaine de production
+        // en dur (jamais dans appsettings, cf. consignes mission - aucune config a toucher) :
+        // seul https://challenges-factory.com fait foi pour le canonical et les balises Open
+        // Graph, quel que soit l'hote sur lequel la requete arrive reellement (dev, staging...).
+        var metaDescription = ViewData["MetaDescription"] as string
+            ?? "Challenges Factory réalise votre Bilan Carbone® puis transforme votre plan de transition en défis terrain de 9 semaines, avec vos équipes.";
+        var domainePublic = "https://challenges-factory.com";
+        var urlCanonique = domainePublic + Context.Request.Path.Value?.TrimEnd('/');
+        if (string.IsNullOrEmpty(Context.Request.Path.Value) || Context.Request.Path.Value == "/")
+        {
+            urlCanonique = domainePublic + "/";
+        }
+        var titrePage = $"{ViewData["Title"]} - Challenges Factory";
+    }
+    <meta name="description" content="@metaDescription" />
+    <link rel="canonical" href="@urlCanonique" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Challenges Factory" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content="@titrePage" />
+    <meta property="og:description" content="@metaDescription" />
+    <meta property="og:url" content="@urlCanonique" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="@titrePage" />
+    <meta name="twitter:description" content="@metaDescription" />
+    @* [À DÉFINIR] og:image / twitter:image : aucun visuel de partage social (1200x630) n'existe
+       aujourd'hui dans les assets publics du projet - a fournir (charte graphique) plutot que
+       d'improviser un visuel, cf. point de tension deja ouvert sur les codes couleur/police
+       exacts de la charte. *@
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -186,6 +219,7 @@
                                     <ul>
                                         <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
                                         <li><a asp-controller="Home" asp-action="Methode">La méthode CBL</a></li>
+                                        <li><a asp-controller="Home" asp-action="BilanCarboneEureEtLoir">Bilan Carbone en Eure-et-Loir</a></li>
                                         <li><a asp-controller="Home" asp-action="LeLab">Le Lab</a></li>
                                         <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
                                     </ul>
