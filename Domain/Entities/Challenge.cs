@@ -26,6 +26,11 @@ public class Challenge
     public ModePlateforme Mode { get; set; }
     public StatutChallenge Statut { get; set; } = StatutChallenge.Brouillon;
 
+    // Piste editoriale du catalogue (decarbonation vs humain/organisation) - permet de
+    // distinguer graphiquement les deux familles de parcours sur /formations sans deduire
+    // quoi que ce soit du Titre/Code (fragile). Cf. ThematiqueChallenge.
+    public ThematiqueChallenge Thematique { get; set; } = ThematiqueChallenge.HumainEtOrganisation;
+
     public DateTime CreeLe { get; set; } = DateTime.UtcNow;
 
     public List<ChallengeEtape> Etapes { get; set; } = [];

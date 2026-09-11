@@ -12,6 +12,7 @@ public sealed class ChallengeInput
     public string? Description { get; set; }
     public int NombreEtapes { get; set; } = 8;
     public ModePlateforme Mode { get; set; }
+    public ThematiqueChallenge Thematique { get; set; } = ThematiqueChallenge.HumainEtOrganisation;
 }
 
 public sealed class ChallengeEtapeInput

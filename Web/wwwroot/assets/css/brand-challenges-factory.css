@@ -9,6 +9,12 @@
   --cf-orange: #e8500a;
   --cf-orange-light: #ff6b2b;
   --cf-orange-pale: #fef3ed;
+  /* Piste "Humain & Organisation" du catalogue de parcours (a cote de l'orange, piste
+     "Decarbonation") - bleu-petrole/indigo choisi pour son contraste fort avec l'orange
+     sans entrer en concurrence visuelle avec le vert deja associe au carbone (tCO2e). */
+  --cf-indigo: #2b4c6f;
+  --cf-indigo-light: #3d6690;
+  --cf-indigo-pale: #eef2f6;
   --cf-black: #0f0f0f;
   --cf-dark: #1c1c1c;
   --cf-white: #ffffff;
@@ -119,6 +125,29 @@
   margin-bottom: 24px;
 }
 .cf-badge::before { content: '●'; font-size: 8px; }
+
+/* Eyebrow en accent indigo (piste "Humain & Organisation", a cote du .cf-eyebrow orange
+   par defaut) */
+.cf-eyebrow-indigo { color: var(--cf-indigo); }
+
+/* Pistes du catalogue de parcours (/formations) : distingue graphiquement les Challenges
+   Decarbonation (orange, deja la couleur de marque) des Challenges Humain & Organisation
+   (indigo) - cf. Domain.Entities.ThematiqueChallenge. Le badge + la bordure gauche de
+   carte portent l'accent, le reste de la carte (.cf-formation-card) reste neutre. */
+.cf-track-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cf-font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.cf-track-decarbonation { background: var(--cf-orange-pale); color: var(--cf-orange); }
+.cf-track-humain { background: var(--cf-indigo-pale); color: var(--cf-indigo); }
 
 /* Boutons */
 .cf-btn {

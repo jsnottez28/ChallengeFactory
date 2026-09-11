@@ -2,6 +2,9 @@
 @{
     ViewData["Title"] = "Formations";
     ViewData["MetaDescription"] = "Le catalogue des parcours Challenges Factory : Cap Bas Carbone et nos parcours Compétences & IA, en méthode Challenge-Based Learning.";
+
+    var parcoursDecarbonation = Model.Where(c => c.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation).ToList();
+    var parcoursHumain = Model.Where(c => c.Thematique == Domain.Entities.ThematiqueChallenge.HumainEtOrganisation).ToList();
 }
 
 <section class="cf-hero-home">
@@ -10,7 +13,7 @@
             <div class="col-xl-9">
                 <span class="cf-badge">Nos Challenges</span>
                 <h1 class="cf-h1 mb-3">Rejoignez un <span class="cf-accent">Challenge</span>.</h1>
-                <p class="cf-lead" style="max-width:640px;">Progressez en faisant, pas en regardant. Choisissez un Challenge et rejoignez une session ouverte, ou demandez à en ouvrir une.</p>
+                <p class="cf-lead" style="max-width:640px;">Progressez en faisant, pas en regardant. Deux pistes de parcours : la décarbonation de votre activité, et le savoir-être qui fluidifie les relations pendant la transition.</p>
             </div>
         </div>
     </div>
@@ -30,33 +33,32 @@
         {
             <p class="text-muted">Aucun Challenge n'est disponible pour le moment. Revenez bientôt !</p>
         }
-        else
+
+        @if (parcoursDecarbonation.Count > 0)
         {
-            <div class="row g-3">
-                @foreach (var challenge in Model)
-                {
-                    <div class="col-12 col-md-6 col-xl-4">
-                        <a asp-controller="Home" asp-action="Formation" asp-route-challengeId="@challenge.ChallengeId" class="cf-formation-card d-block h-100 text-decoration-none">
-                            <h3 class="cf-formation-title mb-1">@challenge.Titre</h3>
-                            @if (!string.IsNullOrWhiteSpace(challenge.Slogan))
-                            {
-                                <p class="text-muted small mb-2">@challenge.Slogan</p>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(challenge.DescriptionExtrait))
-                            {
-                                <p class="small mb-2">@challenge.DescriptionExtrait</p>
-                            }
-                            <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
-                                <span class="badge @(challenge.NombreCohortesOuvertes > 0 ? "text-bg-success" : "text-bg-light")">
-                                    @(challenge.NombreCohortesOuvertes > 0
-                                        ? $"{challenge.NombreCohortesOuvertes} session{(challenge.NombreCohortesOuvertes > 1 ? "s" : "")} en cours"
-                                        : "Aucune session ouverte")
-                                </span>
-                                <span class="cf-formation-cta">Découvrir →</span>
-                            </div>
-                        </a>
-                    </div>
-                }
+            <div class="mb-5" id="decarbonation">
+                <span class="cf-eyebrow">🌱 Décarbonation</span>
+                <h2 class="cf-h2 mb-3">Réduire les émissions, en équipe</h2>
+                <div class="row g-3">
+                    @foreach (var challenge in parcoursDecarbonation)
+                    {
+                        <partial name="_FormationCard" model="challenge" />
+                    }
+                </div>
+            </div>
+        }
+
+        @if (parcoursHumain.Count > 0)
+        {
+            <div class="@(parcoursDecarbonation.Count > 0 ? "mt-5" : "")" id="humain-organisation">
+                <span class="cf-eyebrow cf-eyebrow-indigo">🤝 Humain &amp; Organisation</span>
+                <h2 class="cf-h2 mb-3">Mieux vivre les transitions, ensemble</h2>
+                <div class="row g-3">
+                    @foreach (var challenge in parcoursHumain)
+                    {
+                        <partial name="_FormationCard" model="challenge" />
+                    }
+                </div>
             </div>
         }
     </div>
@@ -75,6 +77,10 @@
         transition: all .2s ease;
     }
     .cf-formation-card:hover { border-color: var(--cf-orange); box-shadow: var(--cf-shadow-md); transform: translateY(-2px); }
+    .cf-formation-card--decarbonation { border-left: 4px solid var(--cf-orange); }
+    .cf-formation-card--decarbonation:hover { border-color: var(--cf-orange); }
+    .cf-formation-card--humain { border-left: 4px solid var(--cf-indigo); }
+    .cf-formation-card--humain:hover { border-color: var(--cf-indigo); }
     .cf-formation-title { font-size: 17px; font-weight: 700; color: var(--cf-dark); }
     .cf-formation-cta { font-size: 13px; font-weight: 600; color: var(--cf-orange); }
 </style>

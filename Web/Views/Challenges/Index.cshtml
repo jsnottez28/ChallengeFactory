@@ -44,6 +44,7 @@
                             <tr>
                                 <th scope="col">Titre</th>
                                 <th scope="col">Mode</th>
+                                <th scope="col">Thématique</th>
                                 <th scope="col">Étapes</th>
                                 <th scope="col">Statut</th>
                                 <th scope="col" class="text-end">Actions</th>
@@ -53,7 +54,7 @@
                             @if (Model.Count == 0)
                             {
                                 <tr>
-                                    <td colspan="5" class="text-muted text-center py-4">Aucun Challenge créé pour le moment.</td>
+                                    <td colspan="6" class="text-muted text-center py-4">Aucun Challenge créé pour le moment.</td>
                                 </tr>
                             }
                             else
@@ -69,6 +70,11 @@
                                             }
                                         </td>
                                         <td><span class="badge text-bg-light">@challenge.Mode</span></td>
+                                        <td>
+                                            <span class="badge" style="background:@(challenge.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "#e8500a" : "#2b4c6f");">
+                                                @(challenge.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "Décarbonation" : "Humain & Organisation")
+                                            </span>
+                                        </td>
                                         <td>@challenge.NombreEtapes</td>
                                         <td>
                                             @if (challenge.Statut == Domain.Entities.StatutChallenge.Publie)

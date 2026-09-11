@@ -61,6 +61,14 @@
                                 <option value="@Domain.Entities.ModePlateforme.BtoB">BtoB</option>
                             </select>
                         </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Thematique" class="form-label"></label>
+                            <select asp-for="Thematique" class="form-select">
+                                <option value="@Domain.Entities.ThematiqueChallenge.HumainEtOrganisation">Humain &amp; Organisation</option>
+                                <option value="@Domain.Entities.ThematiqueChallenge.Decarbonation">Décarbonation</option>
+                            </select>
+                            <div class="form-text">Détermine l'accent visuel du parcours sur le catalogue public /formations.</div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer bg-white border-top p-4">

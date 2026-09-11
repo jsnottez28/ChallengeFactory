@@ -8,7 +8,12 @@
         <div class="row">
             <div class="col-xl-9">
                 <a asp-controller="Home" asp-action="Formations" class="cf-badge text-decoration-none">← Tous les Challenges</a>
-                <h1 class="cf-h1 mb-2 mt-3">@Model.Titre</h1>
+                <div class="mt-3">
+                    <span class="cf-track-badge @(Model.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "cf-track-decarbonation" : "cf-track-humain")">
+                        @(Model.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "🌱 Décarbonation" : "🤝 Humain & Organisation")
+                    </span>
+                </div>
+                <h1 class="cf-h1 mb-2 mt-2">@Model.Titre</h1>
                 @if (!string.IsNullOrWhiteSpace(Model.Slogan))
                 {
                     <p class="cf-lead" style="max-width:640px;">@Model.Slogan</p>

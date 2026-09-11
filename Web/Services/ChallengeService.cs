@@ -47,6 +47,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
             Description = input.Description,
             NombreEtapes = input.NombreEtapes,
             Mode = input.Mode,
+            Thematique = input.Thematique,
         };
 
         dbContext.Challenges.Add(challenge);
@@ -83,6 +84,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
         challenge.Description = input.Description;
         challenge.NombreEtapes = input.NombreEtapes;
         challenge.Mode = input.Mode;
+        challenge.Thematique = input.Thematique;
 
         await dbContext.SaveChangesAsync();
 
@@ -356,6 +358,16 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
                     continue;
                 }
 
+                // Colonne facultative (retro-compatible avec les fichiers existants qui ne
+                // la connaissent pas encore) : valeur absente/vide ou non reconnue -> repli
+                // silencieux sur HumainEtOrganisation (meme convention que le backfill de
+                // la migration, cf. ThematiqueChallenge), pas une erreur bloquante comme
+                // pour "mode".
+                var thematiqueTexte = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "thematique"));
+                var thematique = thematiqueTexte is not null && TryParserThematique(thematiqueTexte, out var thematiqueParsee)
+                    ? thematiqueParsee
+                    : ThematiqueChallenge.HumainEtOrganisation;
+
                 var nombreEtapesTexte = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "nombre_etapes"));
                 var nombreEtapes = 8;
                 if (nombreEtapesTexte is not null && (!int.TryParse(nombreEtapesTexte, out nombreEtapes) || nombreEtapes < 1))
@@ -388,6 +400,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
                 challenge.Description = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "description"));
                 challenge.NombreEtapes = nombreEtapes;
                 challenge.Mode = mode;
+                challenge.Thematique = thematique;
 
                 if (estNouveau)
                 {
@@ -598,6 +611,27 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
         }
 
         mode = default;
+        return false;
+    }
+
+    private static bool TryParserThematique(string valeur, out ThematiqueChallenge thematique)
+    {
+        if (string.Equals(valeur, "Decarbonation", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(valeur, "Décarbonation", StringComparison.OrdinalIgnoreCase))
+        {
+            thematique = ThematiqueChallenge.Decarbonation;
+            return true;
+        }
+
+        if (string.Equals(valeur, "HumainEtOrganisation", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(valeur, "Humain", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(valeur, "Humain et organisation", StringComparison.OrdinalIgnoreCase))
+        {
+            thematique = ThematiqueChallenge.HumainEtOrganisation;
+            return true;
+        }
+
+        thematique = default;
         return false;
     }
 

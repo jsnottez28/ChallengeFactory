@@ -1,0 +1,29 @@
+@model Web.Controllers.FormationViewModel
+@{
+    var estDecarbonation = Model.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation;
+}
+<div class="col-12 col-md-6 col-xl-4">
+    <a asp-controller="Home" asp-action="Formation" asp-route-challengeId="@Model.ChallengeId"
+       class="cf-formation-card @(estDecarbonation ? "cf-formation-card--decarbonation" : "cf-formation-card--humain") d-block h-100 text-decoration-none">
+        <span class="cf-track-badge @(estDecarbonation ? "cf-track-decarbonation" : "cf-track-humain") mb-2 align-self-start">
+            @(estDecarbonation ? "🌱 Décarbonation" : "🤝 Humain & Organisation")
+        </span>
+        <h3 class="cf-formation-title mb-1">@Model.Titre</h3>
+        @if (!string.IsNullOrWhiteSpace(Model.Slogan))
+        {
+            <p class="text-muted small mb-2">@Model.Slogan</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.DescriptionExtrait))
+        {
+            <p class="small mb-2">@Model.DescriptionExtrait</p>
+        }
+        <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
+            <span class="badge @(Model.NombreCohortesOuvertes > 0 ? "text-bg-success" : "text-bg-light")">
+                @(Model.NombreCohortesOuvertes > 0
+                    ? $"{Model.NombreCohortesOuvertes} session{(Model.NombreCohortesOuvertes > 1 ? "s" : "")} en cours"
+                    : "Aucune session ouverte")
+            </span>
+            <span class="cf-formation-cta">Découvrir →</span>
+        </div>
+    </a>
+</div>

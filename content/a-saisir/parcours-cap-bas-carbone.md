@@ -18,6 +18,7 @@ migration ni un script SQL.
 | **Slogan** | 9 semaines pour passer du bilan carbone à l'action, en équipe |
 | **Nombre d'étapes** | 8 *(les 8 thématiques de contenu ; la cérémonie finale de la semaine 9 n'est pas une étape à part — elle a lieu à la clôture de l'étape 8, comme le fait déjà le système pour toute clôture de Challenge)* |
 | **Mode** | BtoC *(confirmé — cf. note technique ci-dessous)* |
+| **Thématique** | Décarbonation *(champ ajouté le 2026-09-11, migration `AddThematiqueChallenge` — distingue ce parcours des Challenges "Humain & Organisation" sur le catalogue public /formations)* |
 
 > **Note technique — `Challenge.Mode` (`Domain/Entities/ModePlateforme.cs`) est un enum
 > exclusif (`BtoB` ou `BtoC`, jamais les deux) : impossible d'ouvrir un même Challenge aux

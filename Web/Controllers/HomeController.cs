@@ -149,6 +149,7 @@ namespace Web.Controllers
                     DescriptionExtrait = ExtraireTexte(challenge.Description, 110),
                     NombreEtapes = challenge.NombreEtapes,
                     NombreCohortesOuvertes = nombreCohortesOuvertesParChallenge.GetValueOrDefault(challenge.Id),
+                    Thematique = challenge.Thematique,
                 })
                 .ToList();
 
@@ -179,6 +180,7 @@ namespace Web.Controllers
                 Titre = challenge.Titre,
                 Slogan = challenge.Slogan,
                 Description = challenge.Description,
+                Thematique = challenge.Thematique,
                 Etapes = challenge.Etapes
                     .OrderBy(e => e.NumeroEtape)
                     .Select(e => new EtapeApercuViewModel
@@ -288,6 +290,7 @@ namespace Web.Controllers
         public string? DescriptionExtrait { get; set; }
         public int NombreEtapes { get; set; }
         public int NombreCohortesOuvertes { get; set; }
+        public ThematiqueChallenge Thematique { get; set; }
     }
 
     // Page de presentation dediee a un Challenge (prompt section H) : description complete
@@ -300,6 +303,7 @@ namespace Web.Controllers
         public string Titre { get; set; } = string.Empty;
         public string? Slogan { get; set; }
         public string? Description { get; set; }
+        public ThematiqueChallenge Thematique { get; set; }
         public List<EtapeApercuViewModel> Etapes { get; set; } = [];
         public List<CohorteResume> CohortesOuvertes { get; set; } = [];
     }
