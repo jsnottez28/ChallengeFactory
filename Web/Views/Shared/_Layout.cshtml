@@ -36,14 +36,24 @@
                     <div class="logo flex-shrink-0">
                         <a class="cf-logo" asp-controller="Home" asp-action="Index">
                             <span class="cf-logo-name">CHALLENGES<span class="cf-logo-dash">-</span>FACTORY</span>
-                            <span class="cf-logo-tagline">Vous apprenez en faisant</span>
+                            <span class="cf-logo-tagline">De la mesure à l'action</span>
                         </a>
                     </div>
                     <nav class="tdmenu__nav tdmenu__wrap tdmenu-2 tdmenu-4 d-none d-xxl-flex flex-shrink-1">
                         <div class="tdmenu__navbar-wrap tdmenu__main-menu">
                             <ul class="navigation">
                                 <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
-                                <li><a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a></li>
+                                @* Sous-menu CSS pur (survole = affiche, cf. main.css .sub-menu / li:hover) : le
+                                   theme le supporte nativement, pas de JS a charger. Regroupe Bilan Carbone et
+                                   Bilan de competences pour eviter d'ajouter un 8e lien de premier niveau - le
+                                   palier xxl (1400px) etait deja calibre au pixel pres pour 7 (cf. historique). *@
+                                <li class="menu-item-has-children">
+                                    <a href="#">Nos bilans</a>
+                                    <ul class="sub-menu">
+                                        <li><a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a></li>
+                                        <li><a asp-controller="Home" asp-action="BilanDeCompetences">Se reconvertir</a></li>
+                                    </ul>
+                                </li>
                                 <li><a asp-controller="Home" asp-action="Formations">Nos parcours</a></li>
                                 <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
                                 <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
@@ -98,6 +108,7 @@
                         <ul class="navigation">
                             <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
                             <li><a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a></li>
+                            <li><a asp-controller="Home" asp-action="BilanDeCompetences">Se reconvertir</a></li>
                             <li><a asp-controller="Home" asp-action="Formations">Nos parcours</a></li>
                             <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
                             <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
