@@ -52,6 +52,17 @@ namespace Web.Controllers
             return View();
         }
 
+        // Bilan de competences (reconversion vers un metier de la transition ecologique) :
+        // dispositif distinct du Bilan Carbone(R), encadre par le Code du travail (art.
+        // L6313-4). Page de presentation statique, meme principe que les autres pages
+        // vitrine - aucune donnee metier (dossiers de beneficiaires, etc.) ne transite ici,
+        // uniquement de la prise de contact via le meme calendrier de pre-diagnostic.
+        [Route("bilan-de-competences")]
+        public IActionResult BilanDeCompetences()
+        {
+            return View();
+        }
+
         // Le Lab : pas de modele Article en base (aucune migration sans accord explicite,
         // cf. mission) - contenu statique, meme technique que La methode/A propos. Chaque
         // article est une action/vue dediee plutot qu'un systeme de slug generique, le
