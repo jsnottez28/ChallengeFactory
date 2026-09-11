@@ -204,6 +204,8 @@
 .cf-flip-card { border-radius: var(--cf-radius-lg); padding: 32px; height: 100%; }
 .cf-flip-before { background: var(--cf-orange-pale); border: 1px solid rgba(232,80,10,.2); }
 .cf-flip-after { background: var(--cf-black); color: #fff; }
+/* Le theme herite force h1..h6 en noir (main.css) : sur fond sombre il faut le reecraser explicitement */
+.cf-flip-after h5 { color: #fff; }
 .cf-flip-after .cf-flip-list { color: rgba(255,255,255,.75); }
 
 /* Bande copyright du footer herite : reste sur le noir de marque */
