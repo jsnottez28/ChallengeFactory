@@ -46,10 +46,18 @@ l'exécute pas (cf. règle mission n°3 — pas de déploiement sans accord expl
 Challenge "Cap Bas Carbone" est confirmé `Mode = BtoC` pour la fiche du catalogue public
 (avec une seconde fiche `BtoB` à prévoir séparément pour l'offre commerciale packagée —
 voir note technique dans `parcours-cap-bas-carbone.md`), et les 8 étapes ont reçu un
-objectif pédagogique / compétence cible / défi individuel. Le témoignage client carbone a
-été explicitement laissé désactivé : demandé d'en inventer un pour une "entreprise
-informatique", ce qui a été refusé (règle mission n°6 — jamais de témoignage inventé,
-cf. section 4).
+objectif pédagogique / compétence cible / défi individuel.
+
+*Mise à jour du 2026-09-11 (suite)* : deux témoignages ajoutés depuis, sans rien inventer —
+1. **Sigebene**, sur `/la-methode` : citation réelle retrouvée verbatim sur la page
+   publique challenges-factory.com (confirmée identique à deux relectures indépendantes),
+   cohérente avec la mention "cas Sigebene (ancrage mémoriel)" déjà présente dans la frise
+   chronologique de `/a-propos`.
+2. **Témoignage carbone**, sur l'Accueil : d'abord demandé d'en *inventer* un pour une
+   « entreprise informatique » — refusé (règle mission n°6, voir section 4). Le contenu
+   réel transmis ensuite (résumé oral, pas de citation exacte) a été reformulé et publié
+   **volontairement générique** ("Dirigeant — PME du secteur informatique", sans nom),
+   conformément à la confirmation explicite "rester générique à partir de ce que j'ai dit".
 
 ## 3. Récapitulatif des marqueurs `[À CONFIRMER]` / `[À DÉFINIR]` restants dans le dépôt
 
@@ -57,7 +65,6 @@ cf. section 4).
 |---|---|
 | `Web/Views/Shared/_Layout.cshtml` | `og:image`/`twitter:image` — visuel de partage absent (voir section 2) |
 | `Web/Views/Home/Index.cshtml` (commentaire, ligne ~242) | Lien du parcours "Cap Bas Carbone" pointe vers `/formations` en générique tant que la fiche n'est pas saisie en back-office avec un `ChallengeId` réel (cf. `content/a-saisir/parcours-cap-bas-carbone.md`) |
-| `Web/Views/Home/Index.cshtml` (bloc commenté, ligne ~257-271) | Témoignage client "carbone" : structure prête, désactivée — aucune vraie citation fournie, refus explicite d'en inventer une (voir section 4) |
 | `content/a-saisir/parcours-cap-bas-carbone.md` | Cérémonie finale (S9) : contenu spécifique (script, support) éventuel à préparer séparément, hors périmètre de ce fichier |
 
 ## 4. Refus d'invention (règle mission n°6)
@@ -68,8 +75,10 @@ mission fixe explicitement la règle « ne jamais inventer de témoignages/logos
 certifications — marquer les inconnues [À DÉFINIR] et les lister ». Un faux témoignage
 attribué à une entreprise (même non nommée précisément, le format "rôle + entreprise +
 citation" suggère une source réelle) induirait le visiteur en erreur sur l'existence d'un
-client réel. La section reste donc désactivée (bloc commenté dans `Index.cshtml`), prête à
-être activée dès qu'une vraie citation, avec l'accord de son auteur, sera fournie.
+client réel. À la place : demande de précisions (nom réel ou générique, citation exacte ou
+reformulation à valider) ; réponse obtenue "rester générique à partir de ce que j'ai dit" —
+contenu publié en conséquence, sans nom d'entreprise ni de personne, sans rien attribué qui
+n'ait pas été confirmé.
 
 ## 4. Procédure de déploiement (préparation — non exécutée)
 
