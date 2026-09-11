@@ -221,17 +221,19 @@
 
 /* Degagement sous le header transparent (position: absolute, donc hors du flux -
    toute premiere section de page doit reserver assez d'espace en haut pour ne pas se
-   faire recouvrir). Le menu principal et les boutons Pre-diagnostic ne s'affichent
-   qu'a partir du palier xl (voir .header-auth et .tdmenu__wrap dans _Layout.cshtml,
-   xl = 1200px, breakpoint Bootstrap) : trois etats mesures empiriquement (Playwright,
-   cf. session du 2026-09-11 - la barre horizontale d'origine exigeait >=1400px pour
-   afficher le menu, ce qui masquait le menu desktop sur une grande partie des largeurs
-   PC reelles, ex. 1366px ou 1920px avec mise a l'echelle systeme) :
-   - < 1200px : logo + hamburger seuls, une ligne (mode mobile/offcanvas) ;
-   - 1200-1399px : logo + hamburger disparaissent, le menu complet + bouton
-     apparaissent mais ne tiennent plus sur une seule ligne (flex-wrap) -> 2 lignes
-     (logo, puis nav+bouton), hauteur mesuree stable ~226px sur toute la plage ;
-   - >= 1400px : tout tient sur une seule ligne (~90px). */
+   faire recouvrir). Le menu principal et le bouton Pre-diagnostic ne s'affichent qu'a
+   partir du palier xl (voir .header-auth et .tdmenu__wrap dans _Layout.cshtml, xl =
+   1200px, breakpoint Bootstrap). Historique (session du 2026-09-11) : la barre
+   horizontale exigeait a l'origine >=1400px pour afficher le menu, ce qui le masquait
+   sur une grande partie des largeurs PC reelles (ex. 1366px, ou 1920px avec mise a
+   l'echelle systeme) - signale par capture d'ecran utilisateur. Un premier correctif
+   (repli du header sur plusieurs lignes entre 1200 et 1399px) s'est revele fragile en
+   navigateur reel (le bouton finissait seul sur sa propre ligne, avec un grand vide
+   au-dessus du contenu) : remplace par le mode "compact" ci-dessous, qui resserre nav
+   et bouton pour que tout tienne sur une seule ligne avec de la marge, mesure et
+   confirme sans chevauchement de 1200 a 1399px inclus (hauteur header stable ~126px,
+   contre ~136px au palier superieur - le degagement par defaut (110px) convient donc
+   aux deux paliers >= 1200px, seul le mode hamburger (< 1200px) a besoin de plus). */
 :root {
   --cf-header-clearance: 110px;
 }
@@ -240,9 +242,29 @@
     --cf-header-clearance: 190px;
   }
 }
+
+/* Mode compact du header, palier xl uniquement (1200-1399.98px) : resserre nav et
+   bouton pour que logo + menu + bouton tiennent sur une seule ligne avec de la marge
+   (cf. commentaire ci-dessus). Charge apres main.css (voir _Layout.cshtml) : memes
+   selecteurs, l'emporte par ordre de cascade sans besoin de !important - SAUF pour la
+   regle de marge des liens de nav, ou main.css utilise un selecteur plus specifique
+   (.tdmenu-2 .tdmenu__navbar-wrap ul li a, 2 classes) qu'il faut reprendre a
+   l'identique pour l'emporter (la cascade seule ne suffit pas en cas de specificite
+   inferieure). */
 @media (min-width: 1200px) and (max-width: 1399.98px) {
-  :root {
-    --cf-header-clearance: 250px;
+  #header-sticky .container > .d-flex { gap: 8px; }
+  .cf-logo-name { font-size: 17px; letter-spacing: 1.5px; }
+  .cf-logo-tagline { display: none; }
+  .tdmenu-2 .tdmenu__navbar-wrap ul li a {
+    font-size: 12px;
+    padding: 42px 0;
+    margin: 0 5px;
+  }
+  .header-auth .cf-btn {
+    font-size: 11px;
+    padding: 9px 12px;
+    letter-spacing: .3px;
+    gap: 5px;
   }
 }
 
