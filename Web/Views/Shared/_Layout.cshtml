@@ -34,13 +34,22 @@
     <meta property="og:title" content="@titrePage" />
     <meta property="og:description" content="@metaDescription" />
     <meta property="og:url" content="@urlCanonique" />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="@titrePage" />
     <meta name="twitter:description" content="@metaDescription" />
-    @* [À DÉFINIR] og:image / twitter:image : aucun visuel de partage social (1200x630) n'existe
-       aujourd'hui dans les assets publics du projet - a fournir (charte graphique) plutot que
-       d'improviser un visuel, cf. point de tension deja ouvert sur les codes couleur/police
-       exacts de la charte. *@
+    @* Visuel de partage genere a partir des tokens de marque deja en production
+       (brand-challenges-factory.css : --cf-orange #e8500a, --cf-black #0f0f0f, police
+       Bebas Neue deja chargee ci-dessous) - pas une nouvelle charte inventee, juste la
+       reprise du wordmark header/footer existant. A remplacer si un vrai visuel de marque
+       (photo, illustration) est fourni un jour. *@
+    <meta property="og:image" content="@(domainePublic + Url.Content("~/brand/og-image.png"))" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:image" content="@(domainePublic + Url.Content("~/brand/og-image.png"))" />
+
+    <link rel="icon" type="image/png" sizes="32x32" href="~/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="~/brand/favicon-16.png" />
+    <link rel="apple-touch-icon" href="~/brand/apple-touch-icon.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

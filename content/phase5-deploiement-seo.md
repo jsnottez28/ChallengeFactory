@@ -24,19 +24,31 @@ l'exécute pas (cf. règle mission n°3 — pas de déploiement sans accord expl
   aucune page du site (orpheline, atteignable uniquement par URL directe) — un lien a été
   ajouté dans le footer, colonne "Entreprise".
 
+## 1bis. Favicon et visuel de partage (2026-09-11)
+
+Générés à partir des tokens de marque déjà en production (`--cf-orange` #e8500a,
+`--cf-black` #0f0f0f, police Bebas Neue déjà chargée pour le wordmark header/footer) — pas
+une nouvelle charte inventée, juste la reprise du wordmark existant :
+
+- `Web/wwwroot/brand/favicon-16.png`, `favicon-32.png`, `apple-touch-icon.png` (180×180) —
+  monogramme "CF" sur fond noir, câblés dans `_Layout.cshtml` (`<link rel="icon">` /
+  `apple-touch-icon`).
+- `Web/wwwroot/brand/og-image.png` (1200×630) — wordmark "CHALLENGES-FACTORY", tagline "De
+  la mesure à l'action", sous-titre "Bilan Carbone® & Challenges de décarbonation" —
+  câblé en `og:image`/`twitter:image`.
+
+Le favicon back-office (`assets-backoffice/images/favicon.png`, identité "plateforme
+d'apprentissage soft skills") n'a pas été réutilisé sur le site public — nouveaux fichiers
+dédiés à la marque Climat, dans un dossier `wwwroot/brand/` séparé du back-office.
+
+À remplacer si un vrai visuel de marque (photo, illustration signée) est fourni un jour ;
+en attendant, ce n'est plus un blocage pour la mise en production.
+
 ## 2. Ce qui reste [À DÉFINIR] avant mise en production
 
-- **Visuel de partage social** (`og:image` / `twitter:image`, format 1200×630) : aucun
-  visuel n'existe aujourd'hui dans les assets publics du projet. À fournir une fois la
-  charte graphique précisée (même point de tension que les codes couleur/police exacts,
-  déjà signalé) — sans quoi les partages sur réseaux sociaux et messageries n'auront pas
-  de vignette.
-- **Favicon** : `_Layout.cshtml` (public) n'a actuellement aucune balise `<link
-  rel="icon">`. Un favicon existe dans `Web/wwwroot/assets-backoffice/images/favicon.png`,
-  mais il appartient à l'identité visuelle de l'ancien positionnement "plateforme
-  d'apprentissage soft skills" (back-office uniquement) — je ne l'ai pas réutilisé pour le
-  site public sans confirmation, pour ne pas figer une identité visuelle non validée pour
-  la nouvelle marque Climat.
+*Mise à jour du 2026-09-11* : favicon et visuel de partage livrés (voir section 1bis
+ci-dessous) — retirés de cette liste. Il ne reste plus d'item dans cette section.
+
 - Les marqueurs `[À CONFIRMER]` / `[À DÉFINIR]` restants (récapitulés en section 3)
   doivent être levés — ou au moins arbitrés — avant une mise en ligne définitive.
 
