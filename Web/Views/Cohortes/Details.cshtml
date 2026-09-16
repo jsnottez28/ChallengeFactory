@@ -318,6 +318,51 @@
                         }
                     </div>
                 </div>
+
+                @{
+                    var miParcours = ViewData["QuestionnaireMiParcours"] as QuestionnaireMiParcoursStats ?? new QuestionnaireMiParcoursStats();
+                }
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Point d'étape mi-parcours</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (miParcours.NombreReponses == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune réponse pour le moment — envoyé automatiquement dès que la Cohorte atteint son étape médiane.</p>
+                        }
+                        else
+                        {
+                            <p class="mb-2">
+                                <strong class="fs-4">@miParcours.NoteAccompagnementMoyenne?.ToString("0.0")</strong><span class="text-muted">/10</span>
+                                <span class="text-muted small ms-2">(@miParcours.NombreReponses réponse@(miParcours.NombreReponses > 1 ? "s" : ""))</span>
+                            </p>
+                            <p class="mb-3 small text-muted">
+                                Projet toujours pertinent : @miParcours.NombreProjetOui oui · @miParcours.NombreProjetPartiellement partiellement · @miParcours.NombreProjetNon non
+                            </p>
+                            @if (miParcours.DerniersAjustements.Count > 0)
+                            {
+                                <h3 class="h6 text-uppercase text-muted">Ajustements souhaités</h3>
+                                <ul class="list-unstyled mb-3">
+                                    @foreach (var ajustement in miParcours.DerniersAjustements)
+                                    {
+                                        <li class="mb-2 text-muted small border-start ps-2">« @ajustement »</li>
+                                    }
+                                </ul>
+                            }
+                            @if (miParcours.DernieresDifficultes.Count > 0)
+                            {
+                                <h3 class="h6 text-uppercase text-muted">Difficultés rencontrées</h3>
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var difficulte in miParcours.DernieresDifficultes)
+                                    {
+                                        <li class="mb-2 text-muted small border-start ps-2">« @difficulte »</li>
+                                    }
+                                </ul>
+                            }
+                        }
+                    </div>
+                </div>
             </div>
         </div>
     </div>

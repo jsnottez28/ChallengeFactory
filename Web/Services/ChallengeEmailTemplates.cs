@@ -148,6 +148,22 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // 8e declencheur email : point d'etape a mi-parcours, envoye automatiquement des que la
+    // Cohorte atteint son etape mediane (cf. CohorteService.
+    // EnvoyerQuestionnaireMiParcoursSiEtapeMedianeAsync).
+    public static (string Sujet, string CorpsHtml) DemandeQuestionnaireMiParcours(string challengeTitre, string lienQuestionnaire)
+    {
+        var sujet = $"{challengeTitre} — Petit point d'étape à mi-parcours";
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Vous êtes à mi-parcours du Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong>. Un petit point s'impose : quelques minutes pour faire le bilan de cette première moitié et ajuster la suite si besoin.</p>
+            <p><a href="{lienQuestionnaire}">Répondre en 2 minutes</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {
         const string sujet = "Bienvenue sur Challenges Factory — Définissez votre mot de passe";

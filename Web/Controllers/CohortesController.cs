@@ -18,6 +18,7 @@ public class CohortesController(
     ISatisfactionService satisfactionService,
     IVisioService visioService,
     IEmargementService emargementService,
+    IQuestionnaireMiParcoursService questionnaireMiParcoursService,
     UserManager<ApplicationUser> userManager) : Controller
 {
     [HttpGet("")]
@@ -86,6 +87,7 @@ public class CohortesController(
         ViewData["Satisfaction"] = await satisfactionService.GetStatsAsync(id);
         ViewData["Visio"] = await visioService.GetEtapeCouranteAsync(id);
         ViewData["Emargements"] = await emargementService.GetSuiviEtapeCouranteAsync(id);
+        ViewData["QuestionnaireMiParcours"] = await questionnaireMiParcoursService.GetStatsAsync(id);
 
         return View(cohorte);
     }
@@ -96,7 +98,8 @@ public class CohortesController(
     public async Task<IActionResult> Lancer(int id)
     {
         var lienMonParcours = Url.Page("/Dashboard/MonParcours", null, null, Request.Scheme) ?? "/Dashboard/MonParcours";
-        var (success, errorMessage) = await cohorteService.LancerAsync(id, userManager.GetUserId(User)!, lienMonParcours);
+        var lienQuestionnaireMiParcours = Url.Page("/Dashboard/QuestionnaireMiParcours", null, null, Request.Scheme) ?? "/Dashboard/QuestionnaireMiParcours";
+        var (success, errorMessage) = await cohorteService.LancerAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienQuestionnaireMiParcours);
         TempData["StatusMessage"] = success ? "Cohorte lancée : étape 1 attribuée et membres notifiés." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -109,8 +112,9 @@ public class CohortesController(
         var lienMonParcours = Url.Page("/Dashboard/MonParcours", null, null, Request.Scheme) ?? "/Dashboard/MonParcours";
         var lienBibliotheque = Url.Page("/Dashboard/Cartes", null, null, Request.Scheme) ?? "/Dashboard/Cartes";
         var lienSatisfaction = Url.Page("/Dashboard/Satisfaction", null, null, Request.Scheme) ?? "/Dashboard/Satisfaction";
+        var lienQuestionnaireMiParcours = Url.Page("/Dashboard/QuestionnaireMiParcours", null, null, Request.Scheme) ?? "/Dashboard/QuestionnaireMiParcours";
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque, lienSatisfaction);
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque, lienSatisfaction, lienQuestionnaireMiParcours);
         TempData["StatusMessage"] = success ? "Étape validée." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }

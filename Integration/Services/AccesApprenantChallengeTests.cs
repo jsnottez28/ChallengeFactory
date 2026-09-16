@@ -35,7 +35,7 @@ public class AccesApprenantChallengeTests
 
         var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = nomCohorte });
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, membre.Id);
-        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
+        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
 
         return (cohorteId.Value, gestionnaire.Id);
     }
@@ -132,7 +132,7 @@ public class AccesApprenantChallengeTests
         Assert.Single(await cohorteService.GetMesParcoursEnCoursAsync(apprenant.Id));
 
         // Une seule etape : la valider cloture la Cohorte.
-        await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaireId, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction");
+        await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaireId, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours");
 
         var parcours = await cohorteService.GetMesParcoursEnCoursAsync(apprenant.Id);
         var bibliotheque = await apprenantService.GetMesCartesAsync(apprenant.Id);

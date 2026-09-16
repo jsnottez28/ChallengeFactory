@@ -44,7 +44,7 @@ public class NotificationTriggersTests
         {
             await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, membre.Id);
         }
-        await cohorteService.LancerAsync(cohorteId!.Value, gestionnaire.Id, "https://test.local/parcours");
+        await cohorteService.LancerAsync(cohorteId!.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
 
         return (dbContext, preuveService, forumService, cohorteService, notificationService, emailService, cohorteId.Value, etape!.Id, membres, gestionnaire.Id);
     }

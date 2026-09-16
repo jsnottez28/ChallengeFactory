@@ -114,13 +114,16 @@ public interface ICohorteService
 
     // Ferme les inscriptions, passe Active, EtapeCourante = 1, attribue les cartes de
     // l'etape 1 et notifie tous les membres actuels (lienMonParcours construit par
-    // l'appelant, cf. Url.Page - le service ne construit jamais d'URL lui-meme).
-    Task<(bool Success, string? ErrorMessage)> LancerAsync(int cohorteId, string gestionnaireId, string lienMonParcours);
+    // l'appelant, cf. Url.Page - le service ne construit jamais d'URL lui-meme). Envoie
+    // aussi le questionnaire mi-parcours si l'etape 1 est deja l'etape mediane (Challenge a
+    // tres peu d'etapes), cf. lienQuestionnaireMiParcours.
+    Task<(bool Success, string? ErrorMessage)> LancerAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienQuestionnaireMiParcours);
 
-    // Cree une ligne d'audit, puis avance EtapeCourante (+attribution+email etape) ou
-    // cloture la Cohorte (+email de cloture + email de demande de satisfaction, cf.
-    // ISatisfactionService) si c'etait la derniere etape.
-    Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque, string lienSatisfaction);
+    // Cree une ligne d'audit, puis avance EtapeCourante (+attribution+email etape, et
+    // envoi du questionnaire mi-parcours si cette etape est l'etape mediane du Challenge,
+    // cf. IQuestionnaireMiParcoursService) ou cloture la Cohorte (+email de cloture + email
+    // de demande de satisfaction, cf. ISatisfactionService) si c'etait la derniere etape.
+    Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque, string lienSatisfaction, string lienQuestionnaireMiParcours);
 
     // Cote apprenant : renvoie [] si le compte n'a pas acces au contenu (Suspendu/En
     // attente de validation, cf. statut_acces_plateforme) - controle serveur, jamais

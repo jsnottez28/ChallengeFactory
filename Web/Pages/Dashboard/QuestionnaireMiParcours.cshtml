@@ -1,0 +1,93 @@
+@page
+@model Web.Pages.Dashboard.QuestionnaireMiParcoursModel
+@using Domain.Entities
+@{
+    ViewData["Title"] = "Point d'étape à mi-parcours";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Point d'étape</li>
+            </ol>
+        </nav>
+
+        @if (Model.StatusMessage is not null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Point d'étape à mi-parcours</p>
+            <h1 class="h3 mb-0">@(Model.ChallengeTitre ?? "Votre Challenge")</h1>
+        </div>
+
+        <div class="card border-0 shadow-sm" style="max-width: 640px;">
+            <div class="card-body p-4">
+                @if (Model.CohorteIntrouvable)
+                {
+                    <p class="text-muted mb-0">Cette Cohorte est introuvable.</p>
+                }
+                else if (Model.ADejaRepondu)
+                {
+                    <p class="mb-0">Merci, vous avez déjà répondu à ce point d'étape pour ce Challenge.</p>
+                }
+                else
+                {
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <form method="post">
+                        <input type="hidden" asp-for="CohorteId" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Le projet professionnel exploré jusqu'ici vous semble-t-il toujours pertinent ?</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach (var valeur in Enum.GetValues<PertinenceProjet>())
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="ProjetToujoursPertinent" id="pertinence-@valeur" value="@valeur" checked="@(Model.ProjetToujoursPertinent == valeur)">
+                                        <label class="form-check-label" for="pertinence-@valeur">@valeur</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Votre satisfaction de l'accompagnement jusqu'ici (0 = pas du tout, 10 = tout à fait)</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @for (var note = 0; note <= 10; note++)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="btn-check" type="radio" name="NoteAccompagnement" id="note-@note" value="@note" autocomplete="off" checked="@(Model.NoteAccompagnement == note)">
+                                        <label class="btn btn-outline-secondary btn-sm" for="note-@note" style="width:42px;">@note</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DifficultesRencontrees" class="form-label">Des difficultés rencontrées jusqu'ici ? (facultatif)</label>
+                            <textarea asp-for="DifficultesRencontrees" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="AjustementsSouhaites" class="form-label">Un ajustement souhaité pour la suite ? (facultatif)</label>
+                            <textarea asp-for="AjustementsSouhaites" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Envoyer mon point d'étape</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

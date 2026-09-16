@@ -42,6 +42,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<SatisfactionReponse> SatisfactionReponses { get; set; }
     public DbSet<EtapeVisio> EtapesVisio { get; set; }
     public DbSet<Emargement> Emargements { get; set; }
+    public DbSet<QuestionnaireMiParcoursReponse> QuestionnairesMiParcoursReponses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -393,6 +394,25 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<Emargement>().Property(e => e.HeuresPresence).HasPrecision(5, 2);
         builder.Entity<Emargement>().Property(e => e.HeuresTravailPersonnel).HasPrecision(5, 2);
+
+        // Une seule reponse par membre et par Cohorte, meme principe d'unicite que
+        // SatisfactionReponse (un seul point d'etape par parcours, envoye automatiquement a
+        // l'etape mediane).
+        builder.Entity<QuestionnaireMiParcoursReponse>()
+            .HasIndex(r => new { r.CohorteId, r.UtilisateurId })
+            .IsUnique();
+
+        builder.Entity<QuestionnaireMiParcoursReponse>()
+            .HasOne(r => r.Cohorte)
+            .WithMany()
+            .HasForeignKey(r => r.CohorteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<QuestionnaireMiParcoursReponse>()
+            .HasOne(r => r.Utilisateur)
+            .WithMany()
+            .HasForeignKey(r => r.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<InvitationCompte>()
             .HasIndex(i => i.Token)

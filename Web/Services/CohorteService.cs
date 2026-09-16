@@ -306,7 +306,7 @@ public sealed class CohorteService(
         return (true, null);
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> LancerAsync(int cohorteId, string gestionnaireId, string lienMonParcours)
+    public async Task<(bool Success, string? ErrorMessage)> LancerAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienQuestionnaireMiParcours)
     {
         var cohorte = await dbContext.Cohortes.Include(c => c.Challenge).FirstOrDefaultAsync(c => c.Id == cohorteId);
         if (cohorte is null)
@@ -325,6 +325,7 @@ public sealed class CohorteService(
 
         await AttribuerCartesEtapeAsync(cohorte, 1, gestionnaireId);
         await NotifierNouvelleEtapeAsync(cohorte, 1, lienMonParcours);
+        await EnvoyerQuestionnaireMiParcoursSiEtapeMedianeAsync(cohorte, 1, lienQuestionnaireMiParcours);
 
         return (true, null);
     }
@@ -334,7 +335,8 @@ public sealed class CohorteService(
         string gestionnaireId,
         string lienMonParcours,
         string lienBibliotheque,
-        string lienSatisfaction)
+        string lienSatisfaction,
+        string lienQuestionnaireMiParcours)
     {
         var cohorte = await dbContext.Cohortes.Include(c => c.Challenge).FirstOrDefaultAsync(c => c.Id == cohorteId);
         if (cohorte is null)
@@ -380,6 +382,7 @@ public sealed class CohorteService(
 
         await AttribuerCartesEtapeAsync(cohorte, cohorte.EtapeCourante, gestionnaireId);
         await NotifierNouvelleEtapeAsync(cohorte, cohorte.EtapeCourante, lienMonParcours);
+        await EnvoyerQuestionnaireMiParcoursSiEtapeMedianeAsync(cohorte, cohorte.EtapeCourante, lienQuestionnaireMiParcours);
 
         return (true, null);
     }
@@ -714,6 +717,29 @@ public sealed class CohorteService(
     {
         var lienComplet = $"{lienSatisfaction}?cohorteId={cohorte.Id}";
         var (sujet, corps) = ChallengeEmailTemplates.DemandeSatisfaction(cohorte.Challenge.Titre, lienComplet);
+        await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
+    }
+
+    // Point d'etape a mi-parcours : envoye automatiquement, une seule fois, des que la
+    // Cohorte atteint l'etape mediane de son Challenge (arrondi au superieur : 10 etapes ->
+    // etape 5, 9 etapes -> etape 5). Aucune sollicitation pour un Challenge a une seule
+    // etape (pas de "milieu" qui ait du sens) - generique, pas de branche par type de
+    // Challenge, cf. IQuestionnaireMiParcoursService.
+    private async Task EnvoyerQuestionnaireMiParcoursSiEtapeMedianeAsync(Cohorte cohorte, int numeroEtape, string lienQuestionnaireMiParcours)
+    {
+        if (cohorte.Challenge.NombreEtapes < 2)
+        {
+            return;
+        }
+
+        var etapeMediane = (int)Math.Ceiling(cohorte.Challenge.NombreEtapes / 2.0);
+        if (numeroEtape != etapeMediane)
+        {
+            return;
+        }
+
+        var lienComplet = $"{lienQuestionnaireMiParcours}?cohorteId={cohorte.Id}";
+        var (sujet, corps) = ChallengeEmailTemplates.DemandeQuestionnaireMiParcours(cohorte.Challenge.Titre, lienComplet);
         await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
     }
 
