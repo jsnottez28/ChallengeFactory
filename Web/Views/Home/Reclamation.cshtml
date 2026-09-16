@@ -1,0 +1,62 @@
+@model Web.Controllers.ReclamationFormModel
+@{
+    ViewData["Title"] = "Réclamation";
+    ViewData["MetaDescription"] = "Déposez une réclamation auprès de Challenges Factory : chaque demande est enregistrée, suivie et fait l'objet d'une réponse écrite.";
+    var reclamationEnvoyee = TempData["ReclamationEnvoyee"] as bool? ?? false;
+}
+
+<section class="cf-hero-home" style="padding:90px 0 50px;">
+    <div class="container">
+        <span class="cf-badge">Canal suivi</span>
+        <h1 class="cf-h1 mb-3" style="font-size:clamp(34px,4.5vw,52px);">Déposer une <span class="cf-accent">réclamation</span></h1>
+        <p class="cf-lead" style="max-width:620px;">
+            Une insatisfaction sur un parcours, un accompagnement ou tout autre aspect de nos
+            prestations ? Ce canal est distinct du formulaire de contact général : chaque
+            réclamation est enregistrée, suivie, et fait l'objet d'une réponse écrite.
+        </p>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="cf-card">
+                    <h3 class="cf-h3 mb-3">Votre réclamation</h3>
+
+                    @if (reclamationEnvoyee)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            Votre réclamation a bien été enregistrée. Un accusé de réception vient de vous être
+                            envoyé par email, et notre équipe reviendra vers vous avec une réponse écrite.
+                        </div>
+                    }
+
+                    <form asp-controller="Home" asp-action="Reclamation" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        <div class="mb-3">
+                            <label asp-for="Nom" class="form-label"></label>
+                            <input asp-for="Nom" class="form-control" />
+                            <span asp-validation-for="Nom" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Message" class="form-label"></label>
+                            <textarea asp-for="Message" class="form-control" rows="6" placeholder="Décrivez votre réclamation le plus précisément possible..."></textarea>
+                            <span asp-validation-for="Message" class="text-danger small"></span>
+                        </div>
+                        <button type="submit" class="cf-btn cf-btn-primary">Envoyer ma réclamation</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

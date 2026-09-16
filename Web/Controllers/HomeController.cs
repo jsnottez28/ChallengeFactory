@@ -19,6 +19,7 @@ namespace Web.Controllers
         private readonly IEmailService _emailService;
         private readonly ICohorteService _cohorteService;
         private readonly IChallengeService _challengeService;
+        private readonly IReclamationService _reclamationService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public HomeController(
@@ -26,12 +27,14 @@ namespace Web.Controllers
             IEmailService emailService,
             ICohorteService cohorteService,
             IChallengeService challengeService,
+            IReclamationService reclamationService,
             UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _emailService = emailService;
             _cohorteService = cohorteService;
             _challengeService = challengeService;
+            _reclamationService = reclamationService;
             _userManager = userManager;
         }
 
@@ -153,6 +156,38 @@ namespace Web.Controllers
 
             TempData["ContactEnvoye"] = true;
             return RedirectToAction(nameof(Contact));
+        }
+
+        // Canal de reclamation trace (Qualiopi indicateur 32), distinct du formulaire de
+        // contact ci-dessus : chaque depot est persiste avec un statut audite plutot que
+        // simplement relaye par email, cf. IReclamationService.
+        [HttpGet]
+        [Route("reclamation")]
+        public IActionResult Reclamation()
+        {
+            return View(new ReclamationFormModel());
+        }
+
+        [HttpPost]
+        [Route("reclamation")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reclamation(ReclamationFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            await _reclamationService.DeposerAsync(new ReclamationInput
+            {
+                Nom = model.Nom,
+                Email = model.Email,
+                Message = model.Message,
+                UtilisateurId = _userManager.GetUserId(User),
+            });
+
+            TempData["ReclamationEnvoyee"] = true;
+            return RedirectToAction(nameof(Reclamation));
         }
 
         [HttpGet]
@@ -359,6 +394,25 @@ namespace Web.Controllers
         [Required(ErrorMessage = "Merci de décrire votre besoin.")]
         [StringLength(4000)]
         [Display(Name = "Votre message")]
+        public string Message { get; set; } = string.Empty;
+    }
+
+    public class ReclamationFormModel
+    {
+        [Required(ErrorMessage = "Merci d'indiquer votre nom.")]
+        [StringLength(150)]
+        [Display(Name = "Nom")]
+        public string Nom { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Merci d'indiquer votre email.")]
+        [EmailAddress(ErrorMessage = "Adresse email invalide.")]
+        [StringLength(256)]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Merci de décrire votre réclamation.")]
+        [StringLength(4000)]
+        [Display(Name = "Votre réclamation")]
         public string Message { get; set; } = string.Empty;
     }
 }

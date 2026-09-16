@@ -73,6 +73,7 @@ builder.Services.AddScoped<IVisioService, VisioService>();
 builder.Services.AddScoped<IEmargementService, EmargementService>();
 builder.Services.AddScoped<IQuestionnaireMiParcoursService, QuestionnaireMiParcoursService>();
 builder.Services.AddScoped<IAttestationService, AttestationService>();
+builder.Services.AddScoped<IReclamationService, ReclamationService>();
 
 builder.Services.Configure<PreuveFichierStockageSettings>(
     builder.Configuration.GetSection("PreuveFichierStockage"));

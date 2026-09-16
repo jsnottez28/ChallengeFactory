@@ -160,4 +160,34 @@ public static class EmailTemplates
             </p>
             """);
     }
+
+    public static string AccuseReceptionReclamation(string nom)
+    {
+        var nomSecurise = System.Net.WebUtility.HtmlEncode(nom);
+
+        return BaseTemplate("Réclamation bien reçue", $"""
+            <h2 style="color:#003189;font-size:20px;margin:0 0 16px;">
+                Votre réclamation a bien été reçue
+            </h2>
+            <p style="color:#444444;font-size:15px;line-height:1.6;margin:0 0 24px;">
+                Bonjour {nomSecurise},<br><br>
+                Nous accusons réception de votre réclamation. Notre équipe l'étudie et vous
+                répondra dans les meilleurs délais, à cette même adresse email.
+            </p>
+            """);
+    }
+
+    public static string ReponseReclamation(string reponse)
+    {
+        var reponseSecurisee = System.Net.WebUtility.HtmlEncode(reponse);
+
+        return BaseTemplate("Réponse à votre réclamation", $"""
+            <h2 style="color:#003189;font-size:20px;margin:0 0 16px;">
+                Réponse à votre réclamation
+            </h2>
+            <p style="color:#444444;font-size:15px;line-height:1.6;margin:0 0 24px;white-space:pre-line;">
+                {reponseSecurisee}
+            </p>
+            """);
+    }
 }

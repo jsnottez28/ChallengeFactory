@@ -1,0 +1,103 @@
+@model Application.Common.Interfaces.ReclamationInfo
+@using Domain.Entities
+@{
+    ViewData["Title"] = "Réclamation";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Reclamations" asp-action="Index">Réclamations</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Réclamation #@Model.Id</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Réclamation de @Model.Nom</h1>
+                <p class="text-muted mb-0">Déposée le @Model.DeposeLe.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+            @switch (Model.Statut)
+            {
+                case StatutReclamation.Recue:
+                    <span class="badge text-bg-warning align-self-center">Reçue</span>
+                    break;
+                case StatutReclamation.EnCours:
+                    <span class="badge text-bg-info align-self-center">En cours</span>
+                    break;
+                default:
+                    <span class="badge text-bg-success align-self-center">Traitée</span>
+                    break;
+            }
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Message</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="mb-2"><strong>Auteur :</strong> @Model.Nom (<a href="mailto:@Model.Email">@Model.Email</a>)</p>
+                        <p class="mb-0" style="white-space:pre-line;">@Model.Message</p>
+                    </div>
+                </div>
+
+                @if (Model.Statut == StatutReclamation.Traitee)
+                {
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Réponse apportée</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="mb-0" style="white-space:pre-line;">@Model.Reponse</p>
+                            <p class="text-muted small mt-3 mb-0">
+                                Par @Model.TraiteParNomComplet, le @Model.TraiteLe?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            </p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Répondre</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            <droit-visible code="RECLAMATION.VALIDER">
+                                @if (Model.Statut == StatutReclamation.Recue)
+                                {
+                                    <form method="post" asp-controller="Reclamations" asp-action="PrendreEnCharge" asp-route-id="@Model.Id" class="mb-4">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">Marquer comme prise en charge</button>
+                                    </form>
+                                }
+
+                                <form method="post" asp-controller="Reclamations" asp-action="Repondre" asp-route-id="@Model.Id">
+                                    @Html.AntiForgeryToken()
+                                    <div class="mb-3">
+                                        <label for="reponse" class="form-label">Réponse envoyée par email à l'auteur</label>
+                                        <textarea name="reponse" id="reponse" class="form-control" rows="5" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Envoyer la réponse et clôturer</button>
+                                </form>
+                            </droit-visible>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

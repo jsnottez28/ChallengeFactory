@@ -1,0 +1,92 @@
+@model List<Application.Common.Interfaces.ReclamationInfo>
+@using Domain.Entities
+@{
+    ViewData["Title"] = "Réclamations";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Réclamations</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Réclamations</h1>
+                <p class="text-muted mb-0">Canal tracé, distinct du formulaire de contact général — critère Qualiopi de traitement des réclamations.</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Déposée le</th>
+                                <th scope="col">Auteur</th>
+                                <th scope="col">Message</th>
+                                <th scope="col">Statut</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-muted text-center py-4">Aucune réclamation pour le moment.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var reclamation in Model)
+                                {
+                                    <tr>
+                                        <td>@reclamation.DeposeLe.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @reclamation.Nom
+                                            <span class="d-block text-muted small">@reclamation.Email</span>
+                                        </td>
+                                        <td style="max-width:320px;">
+                                            <span class="text-truncate d-inline-block" style="max-width:320px;">@reclamation.Message</span>
+                                        </td>
+                                        <td>
+                                            @switch (reclamation.Statut)
+                                            {
+                                                case StatutReclamation.Recue:
+                                                    <span class="badge text-bg-warning">Reçue</span>
+                                                    break;
+                                                case StatutReclamation.EnCours:
+                                                    <span class="badge text-bg-info">En cours</span>
+                                                    break;
+                                                default:
+                                                    <span class="badge text-bg-success">Traitée</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <a asp-controller="Reclamations" asp-action="Details" asp-route-id="@reclamation.Id" class="btn btn-sm btn-outline-secondary">Voir</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

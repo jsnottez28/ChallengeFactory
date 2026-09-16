@@ -145,6 +145,9 @@
                         <droit-visible code="COHORTE.MODIFIER">
                             <li><a class="dropdown-item" asp-page="/Admin/AbonnementsBtoC">Abonnements BtoC</a></li>
                         </droit-visible>
+                        <droit-visible code="RECLAMATION.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="Reclamations" asp-action="Index">Réclamations</a></li>
+                        </droit-visible>
                         <li><a class="dropdown-item" asp-page="/Admin/Parametrage">Parametrage</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Droits et permissions (RBAC)</h6></li>

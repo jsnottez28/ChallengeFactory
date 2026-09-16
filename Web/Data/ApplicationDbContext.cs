@@ -43,6 +43,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<EtapeVisio> EtapesVisio { get; set; }
     public DbSet<Emargement> Emargements { get; set; }
     public DbSet<QuestionnaireMiParcoursReponse> QuestionnairesMiParcoursReponses { get; set; }
+    public DbSet<Reclamation> Reclamations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -413,6 +414,21 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(r => r.UtilisateurId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // SetNull : une reclamation reste consultable meme apres suppression du compte de
+        // son auteur (contrairement a AttribuePar/TraitePar, qui restent en Restrict car
+        // ils portent une responsabilite d'audit interne).
+        builder.Entity<Reclamation>()
+            .HasOne(r => r.Utilisateur)
+            .WithMany()
+            .HasForeignKey(r => r.UtilisateurId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Reclamation>()
+            .HasOne(r => r.TraitePar)
+            .WithMany()
+            .HasForeignKey(r => r.TraiteParId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<InvitationCompte>()
             .HasIndex(i => i.Token)

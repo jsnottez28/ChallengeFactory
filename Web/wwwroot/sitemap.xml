@@ -91,6 +91,12 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://challenges-factory.com/reclamation</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://challenges-factory.com/cgu</loc>
     <lastmod>2026-09-11</lastmod>
     <changefreq>yearly</changefreq>
