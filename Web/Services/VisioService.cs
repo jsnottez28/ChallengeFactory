@@ -20,6 +20,24 @@ public sealed class VisioService(ApplicationDbContext dbContext, IEmailService e
             return (false, "Seule une Cohorte active a une étape courante à planifier.");
         }
 
+        if (dateVisio is null)
+        {
+            return (false, "La date et l'heure de la séance sont obligatoires.");
+        }
+
+        // Tolerance de 1 jour dans le passe (saisie le jour meme d'une seance qui vient de se
+        // terminer) et bornee a 2 ans dans le futur - empeche une saisie aberrante (fautes de
+        // frappe sur l'annee, date sans rapport avec la Cohorte) tout en restant permissif.
+        if (dateVisio.Value < DateTime.UtcNow.AddDays(-1))
+        {
+            return (false, "La date de la séance ne peut pas être dans le passé.");
+        }
+
+        if (dateVisio.Value > DateTime.UtcNow.AddYears(2))
+        {
+            return (false, "La date de la séance est trop éloignée dans le futur, merci de vérifier la saisie.");
+        }
+
         var visio = await dbContext.EtapesVisio
             .FirstOrDefaultAsync(v => v.CohorteId == cohorteId && v.NumeroEtape == cohorte.EtapeCourante);
 

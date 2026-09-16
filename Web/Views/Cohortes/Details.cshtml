@@ -257,7 +257,10 @@
                                     @Html.AntiForgeryToken()
                                     <div class="col-12 col-sm-5">
                                         <label class="form-label small">Date et heure</label>
-                                        <input type="datetime-local" name="dateVisio" class="form-control" value="@(visio.DateVisio?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))">
+                                        <input type="datetime-local" name="dateVisio" class="form-control" required
+                                               min="@DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-ddTHH:mm")"
+                                               max="@DateTime.UtcNow.AddYears(2).ToString("yyyy-MM-ddTHH:mm")"
+                                               value="@(visio.DateVisio?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))">
                                     </div>
                                     <div class="col-12 col-sm-7">
                                         <label class="form-label small">Lien de visio (Zoom, Teams, Meet...)</label>
