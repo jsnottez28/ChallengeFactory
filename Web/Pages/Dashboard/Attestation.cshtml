@@ -79,10 +79,15 @@
 
         .attestation__footer {
             margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid var(--cf-line);
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
-            align-items: flex-end;
-            font-size: .85rem;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: .8rem;
+            line-height: 1.5;
             color: var(--cf-grey-600);
         }
 
@@ -170,7 +175,10 @@
             }
 
             <div class="attestation__footer">
-                <span>Challenges Factory</span>
+                <div>
+                    <strong>Challenges Factory</strong> — AJD&amp;CO, SAS<br>
+                    20 rue Georges Fessard, 28190 Courville-sur-Eure — SIRET 839 480 316 00018
+                </div>
                 <span>Attestation générée le @(info.GenereeLe.ToLocalTime().ToString("dd/MM/yyyy"))</span>
             </div>
         </div>
