@@ -92,6 +92,20 @@ public class CohortesController(
         return View(cohorte);
     }
 
+    [HttpGet("{id:int}/RecapEmargements")]
+    [Authorize(Policy = "Droit:COHORTE.CONSULTER")]
+    public async Task<IActionResult> RecapEmargements(int id)
+    {
+        var cohorte = await cohorteService.GetResumeAsync(id);
+        if (cohorte is null)
+        {
+            return NotFound();
+        }
+
+        ViewData["Recap"] = await emargementService.GetRecapCohorteAsync(id);
+        return View(cohorte);
+    }
+
     [HttpPost("{id:int}/Lancer")]
     [Authorize(Policy = "Droit:COHORTE.VALIDER")]
     [ValidateAntiForgeryToken]

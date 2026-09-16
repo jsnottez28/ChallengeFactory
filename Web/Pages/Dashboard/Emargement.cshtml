@@ -44,6 +44,8 @@
                 }
                 else
                 {
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
                     <form method="post">
                         <input type="hidden" asp-for="CohorteId" />
 
@@ -71,12 +73,14 @@
 
                         <div class="row g-3 mb-4">
                             <div class="col-6">
-                                <label asp-for="HeuresPresence" class="form-label">Heures de présence (optionnel)</label>
-                                <input asp-for="HeuresPresence" type="number" step="0.25" min="0" class="form-control">
+                                <label asp-for="HeuresPresence" class="form-label">Heures de présence</label>
+                                <input asp-for="HeuresPresence" type="number" step="0.25" min="0" class="form-control" required>
+                                <span asp-validation-for="HeuresPresence" class="text-danger small"></span>
                             </div>
                             <div class="col-6">
-                                <label asp-for="HeuresTravailPersonnel" class="form-label">Travail personnel effectué (heures, optionnel)</label>
-                                <input asp-for="HeuresTravailPersonnel" type="number" step="0.25" min="0" class="form-control">
+                                <label asp-for="HeuresTravailPersonnel" class="form-label">Travail personnel effectué (heures)</label>
+                                <input asp-for="HeuresTravailPersonnel" type="number" step="0.25" min="0" class="form-control" required>
+                                <span asp-validation-for="HeuresTravailPersonnel" class="text-danger small"></span>
                             </div>
                         </div>
 

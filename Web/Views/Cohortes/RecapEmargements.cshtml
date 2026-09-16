@@ -1,0 +1,78 @@
+@model Application.Common.Interfaces.CohorteResume
+@using Application.Common.Interfaces
+@{
+    ViewData["Title"] = "Récapitulatif des temps";
+    var recap = ViewData["Recap"] as List<RecapEmargementMembreInfo> ?? [];
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@Model.Id">@Model.Nom</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Récapitulatif des temps</li>
+            </ol>
+        </nav>
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Suivi de l'exécution — Qualiopi</p>
+            <h1 class="h3 mb-0">Récapitulatif des temps — @Model.Nom</h1>
+            <p class="text-muted mb-0">@Model.ChallengeTitre @(Model.OrganisationNom is not null ? $"· {Model.OrganisationNom}" : "")</p>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @if (recap.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucune carte attribuée pour le moment, ou aucun émargement signé.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Participant</th>
+                                    <th scope="col">Séances émargées</th>
+                                    <th scope="col">Temps en présentiel</th>
+                                    <th scope="col">Travail en autonomie</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var membre in recap)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@membre.NomComplet</td>
+                                        <td>
+                                            @membre.NombreSeancesSignees / @membre.NombreSeancesTotal
+                                            @if (membre.NombreSeancesSignees < membre.NombreSeancesTotal)
+                                            {
+                                                <span class="badge text-bg-warning ms-1">En attente</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-success ms-1">Complet</span>
+                                            }
+                                        </td>
+                                        <td>@membre.TotalHeuresPresence.ToString("0.##") h</td>
+                                        <td>@membre.TotalHeuresTravailPersonnel.ToString("0.##") h</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="fw-semibold">
+                                    <td colspan="2" class="text-end">Total cohorte</td>
+                                    <td>@recap.Sum(m => m.TotalHeuresPresence).ToString("0.##") h</td>
+                                    <td>@recap.Sum(m => m.TotalHeuresTravailPersonnel).ToString("0.##") h</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

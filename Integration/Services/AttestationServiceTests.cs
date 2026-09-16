@@ -138,8 +138,12 @@ public class AttestationServiceTests
     }
 
     [Fact]
-    public async Task GetAttestationAsync_SigneSansHeuresRenseignees_ListeLesCartesMaisSansHeures()
+    public async Task GetAttestationAsync_EmargementSigneSansHeures_ListeQuandMemeLesCartesMaisSansHeures()
     {
+        // Les heures sont obligatoires depuis IEmargementService.SignerAsync - ce scenario ne
+        // peut plus se produire via le flux normal. On simule ici une ligne d'emargement
+        // "historique" (signee avant l'ajout de cette regle, ou modifiee directement en base)
+        // pour verifier qu'AttestationService reste robuste face a des heures absentes.
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
         var emailService = new FakeEmailService();
@@ -159,13 +163,17 @@ public class AttestationServiceTests
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
 
-        // Emargement signe, mais sans renseigner les heures (facultatives) - un membre peut
-        // signer sans avoir de volume horaire a declarer, cf. IEmargementService.SignerAsync.
         await visioService.PlanifierAsync(cohorteId.Value, gestionnaire.Id, DateTime.UtcNow, "https://meet.test.local/seance");
         await emargementService.EnvoyerEmargementsEtapeCouranteAsync(cohorteId.Value, _ => "https://test.local/emargement");
         var aSigner = await emargementService.GetPourSignatureAsync(cohorteId.Value, apprenant.Id);
         var emargementIds = aSigner!.Cartes.Select(c => c.EmargementId).ToList();
-        await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, emargementIds, null, null, [1, 2, 3]);
+        await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, emargementIds, 1m, 1m, [1, 2, 3]);
+
+        // Efface les heures directement en base pour simuler la donnee historique.
+        var emargement = await dbContext.Emargements.SingleAsync();
+        emargement.HeuresPresence = null;
+        emargement.HeuresTravailPersonnel = null;
+        await dbContext.SaveChangesAsync();
 
         await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 

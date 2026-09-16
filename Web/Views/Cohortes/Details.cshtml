@@ -56,6 +56,13 @@
                     </droit-visible>
                 }
 
+                @if (Model.Statut != StatutCohorte.EnPreparation)
+                {
+                    <droit-visible code="COHORTE.CONSULTER">
+                        <a asp-controller="Cohortes" asp-action="RecapEmargements" asp-route-id="@Model.Id" class="btn btn-outline-secondary align-self-center">Récapitulatif des temps</a>
+                    </droit-visible>
+                }
+
                 <droit-visible code="COHORTE.VALIDER">
                     @if (Model.Statut == StatutCohorte.EnPreparation)
                     {

@@ -30,6 +30,20 @@ public sealed class EmargementPourSignatureInfo
     public decimal? HeuresTravailPersonnel { get; set; }
 }
 
+public sealed class RecapEmargementMembreInfo
+{
+    public string UtilisateurId { get; set; } = string.Empty;
+    public string NomComplet { get; set; } = string.Empty;
+
+    // Une "seance" = une etape distincte ayant des cartes attribuees a ce membre, pas une
+    // carte (plusieurs cartes d'une meme etape partagent la meme seance/signature).
+    public int NombreSeancesSignees { get; set; }
+    public int NombreSeancesTotal { get; set; }
+
+    public decimal TotalHeuresPresence { get; set; }
+    public decimal TotalHeuresTravailPersonnel { get; set; }
+}
+
 // Emargement numerique par carte (tracabilite de la participation ET de l'acquisition,
 // exigence de suivi de l'execution Qualiopi) - jamais de progression automatique :
 // uniquement declenche par l'action explicite du Gestionnaire (bouton "Envoyer les
@@ -59,4 +73,9 @@ public interface IEmargementService
     // COHORTE.CONSULTER) : renvoie null si l'emargement, sa signature, ou le droit d'acces
     // sont introuvables/refuses.
     Task<(Stream Contenu, string NomFichier)?> TelechargerSignatureAsync(int emargementId, string utilisateurId, bool estGestionnaire);
+
+    // Cote back-office : recapitulatif des temps (presentiel + travail autonome) par
+    // participant, agrege sur l'ensemble du parcours (toutes les etapes deja emargees), pas
+    // seulement l'etape courante - cf. GetSuiviEtapeCouranteAsync pour la vue par etape.
+    Task<List<RecapEmargementMembreInfo>> GetRecapCohorteAsync(int cohorteId);
 }

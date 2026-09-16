@@ -29,7 +29,7 @@ internal static class EmargementTestHelper
             }
 
             var emargementIds = aSigner.Cartes.Select(c => c.EmargementId).ToList();
-            await emargementService.SignerAsync(cohorteId, membre.Id, emargementIds, null, null, [1, 2, 3]);
+            await emargementService.SignerAsync(cohorteId, membre.Id, emargementIds, 1m, 1m, [1, 2, 3]);
         }
     }
 }

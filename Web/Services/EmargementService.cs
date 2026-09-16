@@ -247,6 +247,19 @@ public sealed class EmargementService(
             return (false, "Votre signature est obligatoire pour valider cet émargement.");
         }
 
+        // Les heures declarees sont obligatoires (recap des temps presentiel/autonomie par
+        // participant, cf. IEmargementService.GetRecapCohorteAsync) - plus de champ facultatif
+        // laisse a l'appreciation du membre.
+        if (aSignerMaintenant.Count > 0 && (heuresPresence is null || heuresTravailPersonnel is null))
+        {
+            return (false, "Les heures de présence et de travail personnel sont obligatoires pour valider cet émargement.");
+        }
+
+        if (heuresPresence is < 0 || heuresTravailPersonnel is < 0)
+        {
+            return (false, "Les heures ne peuvent pas être négatives.");
+        }
+
         string? cheminSignature = null;
         if (aSignerMaintenant.Count > 0)
         {
@@ -290,6 +303,63 @@ public sealed class EmargementService(
 
         var contenu = await stockageService.TelechargerAsync(emargement.SignatureCheminStockage);
         return contenu is null ? null : (contenu, $"signature-{emargementId}.png");
+    }
+
+    public async Task<List<RecapEmargementMembreInfo>> GetRecapCohorteAsync(int cohorteId)
+    {
+        var attributions = await dbContext.CarteAttributions
+            .Include(a => a.Utilisateur)
+            .Where(a => a.CohorteId == cohorteId && a.EstActif)
+            .ToListAsync();
+
+        if (attributions.Count == 0)
+        {
+            return [];
+        }
+
+        var attributionIds = attributions.Select(a => a.Id).ToList();
+        var emargements = await dbContext.Emargements
+            .Where(e => attributionIds.Contains(e.CarteAttributionId))
+            .ToListAsync();
+
+        return attributions
+            .GroupBy(a => a.UtilisateurId)
+            .Select(parMembre =>
+            {
+                var parEtape = parMembre.GroupBy(a => a.ChallengeEtapeId).ToList();
+
+                var seancesSignees = 0;
+                decimal totalPresence = 0;
+                decimal totalTravail = 0;
+
+                foreach (var etape in parEtape)
+                {
+                    var attributionIdsEtape = etape.Select(a => a.Id).ToHashSet();
+                    var emargementsEtape = emargements.Where(e => attributionIdsEtape.Contains(e.CarteAttributionId)).ToList();
+
+                    var toutesSignees = emargementsEtape.Count > 0 && emargementsEtape.All(e => e.SigneLe is not null);
+                    if (!toutesSignees)
+                    {
+                        continue;
+                    }
+
+                    seancesSignees++;
+                    totalPresence += emargementsEtape.Select(e => e.HeuresPresence).FirstOrDefault(v => v is not null) ?? 0;
+                    totalTravail += emargementsEtape.Select(e => e.HeuresTravailPersonnel).FirstOrDefault(v => v is not null) ?? 0;
+                }
+
+                return new RecapEmargementMembreInfo
+                {
+                    UtilisateurId = parMembre.Key,
+                    NomComplet = NomComplet(parMembre.First().Utilisateur),
+                    NombreSeancesSignees = seancesSignees,
+                    NombreSeancesTotal = parEtape.Count,
+                    TotalHeuresPresence = totalPresence,
+                    TotalHeuresTravailPersonnel = totalTravail,
+                };
+            })
+            .OrderBy(r => r.NomComplet)
+            .ToList();
     }
 
     private static string NomComplet(ApplicationUser utilisateur)

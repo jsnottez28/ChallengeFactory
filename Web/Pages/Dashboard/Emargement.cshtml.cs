@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Application.Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,9 +18,13 @@ public class EmargementModel(IEmargementService emargementService, UserManager<A
     public List<int> EmargementIdsConfirmes { get; set; } = [];
 
     [BindProperty]
+    [Required(ErrorMessage = "Merci d'indiquer vos heures de présence.")]
+    [Range(0, 1000, ErrorMessage = "Les heures de présence doivent être comprises entre 0 et 1000.")]
     public decimal? HeuresPresence { get; set; }
 
     [BindProperty]
+    [Required(ErrorMessage = "Merci d'indiquer vos heures de travail personnel.")]
+    [Range(0, 1000, ErrorMessage = "Les heures de travail personnel doivent être comprises entre 0 et 1000.")]
     public decimal? HeuresTravailPersonnel { get; set; }
 
     // Rempli par le script du pad de signature (canvas.toDataURL) juste avant la
@@ -45,6 +50,14 @@ public class EmargementModel(IEmargementService emargementService, UserManager<A
     public async Task<IActionResult> OnPostAsync()
     {
         var utilisateurId = userManager.GetUserId(User)!;
+
+        if (!ModelState.IsValid)
+        {
+            Info = await emargementService.GetPourSignatureAsync(CohorteId, utilisateurId);
+            RienASigner = Info is null || Info.Cartes.All(c => c.Signe);
+            return Page();
+        }
+
         var (success, errorMessage) = await emargementService.SignerAsync(
             CohorteId, utilisateurId, EmargementIdsConfirmes, HeuresPresence, HeuresTravailPersonnel, DecoderSignature(SignatureDataUrl));
 

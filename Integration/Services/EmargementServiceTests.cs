@@ -101,10 +101,31 @@ public class EmargementServiceTests
         var aSigner = await emargementService.GetPourSignatureAsync(cohorteId, apprenant.Id);
         var emargementIds = aSigner!.Cartes.Select(c => c.EmargementId).ToList();
 
-        var (success, errorMessage) = await emargementService.SignerAsync(cohorteId, apprenant.Id, emargementIds, null, null, null);
+        var (success, errorMessage) = await emargementService.SignerAsync(cohorteId, apprenant.Id, emargementIds, 1m, 1m, null);
 
         Assert.False(success);
         Assert.Contains("signature", errorMessage, StringComparison.OrdinalIgnoreCase);
+        var emargement = await dbContext.Emargements.SingleAsync();
+        Assert.Null(emargement.SigneLe);
+    }
+
+    [Fact]
+    public async Task SignerAsync_Echoue_SansHeuresRenseignees()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var (_, emargementService, visioService, cohorteId, gestionnaire, apprenant) = await PreparerCohorteActiveAsync(dbContext);
+
+        await visioService.PlanifierAsync(cohorteId, gestionnaire.Id, DateTime.UtcNow, "https://meet.test.local/seance");
+        await emargementService.EnvoyerEmargementsEtapeCouranteAsync(cohorteId, _ => "https://test.local/emargement");
+
+        var aSigner = await emargementService.GetPourSignatureAsync(cohorteId, apprenant.Id);
+        var emargementIds = aSigner!.Cartes.Select(c => c.EmargementId).ToList();
+        var signaturePng = new byte[] { 137, 80, 78, 71 };
+
+        var (success, errorMessage) = await emargementService.SignerAsync(cohorteId, apprenant.Id, emargementIds, null, null, signaturePng);
+
+        Assert.False(success);
+        Assert.Contains("heures", errorMessage, StringComparison.OrdinalIgnoreCase);
         var emargement = await dbContext.Emargements.SingleAsync();
         Assert.Null(emargement.SigneLe);
     }
@@ -126,7 +147,7 @@ public class EmargementServiceTests
         var emargementIds = aSigner!.Cartes.Select(c => c.EmargementId).ToList();
         var signaturePng = new byte[] { 137, 80, 78, 71 };
 
-        var (success, errorMessage) = await emargementService.SignerAsync(cohorteId, apprenant.Id, emargementIds, null, null, signaturePng);
+        var (success, errorMessage) = await emargementService.SignerAsync(cohorteId, apprenant.Id, emargementIds, 3m, 4m, signaturePng);
         Assert.True(success, errorMessage);
 
         var emargement = await dbContext.Emargements.SingleAsync();
@@ -144,5 +165,50 @@ public class EmargementServiceTests
         // Un autre membre sans le droit ne peut pas acceder a la signature d'autrui.
         var telechargementRefuse = await emargementService.TelechargerSignatureAsync(emargement.Id, autreUtilisateur.Id, estGestionnaire: false);
         Assert.Null(telechargementRefuse);
+    }
+
+    [Fact]
+    public async Task GetRecapCohorteAsync_AgregeLesHeuresParSeanceSurToutesLesEtapesDejaEmargees()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var userManager = TestUserManagerFactory.Create(dbContext);
+        var emailService = new FakeEmailService();
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
+        var emargementService = new EmargementService(dbContext, emailService, new FakePreuveFichierStockageService());
+        var visioService = new VisioService(dbContext, emailService);
+
+        var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 2);
+
+        var gestionnaire = new ApplicationUser { UserName = "coach@test.local", Email = "coach@test.local" };
+        var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local", Prenom = "Jeanne", Nom = "Dupont" };
+        dbContext.Users.AddRange(gestionnaire, apprenant);
+        await dbContext.SaveChangesAsync();
+
+        var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
+        await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
+        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
+
+        // Etape 1 : 2h de presence + 1h de travail personnel.
+        await visioService.PlanifierAsync(cohorteId.Value, gestionnaire.Id, DateTime.UtcNow, "https://meet.test.local/seance1");
+        await emargementService.EnvoyerEmargementsEtapeCouranteAsync(cohorteId.Value, _ => "https://test.local/emargement");
+        var aSigner1 = await emargementService.GetPourSignatureAsync(cohorteId.Value, apprenant.Id);
+        await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, aSigner1!.Cartes.Select(c => c.EmargementId).ToList(), 2m, 1m, [1, 2, 3]);
+
+        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
+
+        // Etape 2 : 3h de presence + 2h de travail personnel.
+        await visioService.PlanifierAsync(cohorteId.Value, gestionnaire.Id, DateTime.UtcNow, "https://meet.test.local/seance2");
+        await emargementService.EnvoyerEmargementsEtapeCouranteAsync(cohorteId.Value, _ => "https://test.local/emargement");
+        var aSigner2 = await emargementService.GetPourSignatureAsync(cohorteId.Value, apprenant.Id);
+        await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, aSigner2!.Cartes.Select(c => c.EmargementId).ToList(), 3m, 2m, [1, 2, 3]);
+
+        var recap = await emargementService.GetRecapCohorteAsync(cohorteId.Value);
+
+        var membreRecap = Assert.Single(recap);
+        Assert.Equal("Jeanne Dupont", membreRecap.NomComplet);
+        Assert.Equal(2, membreRecap.NombreSeancesSignees);
+        Assert.Equal(2, membreRecap.NombreSeancesTotal);
+        Assert.Equal(5m, membreRecap.TotalHeuresPresence);
+        Assert.Equal(3m, membreRecap.TotalHeuresTravailPersonnel);
     }
 }
