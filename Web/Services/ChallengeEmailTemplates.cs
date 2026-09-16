@@ -99,6 +99,55 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // 6e declencheur email : Rituel Synchrone (visio) de l'etape (cf. CLAUDE.md, "Boucle CBL
+    // hebdomadaire" - Temps 3, Action). Le lien est externe (Zoom/Teams/Meet...), saisi par
+    // le Gestionnaire - la plateforme n'heberge jamais elle-meme de visio.
+    public static (string Sujet, string CorpsHtml) LienVisio(
+        string challengeTitre,
+        string etapeTitre,
+        DateTime? dateVisio,
+        string lienVisio)
+    {
+        var sujet = $"{challengeTitre} — Lien de connexion pour la visio de l'étape";
+
+        var dateHtml = dateVisio is not null
+            ? $"<p>Rendez-vous le <strong>{dateVisio.Value.ToLocalTime():dd/MM/yyyy à HH:mm}</strong>.</p>"
+            : "";
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Une visio est proposée pour l'étape <strong>{WebUtility.HtmlEncode(etapeTitre)}</strong> du Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong>.</p>
+            {dateHtml}
+            <p><a href="{lienVisio}">Rejoindre la visio</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    // 7e declencheur email : demande d'emargement numerique (suivi de l'execution, exigence
+    // Qualiopi) - une carte de l'etape = une ligne a signer, cf. IEmargementService.
+    public static (string Sujet, string CorpsHtml) DemandeEmargement(
+        string challengeTitre,
+        string etapeTitre,
+        List<string> carteTitres,
+        string lienEmargement)
+    {
+        var sujet = $"{challengeTitre} — Merci de signer votre émargement";
+
+        var listeCartes = carteTitres.Count > 0
+            ? "<ul>" + string.Join("", carteTitres.Select(titre => $"<li>{WebUtility.HtmlEncode(titre)}</li>")) + "</ul>"
+            : "";
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci de confirmer votre participation à la séance <strong>{WebUtility.HtmlEncode(etapeTitre)}</strong> du Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> et l'acquisition des cartes suivantes :</p>
+            {listeCartes}
+            <p><a href="{lienEmargement}">Signer mon émargement</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {
         const string sujet = "Bienvenue sur Challenges Factory — Définissez votre mot de passe";

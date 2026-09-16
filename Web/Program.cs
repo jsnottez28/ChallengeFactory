@@ -69,6 +69,8 @@ builder.Services.AddScoped<IPreuveService, PreuveService>();
 builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISatisfactionService, SatisfactionService>();
+builder.Services.AddScoped<IVisioService, VisioService>();
+builder.Services.AddScoped<IEmargementService, EmargementService>();
 
 builder.Services.Configure<PreuveFichierStockageSettings>(
     builder.Configuration.GetSection("PreuveFichierStockage"));

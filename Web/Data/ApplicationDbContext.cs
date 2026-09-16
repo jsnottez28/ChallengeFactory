@@ -40,6 +40,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<BadgeSocialAttribution> BadgeSocialAttributions { get; set; }
     public DbSet<NotificationInApp> NotificationsInApp { get; set; }
     public DbSet<SatisfactionReponse> SatisfactionReponses { get; set; }
+    public DbSet<EtapeVisio> EtapesVisio { get; set; }
+    public DbSet<Emargement> Emargements { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -356,6 +358,41 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(s => s.UtilisateurId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Une seule fiche visio par etape de Cohorte : replanifier ecrase date/lien, ne cree
+        // jamais de doublon (meme principe que SatisfactionReponse pour l'unicite).
+        builder.Entity<EtapeVisio>()
+            .HasIndex(v => new { v.CohorteId, v.NumeroEtape })
+            .IsUnique();
+
+        builder.Entity<EtapeVisio>()
+            .HasOne(v => v.Cohorte)
+            .WithMany()
+            .HasForeignKey(v => v.CohorteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict, meme raisonnement que CohorteEtapeValidation.ValidePar : supprimer le
+        // compte du Gestionnaire qui a planifie la visio ne doit pas effacer la fiche.
+        builder.Entity<EtapeVisio>()
+            .HasOne(v => v.PlanifiePar)
+            .WithMany()
+            .HasForeignKey(v => v.PlanifieParId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Une seule ligne d'emargement par carte attribuee (le bouton "Envoyer les
+        // emargements" est idempotent : il met a jour EnvoyeLe s'il en existe deja une).
+        builder.Entity<Emargement>()
+            .HasIndex(e => e.CarteAttributionId)
+            .IsUnique();
+
+        builder.Entity<Emargement>()
+            .HasOne(e => e.CarteAttribution)
+            .WithMany()
+            .HasForeignKey(e => e.CarteAttributionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Emargement>().Property(e => e.HeuresPresence).HasPrecision(5, 2);
+        builder.Entity<Emargement>().Property(e => e.HeuresTravailPersonnel).HasPrecision(5, 2);
 
         builder.Entity<InvitationCompte>()
             .HasIndex(i => i.Token)

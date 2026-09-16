@@ -205,6 +205,90 @@
                 </div>
 
                 @{
+                    var visio = ViewData["Visio"] as VisioEtapeInfo;
+                }
+                @if (Model.Statut == StatutCohorte.Active && visio is not null)
+                {
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-0">Visio de l'étape @visio.NumeroEtape</h2>
+                        </div>
+                        <div class="card-body p-4">
+                            <droit-visible code="COHORTE.MODIFIER">
+                                <form method="post" asp-controller="Cohortes" asp-action="PlanifierVisio" asp-route-id="@Model.Id" class="row g-2 mb-3">
+                                    @Html.AntiForgeryToken()
+                                    <div class="col-12 col-sm-5">
+                                        <label class="form-label small">Date et heure</label>
+                                        <input type="datetime-local" name="dateVisio" class="form-control" value="@(visio.DateVisio?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))">
+                                    </div>
+                                    <div class="col-12 col-sm-7">
+                                        <label class="form-label small">Lien de visio (Zoom, Teams, Meet...)</label>
+                                        <input type="url" name="lienVisio" class="form-control" value="@visio.LienVisio" placeholder="https://...">
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">Enregistrer</button>
+                                    </div>
+                                </form>
+                                @if (!string.IsNullOrWhiteSpace(visio.LienVisio))
+                                {
+                                    <form method="post" asp-controller="Cohortes" asp-action="EnvoyerLienVisio" asp-route-id="@Model.Id">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-primary btn-sm">@(visio.DernierEnvoiLe is null ? "Envoyer le lien de connexion" : "Renvoyer le lien de connexion")</button>
+                                    </form>
+                                    @if (visio.DernierEnvoiLe is not null)
+                                    {
+                                        <p class="text-muted small mt-2 mb-0">Dernier envoi : @visio.DernierEnvoiLe.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                                    }
+                                }
+                            </droit-visible>
+                        </div>
+                    </div>
+                }
+
+                @{
+                    var emargements = ViewData["Emargements"] as List<EmargementMembreInfo> ?? [];
+                }
+                @if (Model.Statut == StatutCohorte.Active)
+                {
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-white border-bottom p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <h2 class="h5 mb-0">Émargements de l'étape @Model.EtapeCourante</h2>
+                            <droit-visible code="COHORTE.MODIFIER">
+                                <form method="post" asp-controller="Cohortes" asp-action="EnvoyerEmargements" asp-route-id="@Model.Id">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">Envoyer les émargements</button>
+                                </form>
+                            </droit-visible>
+                        </div>
+                        <div class="card-body p-4">
+                            @if (emargements.Count == 0)
+                            {
+                                <p class="text-muted mb-0">Aucune carte attribuée pour l'étape en cours, ou émargements pas encore envoyés.</p>
+                            }
+                            else
+                            {
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var membre in emargements)
+                                    {
+                                        <li class="mb-2">
+                                            @membre.NomComplet
+                                            @if (membre.TousSignes)
+                                            {
+                                                <span class="badge text-bg-success ms-1">Signé</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-warning ms-1">@(membre.Cartes.Count(c => c.Signe))/@(membre.Cartes.Count) carte(s) signée(s)</span>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @{
                     var satisfaction = ViewData["Satisfaction"] as SatisfactionStats ?? new SatisfactionStats();
                 }
                 <div class="card border-0 shadow-sm mt-4">

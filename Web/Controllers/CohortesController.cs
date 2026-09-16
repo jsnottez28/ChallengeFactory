@@ -16,6 +16,8 @@ public class CohortesController(
     IChallengeService challengeService,
     IOrganisationService organisationService,
     ISatisfactionService satisfactionService,
+    IVisioService visioService,
+    IEmargementService emargementService,
     UserManager<ApplicationUser> userManager) : Controller
 {
     [HttpGet("")]
@@ -82,6 +84,8 @@ public class CohortesController(
         ViewData["Membres"] = await cohorteService.GetMembresAsync(id);
         ViewData["Historique"] = await cohorteService.GetHistoriqueValidationsAsync(id);
         ViewData["Satisfaction"] = await satisfactionService.GetStatsAsync(id);
+        ViewData["Visio"] = await visioService.GetEtapeCouranteAsync(id);
+        ViewData["Emargements"] = await emargementService.GetSuiviEtapeCouranteAsync(id);
 
         return View(cohorte);
     }
@@ -108,6 +112,38 @@ public class CohortesController(
 
         var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque, lienSatisfaction);
         TempData["StatusMessage"] = success ? "Étape validée." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/Visio/Planifier")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PlanifierVisio(int id, DateTime? dateVisio, string? lienVisio)
+    {
+        var (success, errorMessage) = await visioService.PlanifierAsync(id, userManager.GetUserId(User)!, dateVisio, lienVisio);
+        TempData["StatusMessage"] = success ? "Visio enregistrée." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/Visio/EnvoyerLien")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnvoyerLienVisio(int id)
+    {
+        var (success, errorMessage) = await visioService.EnvoyerLienAsync(id);
+        TempData["StatusMessage"] = success ? "Lien de connexion envoyé aux membres." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/Emargements/Envoyer")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnvoyerEmargements(int id)
+    {
+        var (success, errorMessage) = await emargementService.EnvoyerEmargementsEtapeCouranteAsync(id, cohorteId =>
+            Url.Page("/Dashboard/Emargement", null, new { cohorteId }, Request.Scheme) ?? $"/Dashboard/Emargement?cohorteId={cohorteId}");
+
+        TempData["StatusMessage"] = success ? "Émargements envoyés aux membres." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }
 
