@@ -10,6 +10,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Attestation de fin de parcours</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
         :root {
             --cf-orange: #e8500a;
@@ -36,8 +38,15 @@
         }
 
         .attestation__logo {
-            height: 40px;
-            margin-bottom: 24px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            letter-spacing: 2.5px;
+            color: var(--cf-black);
+            margin: 0 0 24px;
+        }
+
+        .attestation__logo .attestation__logo-dash {
+            color: var(--cf-orange);
         }
 
         .attestation__eyebrow {
@@ -133,7 +142,7 @@
     else
     {
         <div class="attestation">
-            <img src="/assets/img/logo/logo-black.png" alt="Challenges Factory" class="attestation__logo" />
+            <p class="attestation__logo">CHALLENGES<span class="attestation__logo-dash">-</span>FACTORY</p>
             <p class="attestation__eyebrow">Attestation de fin de parcours</p>
             <h1 class="attestation__titre">@info!.ChallengeTitre</h1>
 
