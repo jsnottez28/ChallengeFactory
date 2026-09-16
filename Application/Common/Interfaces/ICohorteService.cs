@@ -121,9 +121,11 @@ public interface ICohorteService
 
     // Cree une ligne d'audit, puis avance EtapeCourante (+attribution+email etape, et
     // envoi du questionnaire mi-parcours si cette etape est l'etape mediane du Challenge,
-    // cf. IQuestionnaireMiParcoursService) ou cloture la Cohorte (+email de cloture + email
-    // de demande de satisfaction, cf. ISatisfactionService) si c'etait la derniere etape.
-    Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque, string lienSatisfaction, string lienQuestionnaireMiParcours);
+    // cf. IQuestionnaireMiParcoursService) ou cloture la Cohorte (+email de cloture, qui
+    // inclut desormais le lien vers l'attestation de fin de parcours, cf.
+    // IAttestationService, + email de demande de satisfaction, cf. ISatisfactionService) si
+    // c'etait la derniere etape.
+    Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque, string lienSatisfaction, string lienQuestionnaireMiParcours, string lienAttestation);
 
     // Cote apprenant : renvoie [] si le compte n'a pas acces au contenu (Suspendu/En
     // attente de validation, cf. statut_acces_plateforme) - controle serveur, jamais

@@ -155,19 +155,23 @@
                                                     }
                                                 </td>
                                                 <td class="text-end">
-                                                    <droit-visible code="COHORTE.MODIFIER">
-                                                        <div class="d-inline-flex gap-2">
+                                                    <div class="d-inline-flex gap-2">
+                                                        @if (Model.Statut == StatutCohorte.Terminee)
+                                                        {
+                                                            <droit-visible code="COHORTE.CONSULTER">
+                                                                <a asp-page="/Dashboard/Attestation" asp-route-cohorteId="@Model.Id" asp-route-utilisateurId="@membre.UtilisateurId" target="_blank" class="btn btn-sm btn-outline-secondary">Attestation</a>
+                                                            </droit-visible>
+                                                        }
+                                                        <droit-visible code="COHORTE.MODIFIER">
                                                             @if (membre.StatutAcces == StatutUtilisateur.Modere)
                                                             {
                                                                 <form method="post" asp-controller="Cohortes" asp-action="RenvoyerInvitation" asp-route-utilisateurId="@membre.UtilisateurId" asp-route-cohorteId="@Model.Id">
                                                                     <button type="submit" class="btn btn-sm btn-outline-secondary">Renvoyer l'invitation</button>
                                                                 </form>
                                                             }
-                                                            <droit-visible code="COHORTE.MODIFIER">
-                                                                <a asp-page="/Admin/AbonnementsBtoC" asp-route-utilisateurId="@membre.UtilisateurId" class="btn btn-sm btn-outline-secondary">Gérer l'abonnement</a>
-                                                            </droit-visible>
-                                                        </div>
-                                                    </droit-visible>
+                                                            <a asp-page="/Admin/AbonnementsBtoC" asp-route-utilisateurId="@membre.UtilisateurId" class="btn btn-sm btn-outline-secondary">Gérer l'abonnement</a>
+                                                        </droit-visible>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         }

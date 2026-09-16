@@ -29,7 +29,7 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
-    public static (string Sujet, string CorpsHtml) Cloture(string challengeTitre, string lienBibliotheque)
+    public static (string Sujet, string CorpsHtml) Cloture(string challengeTitre, string lienBibliotheque, string lienAttestation)
     {
         var sujet = $"{challengeTitre} — Challenge terminé, félicitations !";
 
@@ -38,6 +38,7 @@ public static class ChallengeEmailTemplates
             <p>Félicitations, vous avez terminé le Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> !</p>
             <p>Toutes les cartes de compétences que vous avez débloquées restent accessibles dans votre bibliothèque personnelle.</p>
             <p><a href="{lienBibliotheque}">Accéder à ma bibliothèque de cartes</a></p>
+            <p><a href="{lienAttestation}">Voir et imprimer mon attestation de fin de parcours</a></p>
             """;
 
         return (sujet, corps);

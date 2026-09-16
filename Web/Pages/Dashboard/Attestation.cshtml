@@ -1,0 +1,183 @@
+@page
+@model Web.Pages.Dashboard.AttestationModel
+@{
+    Layout = null;
+    var info = Model.Info;
+}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Attestation de fin de parcours</title>
+    <style>
+        :root {
+            --cf-orange: #e8500a;
+            --cf-black: #0f0f0f;
+            --cf-grey-600: #5a5650;
+            --cf-line: #e8e5e0;
+        }
+
+        body {
+            font-family: Arial, 'DM Sans', sans-serif;
+            color: var(--cf-black);
+            background: #f4f2ef;
+            margin: 0;
+            padding: 40px 16px;
+        }
+
+        .attestation {
+            max-width: 760px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid var(--cf-line);
+            border-radius: 8px;
+            padding: 48px;
+        }
+
+        .attestation__logo {
+            height: 40px;
+            margin-bottom: 24px;
+        }
+
+        .attestation__eyebrow {
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--cf-orange);
+            font-weight: 700;
+            font-size: .85rem;
+            margin: 0 0 8px;
+        }
+
+        .attestation__titre {
+            font-size: 1.8rem;
+            margin: 0 0 24px;
+        }
+
+        .attestation__ligne {
+            margin: 0 0 8px;
+            line-height: 1.5;
+        }
+
+        .attestation__section {
+            margin-top: 28px;
+        }
+
+        .attestation__section h2 {
+            font-size: 1.05rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--cf-grey-600);
+            border-bottom: 1px solid var(--cf-line);
+            padding-bottom: 6px;
+        }
+
+        ul.cartes {
+            columns: 2;
+            padding-left: 20px;
+        }
+
+        .attestation__footer {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: .85rem;
+            color: var(--cf-grey-600);
+        }
+
+        .no-print {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .no-print button {
+            background: var(--cf-orange);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        @@media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .attestation {
+                border: none;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    @if (Model.Indisponible)
+    {
+        <div class="attestation">
+            <p>Cette attestation n'est pas (encore) disponible. Elle devient accessible une fois le parcours terminé.</p>
+        </div>
+    }
+    else
+    {
+        <div class="attestation">
+            <img src="/assets/img/logo/logo-black.png" alt="Challenges Factory" class="attestation__logo" />
+            <p class="attestation__eyebrow">Attestation de fin de parcours</p>
+            <h1 class="attestation__titre">@info!.ChallengeTitre</h1>
+
+            <p class="attestation__ligne">Nous certifions que</p>
+            <p class="attestation__ligne"><strong>@info.BeneficiaireNomComplet</strong></p>
+            @if (!string.IsNullOrWhiteSpace(info.OrganisationNom))
+            {
+                <p class="attestation__ligne">@info.OrganisationNom</p>
+            }
+            <p class="attestation__ligne">
+                a suivi le parcours <strong>@info.CohorteNom</strong>
+                @if (info.DateDebut is not null)
+                {
+                    @:du @(info.DateDebut.Value.ToLocalTime().ToString("dd/MM/yyyy"))
+                }
+                au @(info.DateFin.ToLocalTime().ToString("dd/MM/yyyy")), et validé @info.NombreEtapesValidees sur @info.NombreEtapesTotal étape(s).
+            </p>
+
+            @if (info.HeuresDisponibles)
+            {
+                <div class="attestation__section">
+                    <h2>Volume horaire</h2>
+                    <p class="attestation__ligne">Heures de présence signées : <strong>@(info.TotalHeuresPresence.ToString("0.##"))</strong> h</p>
+                    <p class="attestation__ligne">Travail personnel effectué : <strong>@(info.TotalHeuresTravailPersonnel.ToString("0.##"))</strong> h</p>
+                </div>
+            }
+
+            @if (info.CartesAcquises.Count > 0)
+            {
+                <div class="attestation__section">
+                    <h2>Cartes de compétences acquises (@info.CartesAcquises.Count)</h2>
+                    <ul class="cartes">
+                        @foreach (var carte in info.CartesAcquises)
+                        {
+                            <li>@carte</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div class="attestation__footer">
+                <span>Challenges Factory</span>
+                <span>Attestation générée le @(info.GenereeLe.ToLocalTime().ToString("dd/MM/yyyy"))</span>
+            </div>
+        </div>
+
+        <div class="no-print">
+            <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+        </div>
+    }
+</body>
+</html>

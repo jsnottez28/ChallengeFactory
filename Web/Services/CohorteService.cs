@@ -336,7 +336,8 @@ public sealed class CohorteService(
         string lienMonParcours,
         string lienBibliotheque,
         string lienSatisfaction,
-        string lienQuestionnaireMiParcours)
+        string lienQuestionnaireMiParcours,
+        string lienAttestation)
     {
         var cohorte = await dbContext.Cohortes.Include(c => c.Challenge).FirstOrDefaultAsync(c => c.Id == cohorteId);
         if (cohorte is null)
@@ -372,7 +373,7 @@ public sealed class CohorteService(
             cohorte.Statut = StatutCohorte.Terminee;
             await dbContext.SaveChangesAsync();
 
-            await NotifierClotureAsync(cohorte, lienBibliotheque);
+            await NotifierClotureAsync(cohorte, lienBibliotheque, lienAttestation);
             await NotifierDemandeSatisfactionAsync(cohorte, lienSatisfaction);
             return (true, null);
         }
@@ -704,9 +705,10 @@ public sealed class CohorteService(
         await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
     }
 
-    private async Task NotifierClotureAsync(Cohorte cohorte, string lienBibliotheque)
+    private async Task NotifierClotureAsync(Cohorte cohorte, string lienBibliotheque, string lienAttestation)
     {
-        var (sujet, corps) = ChallengeEmailTemplates.Cloture(cohorte.Challenge.Titre, lienBibliotheque);
+        var lienAttestationComplet = $"{lienAttestation}?cohorteId={cohorte.Id}";
+        var (sujet, corps) = ChallengeEmailTemplates.Cloture(cohorte.Challenge.Titre, lienBibliotheque, lienAttestationComplet);
         await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
     }
 

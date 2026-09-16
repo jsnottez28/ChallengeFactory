@@ -123,7 +123,7 @@ public class CohorteServiceTests
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
         emailService.Envois.Clear();
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours");
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 
         Assert.True(success, errorMessage);
 
@@ -163,7 +163,7 @@ public class CohorteServiceTests
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
         emailService.Envois.Clear();
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours");
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 
         Assert.True(success, errorMessage);
 
@@ -177,6 +177,7 @@ public class CohorteServiceTests
 
         var emailCloture = Assert.Single(emailService.Envois, e => e.Sujet.Contains("terminé"));
         Assert.DoesNotContain("Nouvelle étape", emailCloture.Sujet);
+        Assert.Contains($"https://test.local/attestation?cohorteId={cohorteId.Value}", emailCloture.CorpsHtml);
 
         var emailSatisfaction = Assert.Single(emailService.Envois, e => e.Sujet.Contains("Votre avis compte"));
         Assert.Contains("https://test.local/satisfaction", emailSatisfaction.CorpsHtml);
@@ -246,7 +247,7 @@ public class CohorteServiceTests
         // Lance (etape 1) puis valide une fois (passe a l'etape 2) avant l'arrivee du
         // retardataire : etapes 1 et 2 sont "deja validees jusqu'a l'etape courante".
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
-        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours");
+        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 
         await cohorteService.AjouterMembreManuelAsync(cohorteId.Value, retardataire.Id);
 
@@ -413,14 +414,14 @@ public class CohorteServiceTests
         // Etapes 1 -> 4 : aucun questionnaire mi-parcours ne doit partir.
         for (var i = 0; i < 3; i++)
         {
-            await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours");
+            await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
         }
         Assert.DoesNotContain(emailService.Envois, e => e.Sujet.Contains("mi-parcours"));
 
         emailService.Envois.Clear();
 
         // Passage a l'etape 5 : le questionnaire doit partir, une seule fois.
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours");
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
         Assert.True(success, errorMessage);
 
         var emailMiParcours = Assert.Single(emailService.Envois, e => e.Sujet.Contains("mi-parcours"));
@@ -430,7 +431,7 @@ public class CohorteServiceTests
         emailService.Envois.Clear();
 
         // Etape 6 : plus aucun questionnaire mi-parcours ne doit repartir.
-        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours");
+        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
         Assert.DoesNotContain(emailService.Envois, e => e.Sujet.Contains("mi-parcours"));
     }
 }

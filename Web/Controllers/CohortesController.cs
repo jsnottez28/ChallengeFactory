@@ -113,8 +113,9 @@ public class CohortesController(
         var lienBibliotheque = Url.Page("/Dashboard/Cartes", null, null, Request.Scheme) ?? "/Dashboard/Cartes";
         var lienSatisfaction = Url.Page("/Dashboard/Satisfaction", null, null, Request.Scheme) ?? "/Dashboard/Satisfaction";
         var lienQuestionnaireMiParcours = Url.Page("/Dashboard/QuestionnaireMiParcours", null, null, Request.Scheme) ?? "/Dashboard/QuestionnaireMiParcours";
+        var lienAttestation = Url.Page("/Dashboard/Attestation", null, null, Request.Scheme) ?? "/Dashboard/Attestation";
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque, lienSatisfaction, lienQuestionnaireMiParcours);
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque, lienSatisfaction, lienQuestionnaireMiParcours, lienAttestation);
         TempData["StatusMessage"] = success ? "Étape validée." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }
