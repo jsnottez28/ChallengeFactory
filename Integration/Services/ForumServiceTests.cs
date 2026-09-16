@@ -5,6 +5,7 @@ using Integration.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Web.Data;
 using Web.Services;
+using static Integration.TestSupport.EmargementTestHelper;
 
 namespace Integration.Services;
 
@@ -129,6 +130,7 @@ public class ForumServiceTests
         var membre = membres[0];
 
         var gestionnaire = await dbContext.Users.FirstAsync(u => u.Email == "coach@test.local");
+        await RepondreTestPositionnementRequisAsync(dbContext, new FakeEmailService(), cohorteId, gestionnaire.Id, membre);
         await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 
         var (success, errorMessage) = await forumService.PosterMessageAsync(membre.Id, cohorteId, etapeId, "Trop tard", null, "https://test.local/forum");

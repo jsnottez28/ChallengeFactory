@@ -450,10 +450,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(t => t.EnvoyeParId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Une seule reponse par (TestPositionnement, Utilisateur, CarteCompetence) - la
+        // Une seule reponse par (TestPositionnement, Utilisateur, ChallengeEtape) - la
         // soumission est atomique (cf. TestPositionnementService.RepondreAsync).
         builder.Entity<TestPositionnementReponse>()
-            .HasIndex(r => new { r.TestPositionnementId, r.UtilisateurId, r.CarteCompetenceId })
+            .HasIndex(r => new { r.TestPositionnementId, r.UtilisateurId, r.ChallengeEtapeId })
             .IsUnique();
 
         builder.Entity<TestPositionnementReponse>()
@@ -469,9 +469,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<TestPositionnementReponse>()
-            .HasOne(r => r.CarteCompetence)
+            .HasOne(r => r.ChallengeEtape)
             .WithMany()
-            .HasForeignKey(r => r.CarteCompetenceId)
+            .HasForeignKey(r => r.ChallengeEtapeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<InvitationCompte>()

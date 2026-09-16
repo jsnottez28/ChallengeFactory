@@ -10,8 +10,8 @@ namespace Integration.TestSupport;
 // doivent etre signes (cf. CohorteService.TousLesEmargementsSontSignesAsync), et - a
 // l'etape 1 et/ou a la derniere etape - le test de connaissances amont/aval requis doit
 // etre complet (cf. CohorteService.GetTestRequisManquantAsync). Tout test qui appelle
-// ValiderEtapeAsync sur une etape ayant des cartes attribuees doit d'abord satisfaire les
-// deux - factorise ici plutot que duplique dans chaque classe de test.
+// ValiderEtapeAsync sur un Challenge ayant des etapes doit d'abord satisfaire les deux -
+// factorise ici plutot que duplique dans chaque classe de test.
 internal static class EmargementTestHelper
 {
     public static async Task SignerTousLesEmargementsEtapeCouranteAsync(
@@ -42,13 +42,13 @@ internal static class EmargementTestHelper
     // deux si l'etape 1 est aussi la derniere (Challenge a une seule etape), car
     // CohorteService.GetTestRequisManquantAsync exige alors les deux independamment. Ne fait
     // rien sur les etapes intermediaires (aucun test requis) ni si le Challenge n'a aucune
-    // carte (rien a evaluer, le service refuserait l'envoi).
+    // etape (rien a evaluer, le service refuserait l'envoi).
     public static async Task RepondreTestPositionnementRequisAsync(
         ApplicationDbContext dbContext, IEmailService emailService, int cohorteId, string gestionnaireId, params ApplicationUser[] membres)
     {
         var cohorte = await dbContext.Cohortes.Include(c => c.Challenge).FirstAsync(c => c.Id == cohorteId);
-        var aDesCartes = await dbContext.ChallengeEtapeCartes.AnyAsync(ec => ec.ChallengeEtape.ChallengeId == cohorte.ChallengeId);
-        if (!aDesCartes)
+        var aDesEtapes = await dbContext.ChallengeEtapes.AnyAsync(e => e.ChallengeId == cohorte.ChallengeId);
+        if (!aDesEtapes)
         {
             return;
         }
@@ -82,7 +82,7 @@ internal static class EmargementTestHelper
                     throw new InvalidOperationException($"GetPourReponseAsync a renvoye null pour {type}");
                 }
 
-                var niveaux = info.Cartes.ToDictionary(c => c.CarteCompetenceId, _ => 5);
+                var niveaux = info.Etapes.ToDictionary(e => e.ChallengeEtapeId, _ => 5);
                 var (repondreSuccess, repondreErreur) = await testPositionnementService.RepondreAsync(cohorteId, type, membre.Id, niveaux);
                 if (!repondreSuccess)
                 {

@@ -39,10 +39,10 @@ public sealed class TestPositionnementService(ApplicationDbContext dbContext, IE
             return (false, "Aucun membre dans cette Cohorte.");
         }
 
-        var carteIds = await GetCarteIdsDuChallengeAsync(cohorte.ChallengeId);
-        if (carteIds.Count == 0)
+        var etapes = await GetEtapesDuChallengeAsync(cohorte.ChallengeId);
+        if (etapes.Count == 0)
         {
-            return (false, "Ce Challenge n'a aucune carte de compétences à évaluer.");
+            return (false, "Ce Challenge n'a aucune étape à évaluer.");
         }
 
         var test = await dbContext.TestsPositionnement.FirstOrDefaultAsync(t => t.CohorteId == cohorteId && t.Type == type);
@@ -91,12 +91,7 @@ public sealed class TestPositionnementService(ApplicationDbContext dbContext, IE
             return null;
         }
 
-        var cartes = await dbContext.ChallengeEtapeCartes
-            .Include(ec => ec.CarteCompetence)
-            .Where(ec => ec.ChallengeEtape.ChallengeId == test.Cohorte.ChallengeId)
-            .Select(ec => ec.CarteCompetence)
-            .Distinct()
-            .ToListAsync();
+        var etapes = await GetEtapesDuChallengeAsync(test.Cohorte.ChallengeId);
 
         var reponses = await dbContext.TestsPositionnementReponses
             .Where(r => r.TestPositionnementId == test.Id && r.UtilisateurId == utilisateurId)
@@ -106,13 +101,13 @@ public sealed class TestPositionnementService(ApplicationDbContext dbContext, IE
         {
             Type = type,
             ChallengeTitre = test.Cohorte.Challenge.Titre,
-            Cartes = cartes
-                .OrderBy(c => c.TitreTheorie)
-                .Select(c => new TestPositionnementCarteInfo
+            Etapes = etapes
+                .Select(e => new TestPositionnementEtapeInfo
                 {
-                    CarteCompetenceId = c.Id,
-                    CarteTitre = c.TitreTheorie,
-                    NiveauDejaRepondu = reponses.FirstOrDefault(r => r.CarteCompetenceId == c.Id)?.NiveauAutoEvalue,
+                    ChallengeEtapeId = e.Id,
+                    NumeroEtape = e.NumeroEtape,
+                    Libelle = EtapeLibelle(e),
+                    NiveauDejaRepondu = reponses.FirstOrDefault(r => r.ChallengeEtapeId == e.Id)?.NiveauAutoEvalue,
                 })
                 .ToList(),
         };
@@ -133,7 +128,7 @@ public sealed class TestPositionnementService(ApplicationDbContext dbContext, IE
         return await dbContext.TestsPositionnementReponses.AnyAsync(r => r.TestPositionnementId == testId && r.UtilisateurId == utilisateurId);
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> RepondreAsync(int cohorteId, TypeTestPositionnement type, string utilisateurId, Dictionary<int, int> niveauxParCarte)
+    public async Task<(bool Success, string? ErrorMessage)> RepondreAsync(int cohorteId, TypeTestPositionnement type, string utilisateurId, Dictionary<int, int> niveauxParEtape)
     {
         var test = await dbContext.TestsPositionnement
             .Include(t => t.Cohorte)
@@ -155,29 +150,29 @@ public sealed class TestPositionnementService(ApplicationDbContext dbContext, IE
             return (false, "Vous avez déjà répondu à ce test.");
         }
 
-        var carteIds = await GetCarteIdsDuChallengeAsync(test.Cohorte.ChallengeId);
-        if (carteIds.Count == 0)
+        var etapes = await GetEtapesDuChallengeAsync(test.Cohorte.ChallengeId);
+        if (etapes.Count == 0)
         {
-            return (false, "Ce Challenge n'a aucune carte de compétences à évaluer.");
+            return (false, "Ce Challenge n'a aucune étape à évaluer.");
         }
 
-        foreach (var carteId in carteIds)
+        foreach (var etape in etapes)
         {
-            if (!niveauxParCarte.TryGetValue(carteId, out var niveau) || niveau < 0 || niveau > 10)
+            if (!niveauxParEtape.TryGetValue(etape.Id, out var niveau) || niveau < 0 || niveau > 10)
             {
-                return (false, "Merci d'évaluer votre niveau (0 à 10) pour chaque carte du parcours.");
+                return (false, "Merci d'évaluer votre niveau (0 à 10) pour chaque étape du parcours.");
             }
         }
 
         var maintenant = DateTime.UtcNow;
-        foreach (var carteId in carteIds)
+        foreach (var etape in etapes)
         {
             dbContext.TestsPositionnementReponses.Add(new TestPositionnementReponse
             {
                 TestPositionnementId = test.Id,
                 UtilisateurId = utilisateurId,
-                CarteCompetenceId = carteId,
-                NiveauAutoEvalue = niveauxParCarte[carteId],
+                ChallengeEtapeId = etape.Id,
+                NiveauAutoEvalue = niveauxParEtape[etape.Id],
                 RepondueLe = maintenant,
             });
         }
@@ -197,7 +192,7 @@ public sealed class TestPositionnementService(ApplicationDbContext dbContext, IE
         }
 
         var reponses = await dbContext.TestsPositionnementReponses
-            .Include(r => r.CarteCompetence)
+            .Include(r => r.ChallengeEtape)
             .Where(r => r.TestPositionnementId == test.Id)
             .ToListAsync();
 
@@ -207,18 +202,22 @@ public sealed class TestPositionnementService(ApplicationDbContext dbContext, IE
             NombreRepondants = reponses.Select(r => r.UtilisateurId).Distinct().Count(),
             NombreMembresTotal = nombreMembres,
             NiveauMoyenGlobal = reponses.Count > 0 ? reponses.Average(r => r.NiveauAutoEvalue) : null,
-            ParCarte = reponses
-                .GroupBy(r => r.CarteCompetence.TitreTheorie)
-                .Select(g => new TestPositionnementCarteStat { CarteTitre = g.Key, NiveauMoyen = g.Average(r => r.NiveauAutoEvalue) })
-                .OrderBy(c => c.CarteTitre)
+            ParEtape = reponses
+                .GroupBy(r => r.ChallengeEtape)
+                .Select(g => new TestPositionnementEtapeStat { NumeroEtape = g.Key.NumeroEtape, Libelle = EtapeLibelle(g.Key), NiveauMoyen = g.Average(r => r.NiveauAutoEvalue) })
+                .OrderBy(e => e.NumeroEtape)
                 .ToList(),
         };
     }
 
-    private async Task<List<int>> GetCarteIdsDuChallengeAsync(int challengeId) =>
-        await dbContext.ChallengeEtapeCartes
-            .Where(ec => ec.ChallengeEtape.ChallengeId == challengeId)
-            .Select(ec => ec.CarteCompetenceId)
-            .Distinct()
+    private async Task<List<ChallengeEtape>> GetEtapesDuChallengeAsync(int challengeId) =>
+        await dbContext.ChallengeEtapes
+            .Where(e => e.ChallengeId == challengeId)
+            .OrderBy(e => e.NumeroEtape)
             .ToListAsync();
+
+    // L'objectif pedagogique est plus parlant qu'un titre d'etape ou de carte pour un
+    // stagiaire qui s'auto-evalue - repli sur le titre si l'objectif n'a pas ete renseigne.
+    private static string EtapeLibelle(ChallengeEtape etape) =>
+        !string.IsNullOrWhiteSpace(etape.ObjectifPedagogique) ? etape.ObjectifPedagogique! : etape.TitreEtape;
 }

@@ -2,10 +2,14 @@ using Domain.Entities;
 
 namespace Application.Common.Interfaces;
 
-public sealed class TestPositionnementCarteInfo
+// Le Libelle est l'objectif pedagogique de l'etape (ChallengeEtape.ObjectifPedagogique),
+// repli sur le titre de l'etape si l'objectif n'a pas ete renseigne - plus parlant pour un
+// stagiaire que le titre d'une carte isolee (cf. TestPositionnementService.EtapeLibelle).
+public sealed class TestPositionnementEtapeInfo
 {
-    public int CarteCompetenceId { get; set; }
-    public string CarteTitre { get; set; } = string.Empty;
+    public int ChallengeEtapeId { get; set; }
+    public int NumeroEtape { get; set; }
+    public string Libelle { get; set; } = string.Empty;
     public int? NiveauDejaRepondu { get; set; }
 }
 
@@ -13,12 +17,13 @@ public sealed class TestPositionnementInfo
 {
     public TypeTestPositionnement Type { get; set; }
     public string ChallengeTitre { get; set; } = string.Empty;
-    public List<TestPositionnementCarteInfo> Cartes { get; set; } = [];
+    public List<TestPositionnementEtapeInfo> Etapes { get; set; } = [];
 }
 
-public sealed class TestPositionnementCarteStat
+public sealed class TestPositionnementEtapeStat
 {
-    public string CarteTitre { get; set; } = string.Empty;
+    public int NumeroEtape { get; set; }
+    public string Libelle { get; set; } = string.Empty;
     public double NiveauMoyen { get; set; }
 }
 
@@ -28,13 +33,13 @@ public sealed class TestPositionnementStats
     public int NombreRepondants { get; set; }
     public int NombreMembresTotal { get; set; }
     public double? NiveauMoyenGlobal { get; set; }
-    public List<TestPositionnementCarteStat> ParCarte { get; set; } = [];
+    public List<TestPositionnementEtapeStat> ParEtape { get; set; } = [];
 }
 
 // Test de connaissances amont/aval (positionnement initial + evaluation finale, exigence de
-// suivi des acquis Qualiopi) - toujours une auto-evaluation par carte du Challenge (jamais
-// une question a bonne/mauvaise reponse, cf. TypeTestPositionnement), envoyee par le
-// Gestionnaire et jamais automatiquement.
+// suivi des acquis Qualiopi) - toujours une auto-evaluation par etape du Challenge, sur son
+// objectif pedagogique (jamais une question a bonne/mauvaise reponse, cf.
+// TypeTestPositionnement), envoyee par le Gestionnaire et jamais automatiquement.
 public interface ITestPositionnementService
 {
     // Idempotent : cree la campagne (Cohorte, Type) si elle n'existe pas encore, sinon
@@ -47,9 +52,10 @@ public interface ITestPositionnementService
 
     Task<bool> ADejaReponduAsync(int cohorteId, TypeTestPositionnement type, string utilisateurId);
 
-    // niveauxParCarte doit couvrir l'integralite des cartes du Challenge en un seul envoi -
-    // jamais de reponse partielle enregistree (cf. Web.Data.TestPositionnementReponse).
-    Task<(bool Success, string? ErrorMessage)> RepondreAsync(int cohorteId, TypeTestPositionnement type, string utilisateurId, Dictionary<int, int> niveauxParCarte);
+    // niveauxParEtape (cle = ChallengeEtapeId) doit couvrir l'integralite des etapes du
+    // Challenge en un seul envoi - jamais de reponse partielle enregistree (cf.
+    // Web.Data.TestPositionnementReponse).
+    Task<(bool Success, string? ErrorMessage)> RepondreAsync(int cohorteId, TypeTestPositionnement type, string utilisateurId, Dictionary<int, int> niveauxParEtape);
 
     // Cote back-office : Envoye = false si la campagne n'a jamais ete lancee pour ce
     // (Cohorte, Type).

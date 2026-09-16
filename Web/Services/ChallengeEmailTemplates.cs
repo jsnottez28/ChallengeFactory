@@ -70,8 +70,8 @@ public static class ChallengeEmailTemplates
     }
 
     // Test de connaissances amont/aval (Methode Miroir, cf. CLAUDE.md "Mesure d'impact &
-    // KPI") : auto-evaluation par carte du Challenge, jamais un QCM note - cf.
-    // TypeTestPositionnement.
+    // KPI") : auto-evaluation par etape du Challenge (son objectif pedagogique), jamais un
+    // QCM note - cf. TypeTestPositionnement.
     public static (string Sujet, string CorpsHtml) DemandeTestPositionnement(
         string challengeTitre,
         Domain.Entities.TypeTestPositionnement type,
@@ -90,7 +90,7 @@ public static class ChallengeEmailTemplates
         var corps = $"""
             <p>Bonjour,</p>
             <p>{intro}</p>
-            <p>Ce test rapide (quelques minutes) évalue votre niveau sur chacune des cartes de compétences du
+            <p>Ce test rapide (quelques minutes) évalue votre niveau sur l'objectif pédagogique de chaque étape du
             parcours <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> — il n'y a pas de bonne ou de mauvaise
             réponse, c'est un point de départ pour mesurer votre progression.</p>
             <p><a href="{lien}">Répondre au test</a></p>

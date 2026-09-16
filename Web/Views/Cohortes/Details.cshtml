@@ -350,48 +350,48 @@
                     // cartes (amont et aval) doivent alors s'afficher simultanement - un simple
                     // ternaire "EtapeCourante == 1 ? Amont : Aval" masquerait le bouton d'envoi du
                     // test aval dans ce cas (bug remonte : email aval jamais visible/envoye).
-                    var cartesTest = new List<(TypeTestPositionnement Type, TestPositionnementStats Stats, string Libelle)>();
+                    var testsPositionnement = new List<(TypeTestPositionnement Type, TestPositionnementStats Stats, string Libelle)>();
                     if (Model.Statut == StatutCohorte.Active && Model.EtapeCourante == 1)
                     {
-                        cartesTest.Add((TypeTestPositionnement.Amont, testAmont, "amont"));
+                        testsPositionnement.Add((TypeTestPositionnement.Amont, testAmont, "amont"));
                     }
                     if (Model.Statut == StatutCohorte.Active && Model.EtapeCourante == Model.NombreEtapes)
                     {
-                        cartesTest.Add((TypeTestPositionnement.Aval, testAval, "aval"));
+                        testsPositionnement.Add((TypeTestPositionnement.Aval, testAval, "aval"));
                     }
                 }
-                @foreach (var carteTest in cartesTest)
+                @foreach (var testPositionnement in testsPositionnement)
                 {
                     <div class="card border-0 shadow-sm mt-4">
                         <div class="card-header bg-white border-bottom p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                            <h2 class="h5 mb-0">Test de connaissances (@carteTest.Libelle)</h2>
+                            <h2 class="h5 mb-0">Test de connaissances (@testPositionnement.Libelle)</h2>
                             <droit-visible code="COHORTE.MODIFIER">
-                                <form method="post" asp-controller="Cohortes" asp-action="EnvoyerTestPositionnement" asp-route-id="@Model.Id" asp-route-type="@carteTest.Type">
+                                <form method="post" asp-controller="Cohortes" asp-action="EnvoyerTestPositionnement" asp-route-id="@Model.Id" asp-route-type="@testPositionnement.Type">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-primary btn-sm">@(carteTest.Stats.Envoye ? "Renvoyer le test" : "Envoyer le test")</button>
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">@(testPositionnement.Stats.Envoye ? "Renvoyer le test" : "Envoyer le test")</button>
                                 </form>
                             </droit-visible>
                         </div>
                         <div class="card-body p-4">
-                            @if (!carteTest.Stats.Envoye)
+                            @if (!testPositionnement.Stats.Envoye)
                             {
                                 <p class="text-muted mb-0">Pas encore envoyé.</p>
                             }
                             else
                             {
                                 <p class="mb-2">
-                                    <strong>@carteTest.Stats.NombreRepondants</strong>/<strong>@carteTest.Stats.NombreMembresTotal</strong> membre(s) ont répondu
-                                    @if (carteTest.Stats.NiveauMoyenGlobal is not null)
+                                    <strong>@testPositionnement.Stats.NombreRepondants</strong>/<strong>@testPositionnement.Stats.NombreMembresTotal</strong> membre(s) ont répondu
+                                    @if (testPositionnement.Stats.NiveauMoyenGlobal is not null)
                                     {
-                                        <span class="text-muted">— niveau moyen : @(carteTest.Stats.NiveauMoyenGlobal.Value.ToString("0.0"))/10</span>
+                                        <span class="text-muted">— niveau moyen : @(testPositionnement.Stats.NiveauMoyenGlobal.Value.ToString("0.0"))/10</span>
                                     }
                                 </p>
-                                @if (carteTest.Stats.ParCarte.Count > 0)
+                                @if (testPositionnement.Stats.ParEtape.Count > 0)
                                 {
                                     <ul class="list-unstyled small text-muted mb-0">
-                                        @foreach (var carteStat in carteTest.Stats.ParCarte)
+                                        @foreach (var etapeStat in testPositionnement.Stats.ParEtape)
                                         {
-                                            <li>@carteStat.CarteTitre : <strong>@carteStat.NiveauMoyen.ToString("0.0")</strong>/10</li>
+                                            <li>Étape @etapeStat.NumeroEtape — @etapeStat.Libelle : <strong>@etapeStat.NiveauMoyen.ToString("0.0")</strong>/10</li>
                                         }
                                     </ul>
                                 }

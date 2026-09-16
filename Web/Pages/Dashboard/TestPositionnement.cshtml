@@ -26,7 +26,7 @@
         <div class="mb-4">
             <p class="text-muted mb-1">@(estAmont ? "Point de départ — avant de démarrer" : "Point d'arrivée — fin de parcours")</p>
             <h1 class="h3 mb-0">@(Model.Info?.ChallengeTitre ?? "Test de connaissances")</h1>
-            <p class="text-muted mb-0">Pas de bonne ou de mauvaise réponse : indiquez simplement votre niveau actuel sur chaque carte, de 0 (aucune connaissance) à 10 (maîtrise complète).</p>
+            <p class="text-muted mb-0">Pas de bonne ou de mauvaise réponse : indiquez simplement votre niveau actuel sur chaque objectif, de 0 (aucune connaissance) à 10 (maîtrise complète).</p>
         </div>
 
         <div class="card border-0 shadow-sm" style="max-width: 720px;">
@@ -45,16 +45,16 @@
                         <input type="hidden" asp-for="CohorteId" />
                         <input type="hidden" asp-for="Type" />
 
-                        @foreach (var carte in Model.Info.Cartes)
+                        @foreach (var etape in Model.Info.Etapes)
                         {
                             <div class="mb-4">
-                                <label class="form-label fw-semibold">@carte.CarteTitre</label>
+                                <label class="form-label fw-semibold">Étape @etape.NumeroEtape — @etape.Libelle</label>
                                 <div class="d-flex flex-wrap gap-2">
                                     @for (var note = 0; note <= 10; note++)
                                     {
                                         <div class="form-check form-check-inline m-0">
-                                            <input class="btn-check" type="radio" name="Niveaux[@carte.CarteCompetenceId]" id="niveau-@(carte.CarteCompetenceId)-@note" value="@note" autocomplete="off" required>
-                                            <label class="btn btn-outline-secondary btn-sm" for="niveau-@(carte.CarteCompetenceId)-@note" style="width:42px;">@note</label>
+                                            <input class="btn-check" type="radio" name="Niveaux[@etape.ChallengeEtapeId]" id="niveau-@(etape.ChallengeEtapeId)-@note" value="@note" autocomplete="off" required>
+                                            <label class="btn btn-outline-secondary btn-sm" for="niveau-@(etape.ChallengeEtapeId)-@note" style="width:42px;">@note</label>
                                         </div>
                                     }
                                 </div>

@@ -675,8 +675,8 @@ public sealed class CohorteService(
     // avant de pouvoir avancer, cf. TestPositionnementService.
     private async Task<TypeTestPositionnement?> GetTestRequisManquantAsync(Cohorte cohorte)
     {
-        var aDesCartes = await dbContext.ChallengeEtapeCartes.AnyAsync(ec => ec.ChallengeEtape.ChallengeId == cohorte.ChallengeId);
-        if (!aDesCartes)
+        var aDesEtapes = await dbContext.ChallengeEtapes.AnyAsync(e => e.ChallengeId == cohorte.ChallengeId);
+        if (!aDesEtapes)
         {
             return null;
         }
