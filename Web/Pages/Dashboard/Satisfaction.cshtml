@@ -1,0 +1,74 @@
+@page
+@model Web.Pages.Dashboard.SatisfactionModel
+@{
+    ViewData["Title"] = "Votre avis";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Votre avis</li>
+            </ol>
+        </nav>
+
+        @if (Model.StatusMessage is not null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Enquête de satisfaction</p>
+            <h1 class="h3 mb-0">@(Model.ChallengeTitre ?? "Votre Challenge")</h1>
+        </div>
+
+        <div class="card border-0 shadow-sm" style="max-width: 640px;">
+            <div class="card-body p-4">
+                @if (Model.CohorteIntrouvable)
+                {
+                    <p class="text-muted mb-0">Cette Cohorte est introuvable.</p>
+                }
+                else if (Model.ADejaRepondu)
+                {
+                    <p class="mb-0">Merci, vous avez déjà répondu à cette enquête pour ce Challenge.</p>
+                }
+                else
+                {
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <form method="post">
+                        <input type="hidden" asp-for="CohorteId" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Recommanderiez-vous ce Challenge à un collègue ? (0 = pas du tout, 10 = tout à fait)</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @for (var note = 0; note <= 10; note++)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="btn-check" type="radio" name="Score" id="score-@note" value="@note" autocomplete="off" checked="@(Model.Score == note)">
+                                        <label class="btn btn-outline-secondary btn-sm" for="score-@note" style="width:42px;">@note</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Commentaire" class="form-label">Un commentaire ? (facultatif)</label>
+                            <textarea asp-for="Commentaire" class="form-control" rows="4"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Envoyer ma réponse</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

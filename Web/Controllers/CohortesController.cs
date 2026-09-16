@@ -15,6 +15,7 @@ public class CohortesController(
     ICohorteService cohorteService,
     IChallengeService challengeService,
     IOrganisationService organisationService,
+    ISatisfactionService satisfactionService,
     UserManager<ApplicationUser> userManager) : Controller
 {
     [HttpGet("")]
@@ -80,6 +81,7 @@ public class CohortesController(
 
         ViewData["Membres"] = await cohorteService.GetMembresAsync(id);
         ViewData["Historique"] = await cohorteService.GetHistoriqueValidationsAsync(id);
+        ViewData["Satisfaction"] = await satisfactionService.GetStatsAsync(id);
 
         return View(cohorte);
     }
@@ -102,8 +104,9 @@ public class CohortesController(
     {
         var lienMonParcours = Url.Page("/Dashboard/MonParcours", null, null, Request.Scheme) ?? "/Dashboard/MonParcours";
         var lienBibliotheque = Url.Page("/Dashboard/Cartes", null, null, Request.Scheme) ?? "/Dashboard/Cartes";
+        var lienSatisfaction = Url.Page("/Dashboard/Satisfaction", null, null, Request.Scheme) ?? "/Dashboard/Satisfaction";
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque);
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(id, userManager.GetUserId(User)!, lienMonParcours, lienBibliotheque, lienSatisfaction);
         TempData["StatusMessage"] = success ? "Étape validée." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }

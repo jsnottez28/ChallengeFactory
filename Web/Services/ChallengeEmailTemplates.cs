@@ -43,6 +43,22 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // 5e declencheur email : enquete de satisfaction a la cloture (critere 7 du
+    // Referentiel National Qualite Qualiopi - recueil des appreciations des
+    // beneficiaires). Envoyee une seule fois, en meme temps que l'email de cloture.
+    public static (string Sujet, string CorpsHtml) DemandeSatisfaction(string challengeTitre, string lienSatisfaction)
+    {
+        var sujet = $"{challengeTitre} — Votre avis compte";
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Vous venez de terminer le Challenge <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong>. Avant de continuer, une dernière chose : votre avis nous aide à améliorer le parcours pour les prochaines Cohortes.</p>
+            <p><a href="{lienSatisfaction}">Répondre en 1 minute</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
     // 3e declencheur email (cf. prompt "Depot de preuves, points et forum", section C) :
     // objectif explicite d'inciter au retour regulier sur la plateforme - appel a l'action
     // direct, pas une simple information passive.

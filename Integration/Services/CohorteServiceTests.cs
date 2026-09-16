@@ -119,7 +119,7 @@ public class CohorteServiceTests
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
         emailService.Envois.Clear();
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque");
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction");
 
         Assert.True(success, errorMessage);
 
@@ -159,17 +159,23 @@ public class CohorteServiceTests
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
         emailService.Envois.Clear();
 
-        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque");
+        var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction");
 
         Assert.True(success, errorMessage);
 
         var cohorte = await dbContext.Cohortes.FirstAsync(c => c.Id == cohorteId.Value);
         Assert.Equal(StatutCohorte.Terminee, cohorte.Statut);
 
-        var email = Assert.Single(emailService.Envois);
-        Assert.Equal(apprenant.Email, email.Destinataire);
-        Assert.Contains("terminé", email.Sujet);
-        Assert.DoesNotContain("Nouvelle étape", email.Sujet);
+        // La cloture envoie desormais 2 emails distincts : la felicitation de cloture, et
+        // la demande de satisfaction (critere 7 Qualiopi) - cf. NotifierDemandeSatisfactionAsync.
+        Assert.Equal(2, emailService.Envois.Count);
+        Assert.All(emailService.Envois, email => Assert.Equal(apprenant.Email, email.Destinataire));
+
+        var emailCloture = Assert.Single(emailService.Envois, e => e.Sujet.Contains("terminé"));
+        Assert.DoesNotContain("Nouvelle étape", emailCloture.Sujet);
+
+        var emailSatisfaction = Assert.Single(emailService.Envois, e => e.Sujet.Contains("Votre avis compte"));
+        Assert.Contains("https://test.local/satisfaction", emailSatisfaction.CorpsHtml);
     }
 
     [Fact]
@@ -236,7 +242,7 @@ public class CohorteServiceTests
         // Lance (etape 1) puis valide une fois (passe a l'etape 2) avant l'arrivee du
         // retardataire : etapes 1 et 2 sont "deja validees jusqu'a l'etape courante".
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours");
-        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque");
+        await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction");
 
         await cohorteService.AjouterMembreManuelAsync(cohorteId.Value, retardataire.Id);
 

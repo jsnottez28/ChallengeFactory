@@ -118,8 +118,9 @@ public interface ICohorteService
     Task<(bool Success, string? ErrorMessage)> LancerAsync(int cohorteId, string gestionnaireId, string lienMonParcours);
 
     // Cree une ligne d'audit, puis avance EtapeCourante (+attribution+email etape) ou
-    // cloture la Cohorte (+email de cloture) si c'etait la derniere etape.
-    Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque);
+    // cloture la Cohorte (+email de cloture + email de demande de satisfaction, cf.
+    // ISatisfactionService) si c'etait la derniere etape.
+    Task<(bool Success, string? ErrorMessage)> ValiderEtapeAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienBibliotheque, string lienSatisfaction);
 
     // Cote apprenant : renvoie [] si le compte n'a pas acces au contenu (Suspendu/En
     // attente de validation, cf. statut_acces_plateforme) - controle serveur, jamais

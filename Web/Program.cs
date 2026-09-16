@@ -68,6 +68,7 @@ builder.Services.AddScoped<ICohorteService, CohorteService>();
 builder.Services.AddScoped<IPreuveService, PreuveService>();
 builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ISatisfactionService, SatisfactionService>();
 
 builder.Services.Configure<PreuveFichierStockageSettings>(
     builder.Configuration.GetSection("PreuveFichierStockage"));

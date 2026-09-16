@@ -132,7 +132,7 @@ public class AccesApprenantChallengeTests
         Assert.Single(await cohorteService.GetMesParcoursEnCoursAsync(apprenant.Id));
 
         // Une seule etape : la valider cloture la Cohorte.
-        await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaireId, "https://test.local/parcours", "https://test.local/bibliotheque");
+        await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaireId, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction");
 
         var parcours = await cohorteService.GetMesParcoursEnCoursAsync(apprenant.Id);
         var bibliotheque = await apprenantService.GetMesCartesAsync(apprenant.Id);

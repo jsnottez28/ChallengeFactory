@@ -333,7 +333,8 @@ public sealed class CohorteService(
         int cohorteId,
         string gestionnaireId,
         string lienMonParcours,
-        string lienBibliotheque)
+        string lienBibliotheque,
+        string lienSatisfaction)
     {
         var cohorte = await dbContext.Cohortes.Include(c => c.Challenge).FirstOrDefaultAsync(c => c.Id == cohorteId);
         if (cohorte is null)
@@ -370,6 +371,7 @@ public sealed class CohorteService(
             await dbContext.SaveChangesAsync();
 
             await NotifierClotureAsync(cohorte, lienBibliotheque);
+            await NotifierDemandeSatisfactionAsync(cohorte, lienSatisfaction);
             return (true, null);
         }
 
@@ -702,6 +704,16 @@ public sealed class CohorteService(
     private async Task NotifierClotureAsync(Cohorte cohorte, string lienBibliotheque)
     {
         var (sujet, corps) = ChallengeEmailTemplates.Cloture(cohorte.Challenge.Titre, lienBibliotheque);
+        await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
+    }
+
+    // Critere 7 Qualiopi (recueil des appreciations) : sollicitation unique a la cloture,
+    // cf. ISatisfactionService - le lien pointe vers une page qui refuse silencieusement
+    // toute deuxieme reponse (index unique CohorteId/UtilisateurId).
+    private async Task NotifierDemandeSatisfactionAsync(Cohorte cohorte, string lienSatisfaction)
+    {
+        var lienComplet = $"{lienSatisfaction}?cohorteId={cohorte.Id}";
+        var (sujet, corps) = ChallengeEmailTemplates.DemandeSatisfaction(cohorte.Challenge.Titre, lienComplet);
         await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
     }
 

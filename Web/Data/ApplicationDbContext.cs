@@ -39,6 +39,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<PointsEvenement> PointsEvenements { get; set; }
     public DbSet<BadgeSocialAttribution> BadgeSocialAttributions { get; set; }
     public DbSet<NotificationInApp> NotificationsInApp { get; set; }
+    public DbSet<SatisfactionReponse> SatisfactionReponses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -337,6 +338,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(v => v.ValideParId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Une seule reponse par membre et par Cohorte (l'enquete est envoyee une fois, a
+        // la cloture - meme principe d'unicite que CohorteMembre/CohorteEtapeValidation).
+        builder.Entity<SatisfactionReponse>()
+            .HasIndex(s => new { s.CohorteId, s.UtilisateurId })
+            .IsUnique();
+
+        builder.Entity<SatisfactionReponse>()
+            .HasOne(s => s.Cohorte)
+            .WithMany()
+            .HasForeignKey(s => s.CohorteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<SatisfactionReponse>()
+            .HasOne(s => s.Utilisateur)
+            .WithMany()
+            .HasForeignKey(s => s.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<InvitationCompte>()
             .HasIndex(i => i.Token)
