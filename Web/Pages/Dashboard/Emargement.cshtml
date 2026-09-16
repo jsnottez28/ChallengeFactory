@@ -15,7 +15,7 @@
 
         @if (Model.StatusMessage is not null)
         {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert @(Model.DernierEnvoiReussi ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
                 @Model.StatusMessage
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
             </div>
@@ -69,6 +69,7 @@
                                     }
                                 </div>
                             }
+                            <span id="carte-erreur" class="text-danger small d-none">Merci de cocher au moins une carte à certifier.</span>
                         </div>
 
                         <div class="row g-3 mb-4">
@@ -166,7 +167,22 @@
             }
 
             if (form) {
-                form.addEventListener('submit', function () {
+                form.addEventListener('submit', function (e) {
+                    var carteErreur = document.getElementById('carte-erreur');
+                    var auMoinsUneCarteCochee = form.querySelectorAll('input[name="EmargementIdsConfirmes"]:checked').length > 0;
+
+                    if (!auMoinsUneCarteCochee) {
+                        e.preventDefault();
+                        if (carteErreur) {
+                            carteErreur.classList.remove('d-none');
+                        }
+                        return;
+                    }
+
+                    if (carteErreur) {
+                        carteErreur.classList.add('d-none');
+                    }
+
                     if (aDessine) {
                         input.value = canvas.toDataURL('image/png');
                     }

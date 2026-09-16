@@ -90,6 +90,28 @@ public class EmargementServiceTests
     }
 
     [Fact]
+    public async Task SignerAsync_Echoue_SiAucuneCarteCochee()
+    {
+        // Regression : signer sans avoir coche aucune carte (mais avec heures et signature
+        // fournies) ne doit jamais renvoyer un faux succes silencieux - c'est le bug remonte
+        // par le Gestionnaire ("enregistré" affiché alors que rien n'avait ete coche, sans
+        // message pour dire de cocher la carte).
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var (_, emargementService, visioService, cohorteId, gestionnaire, apprenant) = await PreparerCohorteActiveAsync(dbContext);
+
+        await visioService.PlanifierAsync(cohorteId, gestionnaire.Id, DateTime.UtcNow, "https://meet.test.local/seance");
+        await emargementService.EnvoyerEmargementsEtapeCouranteAsync(cohorteId, _ => "https://test.local/emargement");
+
+        var signaturePng = new byte[] { 137, 80, 78, 71 };
+        var (success, errorMessage) = await emargementService.SignerAsync(cohorteId, apprenant.Id, [], 1m, 1m, signaturePng);
+
+        Assert.False(success);
+        Assert.Contains("cocher", errorMessage, StringComparison.OrdinalIgnoreCase);
+        var emargement = await dbContext.Emargements.SingleAsync();
+        Assert.Null(emargement.SigneLe);
+    }
+
+    [Fact]
     public async Task SignerAsync_Echoue_SansSignature()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();

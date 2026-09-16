@@ -38,6 +38,8 @@ public class EmargementModel(IEmargementService emargementService, UserManager<A
 
     public string? StatusMessage { get; private set; }
 
+    public bool DernierEnvoiReussi { get; private set; }
+
     public async Task OnGetAsync()
     {
         var utilisateurId = userManager.GetUserId(User)!;
@@ -61,6 +63,7 @@ public class EmargementModel(IEmargementService emargementService, UserManager<A
         var (success, errorMessage) = await emargementService.SignerAsync(
             CohorteId, utilisateurId, EmargementIdsConfirmes, HeuresPresence, HeuresTravailPersonnel, DecoderSignature(SignatureDataUrl));
 
+        DernierEnvoiReussi = success;
         StatusMessage = success ? "Votre émargement a été enregistré." : errorMessage;
         Info = await emargementService.GetPourSignatureAsync(CohorteId, utilisateurId);
         RienASigner = Info is null || Info.Cartes.All(c => c.Signe);

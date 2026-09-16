@@ -240,9 +240,17 @@ public sealed class EmargementService(
 
         var aSignerMaintenant = emargements.Where(e => e.SigneLe is null && emargementIdsConfirmes.Contains(e.Id)).ToList();
 
+        // Aucune carte cochee (ou uniquement des cartes deja signees) : rien a signer, ne
+        // jamais renvoyer un faux succes silencieux - c'etait le bug remonte par le
+        // Gestionnaire (message "enregistre" affiche alors que rien n'avait ete coche).
+        if (aSignerMaintenant.Count == 0)
+        {
+            return (false, "Merci de cocher au moins une carte à certifier avant de signer.");
+        }
+
         // La signature dessinee certifie la participation - jamais une simple case cochee
         // sans trace graphique (cf. Emargement.SignatureCheminStockage).
-        if (aSignerMaintenant.Count > 0 && (signaturePng is null || signaturePng.Length == 0))
+        if (signaturePng is null || signaturePng.Length == 0)
         {
             return (false, "Votre signature est obligatoire pour valider cet émargement.");
         }
@@ -250,22 +258,18 @@ public sealed class EmargementService(
         // Les heures declarees sont obligatoires (recap des temps presentiel/autonomie par
         // participant, cf. IEmargementService.GetRecapCohorteAsync) - plus de champ facultatif
         // laisse a l'appreciation du membre.
-        if (aSignerMaintenant.Count > 0 && (heuresPresence is null || heuresTravailPersonnel is null))
+        if (heuresPresence is null || heuresTravailPersonnel is null)
         {
             return (false, "Les heures de présence et de travail personnel sont obligatoires pour valider cet émargement.");
         }
 
-        if (heuresPresence is < 0 || heuresTravailPersonnel is < 0)
+        if (heuresPresence < 0 || heuresTravailPersonnel < 0)
         {
             return (false, "Les heures ne peuvent pas être négatives.");
         }
 
-        string? cheminSignature = null;
-        if (aSignerMaintenant.Count > 0)
-        {
-            using var contenu = new MemoryStream(signaturePng!);
-            cheminSignature = await stockageService.EnregistrerAsync(contenu, $"signature-cohorte{cohorteId}-etape{etape.NumeroEtape}-{utilisateurId}.png");
-        }
+        using var contenu = new MemoryStream(signaturePng);
+        var cheminSignature = await stockageService.EnregistrerAsync(contenu, $"signature-cohorte{cohorteId}-etape{etape.NumeroEtape}-{utilisateurId}.png");
 
         var maintenant = DateTime.UtcNow;
         foreach (var emargement in emargements)
