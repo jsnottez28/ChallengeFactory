@@ -4,6 +4,7 @@ using Integration.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Web.Data;
 using Web.Services;
+using static Integration.TestSupport.EmargementTestHelper;
 
 namespace Integration.Services;
 
@@ -122,6 +123,8 @@ public class AttestationServiceTests
         var (signatureSuccess, signatureError) = await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, emargementIds, heuresPresence: 1.5m, heuresTravailPersonnel: 2m, signaturePng);
         Assert.True(signatureSuccess, signatureError);
 
+        await RepondreTestPositionnementRequisAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, apprenant);
+
         await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 
         var attestation = await attestationService.GetAttestationAsync(cohorteId.Value, apprenant.Id);
@@ -174,6 +177,8 @@ public class AttestationServiceTests
         emargement.HeuresPresence = null;
         emargement.HeuresTravailPersonnel = null;
         await dbContext.SaveChangesAsync();
+
+        await RepondreTestPositionnementRequisAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, apprenant);
 
         await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 

@@ -29,6 +29,76 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // Email de lancement (etape 1), distinct de NouvelleEtape : explique le principe du
+    // Challenge-Based Learning et le fonctionnement concret de la plateforme avant de
+    // presenter la premiere etape - un stagiaire qui arrive n'a jamais utilise l'outil,
+    // contrairement aux etapes suivantes ou il connait deja le fonctionnement.
+    public static (string Sujet, string CorpsHtml) LancementParcours(
+        string challengeTitre,
+        string etapeTitre,
+        List<string> carteTitres,
+        string lienMonParcours)
+    {
+        var sujet = $"{challengeTitre} — Votre Challenge démarre, bienvenue !";
+
+        var listeCartes = carteTitres.Count > 0
+            ? "<ul>" + string.Join("", carteTitres.Select(titre => $"<li>{WebUtility.HtmlEncode(titre)}</li>")) + "</ul>"
+            : "";
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Bienvenue sur <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> ! Voici comment ça va se passer.</p>
+
+            <p><strong>Le principe :</strong> vous n'allez pas suivre une formation passive. Chaque semaine, vous
+            recevez un petit nombre de <em>Cartes de Compétences</em> — des ressources courtes et concrètes — et un
+            <em>défi individuel</em> à réaliser directement sur le terrain, dans votre quotidien professionnel.</p>
+
+            <p><strong>Comment ça avance :</strong> après avoir relevé votre défi, vous déposez une <em>preuve</em>
+            (photo, vidéo, texte ou capture d'écran) sur la plateforme. Cette preuve est ensuite validée par vos
+            pairs de la cohorte ou par un Tuteur/Coach — jamais uniquement par une machine. Une fois l'étape
+            validée pour l'ensemble de la cohorte, l'étape suivante s'ouvre avec de nouvelles cartes.</p>
+
+            <p><strong>La cohorte :</strong> vous progressez avec un groupe, pas seul. L'entraide entre pairs
+            (relire, valider, encourager) fait partie intégrante du parcours.</p>
+
+            <p>Votre première étape est ouverte dès maintenant : <strong>{WebUtility.HtmlEncode(etapeTitre)}</strong>.</p>
+            {listeCartes}
+            <p><a href="{lienMonParcours}">Accéder à mon parcours</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    // Test de connaissances amont/aval (Methode Miroir, cf. CLAUDE.md "Mesure d'impact &
+    // KPI") : auto-evaluation par carte du Challenge, jamais un QCM note - cf.
+    // TypeTestPositionnement.
+    public static (string Sujet, string CorpsHtml) DemandeTestPositionnement(
+        string challengeTitre,
+        Domain.Entities.TypeTestPositionnement type,
+        string lien)
+    {
+        var estAmont = type == Domain.Entities.TypeTestPositionnement.Amont;
+
+        var sujet = estAmont
+            ? $"{challengeTitre} — Test de connaissances avant de démarrer"
+            : $"{challengeTitre} — Test de connaissances de fin de parcours";
+
+        var intro = estAmont
+            ? "Avant de démarrer votre Challenge, merci de faire le point sur votre niveau actuel de connaissances."
+            : "Vous arrivez au terme de votre Challenge : merci de refaire le point sur vos connaissances, pour mesurer votre progression depuis le début.";
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>{intro}</p>
+            <p>Ce test rapide (quelques minutes) évalue votre niveau sur chacune des cartes de compétences du
+            parcours <strong>{WebUtility.HtmlEncode(challengeTitre)}</strong> — il n'y a pas de bonne ou de mauvaise
+            réponse, c'est un point de départ pour mesurer votre progression.</p>
+            <p><a href="{lien}">Répondre au test</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) Cloture(string challengeTitre, string lienBibliotheque, string lienAttestation)
     {
         var sujet = $"{challengeTitre} — Challenge terminé, félicitations !";

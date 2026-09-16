@@ -8,6 +8,10 @@
     var derniereEtape = Model.EtapeCourante >= Model.NombreEtapes;
     var emargements = ViewData["Emargements"] as List<EmargementMembreInfo> ?? [];
     var emargementsComplets = emargements.Count == 0 || emargements.All(m => m.TousSignes);
+    var testAmont = ViewData["TestAmont"] as TestPositionnementStats ?? new TestPositionnementStats();
+    var testAval = ViewData["TestAval"] as TestPositionnementStats ?? new TestPositionnementStats();
+    var testAmontComplet = Model.EtapeCourante != 1 || (testAmont.Envoye && testAmont.NombreRepondants >= testAmont.NombreMembresTotal);
+    var testAvalComplet = Model.EtapeCourante != Model.NombreEtapes || (testAval.Envoye && testAval.NombreRepondants >= testAval.NombreMembresTotal);
 }
 
 <section class="backend-page">
@@ -72,7 +76,7 @@
                     }
                     else if (Model.Statut == StatutCohorte.Active)
                     {
-                        @if (emargementsComplets)
+                        @if (emargementsComplets && testAmontComplet && testAvalComplet)
                         {
                             <form method="post" asp-controller="Cohortes" asp-action="ValiderEtape" asp-route-id="@Model.Id" onsubmit="return confirm('Confirmer la validation de cette étape ? Consultez le résumé sur la page \'Preuves de l\'étape\' avant de continuer si besoin.');">
                                 <button type="submit" class="btn btn-primary">
@@ -80,10 +84,22 @@
                                 </button>
                             </form>
                         }
-                        else
+                        else if (!emargementsComplets)
                         {
                             <span class="text-muted small align-self-center" title="Tous les membres doivent avoir signé leur émargement de l'étape en cours.">
                                 Émargements en attente de signature — validation impossible
+                            </span>
+                        }
+                        else if (!testAmontComplet)
+                        {
+                            <span class="text-muted small align-self-center" title="Tous les membres doivent avoir répondu au test de connaissances en amont.">
+                                Test de connaissances (amont) en attente — validation impossible
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted small align-self-center" title="Tous les membres doivent avoir répondu au test de connaissances en aval.">
+                                Test de connaissances (aval) en attente — clôture impossible
                             </span>
                         }
                     }
@@ -320,6 +336,50 @@
                                         </li>
                                     }
                                 </ul>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Statut == StatutCohorte.Active && (Model.EtapeCourante == 1 || Model.EtapeCourante == Model.NombreEtapes))
+                {
+                    var typeCourant = Model.EtapeCourante == 1 ? TypeTestPositionnement.Amont : TypeTestPositionnement.Aval;
+                    var statsCourantes = Model.EtapeCourante == 1 ? testAmont : testAval;
+                    var libelleCourant = Model.EtapeCourante == 1 ? "amont" : "aval";
+
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-white border-bottom p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <h2 class="h5 mb-0">Test de connaissances (@libelleCourant)</h2>
+                            <droit-visible code="COHORTE.MODIFIER">
+                                <form method="post" asp-controller="Cohortes" asp-action="EnvoyerTestPositionnement" asp-route-id="@Model.Id" asp-route-type="@typeCourant">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">@(statsCourantes.Envoye ? "Renvoyer le test" : "Envoyer le test")</button>
+                                </form>
+                            </droit-visible>
+                        </div>
+                        <div class="card-body p-4">
+                            @if (!statsCourantes.Envoye)
+                            {
+                                <p class="text-muted mb-0">Pas encore envoyé.</p>
+                            }
+                            else
+                            {
+                                <p class="mb-2">
+                                    <strong>@statsCourantes.NombreRepondants</strong>/<strong>@statsCourantes.NombreMembresTotal</strong> membre(s) ont répondu
+                                    @if (statsCourantes.NiveauMoyenGlobal is not null)
+                                    {
+                                        <span class="text-muted">— niveau moyen : @(statsCourantes.NiveauMoyenGlobal.Value.ToString("0.0"))/10</span>
+                                    }
+                                </p>
+                                @if (statsCourantes.ParCarte.Count > 0)
+                                {
+                                    <ul class="list-unstyled small text-muted mb-0">
+                                        @foreach (var carteStat in statsCourantes.ParCarte)
+                                        {
+                                            <li>@carteStat.CarteTitre : <strong>@carteStat.NiveauMoyen.ToString("0.0")</strong>/10</li>
+                                        }
+                                    </ul>
+                                }
                             }
                         </div>
                     </div>

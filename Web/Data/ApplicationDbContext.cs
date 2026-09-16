@@ -44,6 +44,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Emargement> Emargements { get; set; }
     public DbSet<QuestionnaireMiParcoursReponse> QuestionnairesMiParcoursReponses { get; set; }
     public DbSet<Reclamation> Reclamations { get; set; }
+    public DbSet<TestPositionnement> TestsPositionnement { get; set; }
+    public DbSet<TestPositionnementReponse> TestsPositionnementReponses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -428,6 +430,48 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(r => r.TraitePar)
             .WithMany()
             .HasForeignKey(r => r.TraiteParId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Une seule campagne par (Cohorte, Type) - cf. TestPositionnementService.EnvoyerAsync
+        // (idempotent, relance la meme plutot que d'en creer une nouvelle).
+        builder.Entity<TestPositionnement>()
+            .HasIndex(t => new { t.CohorteId, t.Type })
+            .IsUnique();
+
+        builder.Entity<TestPositionnement>()
+            .HasOne(t => t.Cohorte)
+            .WithMany()
+            .HasForeignKey(t => t.CohorteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<TestPositionnement>()
+            .HasOne(t => t.EnvoyePar)
+            .WithMany()
+            .HasForeignKey(t => t.EnvoyeParId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Une seule reponse par (TestPositionnement, Utilisateur, CarteCompetence) - la
+        // soumission est atomique (cf. TestPositionnementService.RepondreAsync).
+        builder.Entity<TestPositionnementReponse>()
+            .HasIndex(r => new { r.TestPositionnementId, r.UtilisateurId, r.CarteCompetenceId })
+            .IsUnique();
+
+        builder.Entity<TestPositionnementReponse>()
+            .HasOne(r => r.TestPositionnement)
+            .WithMany()
+            .HasForeignKey(r => r.TestPositionnementId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<TestPositionnementReponse>()
+            .HasOne(r => r.Utilisateur)
+            .WithMany()
+            .HasForeignKey(r => r.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<TestPositionnementReponse>()
+            .HasOne(r => r.CarteCompetence)
+            .WithMany()
+            .HasForeignKey(r => r.CarteCompetenceId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<InvitationCompte>()

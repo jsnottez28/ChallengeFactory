@@ -19,6 +19,7 @@ public class CohortesController(
     IVisioService visioService,
     IEmargementService emargementService,
     IQuestionnaireMiParcoursService questionnaireMiParcoursService,
+    ITestPositionnementService testPositionnementService,
     UserManager<ApplicationUser> userManager) : Controller
 {
     [HttpGet("")]
@@ -88,6 +89,8 @@ public class CohortesController(
         ViewData["Visio"] = await visioService.GetEtapeCouranteAsync(id);
         ViewData["Emargements"] = await emargementService.GetSuiviEtapeCouranteAsync(id);
         ViewData["QuestionnaireMiParcours"] = await questionnaireMiParcoursService.GetStatsAsync(id);
+        ViewData["TestAmont"] = await testPositionnementService.GetStatsAsync(id, TypeTestPositionnement.Amont);
+        ViewData["TestAval"] = await testPositionnementService.GetStatsAsync(id, TypeTestPositionnement.Aval);
 
         return View(cohorte);
     }
@@ -163,6 +166,19 @@ public class CohortesController(
             Url.Page("/Dashboard/Emargement", null, new { cohorteId }, Request.Scheme) ?? $"/Dashboard/Emargement?cohorteId={cohorteId}");
 
         TempData["StatusMessage"] = success ? "Émargements envoyés aux membres." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/TestPositionnement/{type}/Envoyer")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnvoyerTestPositionnement(int id, TypeTestPositionnement type)
+    {
+        var (success, errorMessage) = await testPositionnementService.EnvoyerAsync(id, type, userManager.GetUserId(User)!, cohorteId =>
+            Url.Page("/Dashboard/TestPositionnement", null, new { cohorteId, type }, Request.Scheme) ?? $"/Dashboard/TestPositionnement?cohorteId={cohorteId}&type={type}");
+
+        var libelle = type == TypeTestPositionnement.Amont ? "amont" : "aval";
+        TempData["StatusMessage"] = success ? $"Test de connaissances ({libelle}) envoyé aux membres." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }
 

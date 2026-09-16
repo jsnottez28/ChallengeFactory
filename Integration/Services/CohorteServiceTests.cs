@@ -95,12 +95,13 @@ public class CohorteServiceTests
         Assert.Equal(cohorteId.Value, attribution.CohorteId);
         Assert.Equal(etapes[0].Id, attribution.ChallengeEtapeId);
 
-        // 2 emails : la nouvelle étape, et le point d'étape mi-parcours (le Challenge de
-        // test a 2 étapes, donc l'étape 1 est déjà l'étape médiane - cf.
-        // CohorteService.EnvoyerQuestionnaireMiParcoursSiEtapeMedianeAsync).
+        // 2 emails : le lancement (bienvenue + explication du principe, distinct de
+        // "Nouvelle étape" - cf. ChallengeEmailTemplates.LancementParcours), et le point
+        // d'étape mi-parcours (le Challenge de test a 2 étapes, donc l'étape 1 est déjà
+        // l'étape médiane - cf. CohorteService.EnvoyerQuestionnaireMiParcoursSiEtapeMedianeAsync).
         Assert.Equal(2, emailService.Envois.Count);
         Assert.All(emailService.Envois, e => Assert.Equal(apprenant.Email, e.Destinataire));
-        Assert.Single(emailService.Envois, e => e.Sujet.Contains("Nouvelle étape"));
+        Assert.Single(emailService.Envois, e => e.Sujet.Contains("démarre"));
         Assert.Single(emailService.Envois, e => e.Sujet.Contains("mi-parcours"));
     }
 

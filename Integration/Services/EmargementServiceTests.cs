@@ -4,6 +4,7 @@ using Integration.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Web.Data;
 using Web.Services;
+using static Integration.TestSupport.EmargementTestHelper;
 
 namespace Integration.Services;
 
@@ -215,6 +216,8 @@ public class EmargementServiceTests
         await emargementService.EnvoyerEmargementsEtapeCouranteAsync(cohorteId.Value, _ => "https://test.local/emargement");
         var aSigner1 = await emargementService.GetPourSignatureAsync(cohorteId.Value, apprenant.Id);
         await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, aSigner1!.Cartes.Select(c => c.EmargementId).ToList(), 2m, 1m, [1, 2, 3]);
+
+        await RepondreTestPositionnementRequisAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, apprenant);
 
         await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 

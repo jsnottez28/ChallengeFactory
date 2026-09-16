@@ -324,7 +324,7 @@ public sealed class CohorteService(
         await dbContext.SaveChangesAsync();
 
         await AttribuerCartesEtapeAsync(cohorte, 1, gestionnaireId);
-        await NotifierNouvelleEtapeAsync(cohorte, 1, lienMonParcours);
+        await NotifierLancementAsync(cohorte, lienMonParcours);
         await EnvoyerQuestionnaireMiParcoursSiEtapeMedianeAsync(cohorte, 1, lienQuestionnaireMiParcours);
 
         return (true, null);
@@ -357,6 +357,18 @@ public sealed class CohorteService(
         if (!await TousLesEmargementsSontSignesAsync(cohorteId, cohorte.ChallengeId, cohorte.EtapeCourante))
         {
             return (false, "Impossible de valider cette étape : tous les membres n'ont pas encore signé leur émargement.");
+        }
+
+        // Suivi des acquis Qualiopi (Methode Miroir) : le test de connaissances en amont
+        // doit etre complet avant de quitter l'etape 1, celui en aval avant de cloturer -
+        // cf. TestPositionnementService, jamais de branche automatique sans envoi explicite
+        // du Gestionnaire au prealable (GetTestRequisManquantAsync renvoie false tant que la
+        // campagne n'a meme pas ete envoyee).
+        var testManquant = await GetTestRequisManquantAsync(cohorte);
+        if (testManquant is not null)
+        {
+            var libelle = testManquant == TypeTestPositionnement.Amont ? "en amont" : "en aval";
+            return (false, $"Impossible de valider cette étape : tous les membres n'ont pas encore répondu au test de connaissances {libelle}.");
         }
 
         var etapeValidee = cohorte.EtapeCourante;
@@ -656,6 +668,55 @@ public sealed class CohorteService(
         return nombreSignees >= attributionIds.Count;
     }
 
+    // Renvoie le type de test de connaissances qui bloque encore la validation de l'etape
+    // en cours (Amont a l'etape 1, Aval a la derniere etape), ou null si rien ne bloque.
+    // "Incomplet" recouvre aussi bien "jamais envoye" que "envoye mais tout le monde n'a pas
+    // repondu" - dans les deux cas, la campagne doit etre (re)lancee par le Gestionnaire
+    // avant de pouvoir avancer, cf. TestPositionnementService.
+    private async Task<TypeTestPositionnement?> GetTestRequisManquantAsync(Cohorte cohorte)
+    {
+        var aDesCartes = await dbContext.ChallengeEtapeCartes.AnyAsync(ec => ec.ChallengeEtape.ChallengeId == cohorte.ChallengeId);
+        if (!aDesCartes)
+        {
+            return null;
+        }
+
+        if (cohorte.EtapeCourante == 1 && !await TestPositionnementCompletAsync(cohorte.Id, TypeTestPositionnement.Amont))
+        {
+            return TypeTestPositionnement.Amont;
+        }
+
+        if (cohorte.EtapeCourante == cohorte.Challenge.NombreEtapes && !await TestPositionnementCompletAsync(cohorte.Id, TypeTestPositionnement.Aval))
+        {
+            return TypeTestPositionnement.Aval;
+        }
+
+        return null;
+    }
+
+    private async Task<bool> TestPositionnementCompletAsync(int cohorteId, TypeTestPositionnement type)
+    {
+        var test = await dbContext.TestsPositionnement.FirstOrDefaultAsync(t => t.CohorteId == cohorteId && t.Type == type);
+        if (test is null)
+        {
+            return false;
+        }
+
+        var membreIds = await dbContext.CohorteMembres.Where(m => m.CohorteId == cohorteId).Select(m => m.UtilisateurId).ToListAsync();
+        if (membreIds.Count == 0)
+        {
+            return true;
+        }
+
+        var repondantIds = await dbContext.TestsPositionnementReponses
+            .Where(r => r.TestPositionnement.CohorteId == cohorteId && r.TestPositionnement.Type == type)
+            .Select(r => r.UtilisateurId)
+            .Distinct()
+            .ToListAsync();
+
+        return membreIds.All(repondantIds.Contains);
+    }
+
     // Attribue les cartes de l'etape aux membres cibles (tous les membres actuels si
     // utilisateurIdsCibles est null). Idempotent : ne recree jamais une attribution deja
     // existante pour la meme (carte, utilisateur, cohorte, etape).
@@ -740,6 +801,28 @@ public sealed class CohorteService(
 
         var carteTitres = etape.Cartes.Select(ec => ec.CarteCompetence.TitreTheorie).ToList();
         var (sujet, corps) = ChallengeEmailTemplates.NouvelleEtape(cohorte.Challenge.Titre, etape.TitreEtape, carteTitres, lienMonParcours);
+
+        await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
+    }
+
+    // Distinct de NotifierNouvelleEtapeAsync : un stagiaire qui rejoint n'a jamais utilise
+    // la plateforme, il a besoin qu'on lui explique le principe (CBL, cartes, preuves,
+    // validation par les pairs) avant de lui presenter la premiere etape - cf.
+    // ChallengeEmailTemplates.LancementParcours.
+    private async Task NotifierLancementAsync(Cohorte cohorte, string lienMonParcours)
+    {
+        var etape = await dbContext.ChallengeEtapes
+            .Include(e => e.Cartes)
+                .ThenInclude(ec => ec.CarteCompetence)
+            .FirstOrDefaultAsync(e => e.ChallengeId == cohorte.ChallengeId && e.NumeroEtape == 1);
+
+        if (etape is null)
+        {
+            return;
+        }
+
+        var carteTitres = etape.Cartes.Select(ec => ec.CarteCompetence.TitreTheorie).ToList();
+        var (sujet, corps) = ChallengeEmailTemplates.LancementParcours(cohorte.Challenge.Titre, etape.TitreEtape, carteTitres, lienMonParcours);
 
         await EnvoyerATousLesMembresAsync(cohorte.Id, sujet, corps);
     }
