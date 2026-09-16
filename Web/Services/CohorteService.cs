@@ -350,6 +350,15 @@ public sealed class CohorteService(
             return (false, "Seule une Cohorte active peut être avancée.");
         }
 
+        // Suivi de l'execution Qualiopi : impossible d'avancer tant que tous les emargements
+        // de l'etape en cours ne sont pas signes - force a utiliser le circuit emargement
+        // (cf. EmargementService) plutot que de le laisser optionnel. Ne bloque rien si
+        // l'etape n'a aucune carte attribuee (rien a emarger dans ce cas).
+        if (!await TousLesEmargementsSontSignesAsync(cohorteId, cohorte.ChallengeId, cohorte.EtapeCourante))
+        {
+            return (false, "Impossible de valider cette étape : tous les membres n'ont pas encore signé leur émargement.");
+        }
+
         var etapeValidee = cohorte.EtapeCourante;
 
         dbContext.CohorteEtapeValidations.Add(new CohorteEtapeValidation
@@ -615,6 +624,36 @@ public sealed class CohorteService(
             StatutCohorte.Proposee => "Cette Cohorte est encore à l'état de demande, en attente de validation : impossible d'y ajouter des membres directement.",
             _ => null,
         };
+    }
+
+    // Vrai si l'etape n'a aucune carte attribuee (rien a emarger), ou si chaque carte
+    // attribuee a une ligne Emargement signee - cf. ValiderEtapeAsync. Requete directement
+    // les tables plutot que de dependre d'IEmargementService (meme raisonnement que pour
+    // CarteAttribution ailleurs dans ce service : eviter un couplage circulaire entre
+    // services pour une simple lecture).
+    private async Task<bool> TousLesEmargementsSontSignesAsync(int cohorteId, int challengeId, int numeroEtape)
+    {
+        var etape = await dbContext.ChallengeEtapes
+            .FirstOrDefaultAsync(e => e.ChallengeId == challengeId && e.NumeroEtape == numeroEtape);
+        if (etape is null)
+        {
+            return true;
+        }
+
+        var attributionIds = await dbContext.CarteAttributions
+            .Where(a => a.CohorteId == cohorteId && a.ChallengeEtapeId == etape.Id && a.EstActif)
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        if (attributionIds.Count == 0)
+        {
+            return true;
+        }
+
+        var nombreSignees = await dbContext.Emargements
+            .CountAsync(e => attributionIds.Contains(e.CarteAttributionId) && e.SigneLe != null);
+
+        return nombreSignees >= attributionIds.Count;
     }
 
     // Attribue les cartes de l'etape aux membres cibles (tous les membres actuels si

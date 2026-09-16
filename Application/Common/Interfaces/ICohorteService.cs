@@ -119,9 +119,12 @@ public interface ICohorteService
     // tres peu d'etapes), cf. lienQuestionnaireMiParcours.
     Task<(bool Success, string? ErrorMessage)> LancerAsync(int cohorteId, string gestionnaireId, string lienMonParcours, string lienQuestionnaireMiParcours);
 
-    // Cree une ligne d'audit, puis avance EtapeCourante (+attribution+email etape, et
-    // envoi du questionnaire mi-parcours si cette etape est l'etape mediane du Challenge,
-    // cf. IQuestionnaireMiParcoursService) ou cloture la Cohorte (+email de cloture, qui
+    // Refuse si l'etape en cours a des cartes attribuees et qu'au moins un emargement
+    // n'est pas encore signe (suivi de l'execution Qualiopi - force a utiliser le circuit
+    // emargement plutot que de le laisser optionnel, cf. IEmargementService). Sinon, cree
+    // une ligne d'audit, puis avance EtapeCourante (+attribution+email etape, et envoi du
+    // questionnaire mi-parcours si cette etape est l'etape mediane du Challenge, cf.
+    // IQuestionnaireMiParcoursService) ou cloture la Cohorte (+email de cloture, qui
     // inclut desormais le lien vers l'attestation de fin de parcours, cf.
     // IAttestationService, + email de demande de satisfaction, cf. ISatisfactionService) si
     // c'etait la derniere etape.

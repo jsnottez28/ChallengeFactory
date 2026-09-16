@@ -6,6 +6,8 @@
     var membres = ViewData["Membres"] as List<CohorteMembreInfo> ?? [];
     var historique = ViewData["Historique"] as List<CohorteEtapeValidationInfo> ?? [];
     var derniereEtape = Model.EtapeCourante >= Model.NombreEtapes;
+    var emargements = ViewData["Emargements"] as List<EmargementMembreInfo> ?? [];
+    var emargementsComplets = emargements.Count == 0 || emargements.All(m => m.TousSignes);
 }
 
 <section class="backend-page">
@@ -63,11 +65,20 @@
                     }
                     else if (Model.Statut == StatutCohorte.Active)
                     {
-                        <form method="post" asp-controller="Cohortes" asp-action="ValiderEtape" asp-route-id="@Model.Id" onsubmit="return confirm('Confirmer la validation de cette étape ? Consultez le résumé sur la page \'Preuves de l\'étape\' avant de continuer si besoin.');">
-                            <button type="submit" class="btn btn-primary">
-                                @(derniereEtape ? "Valider la dernière étape et clôturer le Challenge" : "Valider l'étape en cours et passer à la suivante")
-                            </button>
-                        </form>
+                        @if (emargementsComplets)
+                        {
+                            <form method="post" asp-controller="Cohortes" asp-action="ValiderEtape" asp-route-id="@Model.Id" onsubmit="return confirm('Confirmer la validation de cette étape ? Consultez le résumé sur la page \'Preuves de l\'étape\' avant de continuer si besoin.');">
+                                <button type="submit" class="btn btn-primary">
+                                    @(derniereEtape ? "Valider la dernière étape et clôturer le Challenge" : "Valider l'étape en cours et passer à la suivante")
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted small align-self-center" title="Tous les membres doivent avoir signé leur émargement de l'étape en cours.">
+                                Émargements en attente de signature — validation impossible
+                            </span>
+                        }
                     }
                 </droit-visible>
                 @if (Model.Statut == StatutCohorte.EnPreparation)
@@ -249,9 +260,6 @@
                     </div>
                 }
 
-                @{
-                    var emargements = ViewData["Emargements"] as List<EmargementMembreInfo> ?? [];
-                }
                 @if (Model.Statut == StatutCohorte.Active)
                 {
                     <div class="card border-0 shadow-sm mt-4">

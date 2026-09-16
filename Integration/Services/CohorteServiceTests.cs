@@ -4,6 +4,7 @@ using Integration.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Web.Data;
 using Web.Services;
+using static Integration.TestSupport.EmargementTestHelper;
 
 namespace Integration.Services;
 
@@ -121,6 +122,7 @@ public class CohorteServiceTests
         var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
+        await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, apprenant);
         emailService.Envois.Clear();
 
         var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
@@ -144,6 +146,50 @@ public class CohorteServiceTests
     }
 
     [Fact]
+    public async Task ValiderEtapeAsync_Echoue_TantQueTousLesMembresNOntPasSigneLeurEmargement()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var userManager = TestUserManagerFactory.Create(dbContext);
+        var emailService = new FakeEmailService();
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
+
+        var (challenge, _, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 2);
+
+        var gestionnaire = new ApplicationUser { UserName = "coach@test.local", Email = "coach@test.local" };
+        var premierMembre = new ApplicationUser { UserName = "premier@test.local", Email = "premier@test.local" };
+        var secondMembre = new ApplicationUser { UserName = "second@test.local", Email = "second@test.local" };
+        dbContext.Users.AddRange(gestionnaire, premierMembre, secondMembre);
+        await dbContext.SaveChangesAsync();
+
+        var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
+        await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, premierMembre.Id);
+        await cohorteService.AjouterMembreManuelAsync(cohorteId.Value, secondMembre.Id);
+        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
+
+        // Aucun emargement envoye du tout : refuse.
+        var (successSansEnvoi, erreurSansEnvoi) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
+        Assert.False(successSansEnvoi);
+        Assert.Contains("émargement", erreurSansEnvoi);
+
+        // Un seul des deux membres a signe : toujours refuse.
+        await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, premierMembre);
+        var (successPartiel, erreurPartiel) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
+        Assert.False(successPartiel);
+        Assert.Contains("émargement", erreurPartiel);
+
+        var cohorteEncoreEtape1 = await dbContext.Cohortes.FirstAsync(c => c.Id == cohorteId.Value);
+        Assert.Equal(1, cohorteEncoreEtape1.EtapeCourante);
+
+        // Les deux ont signe : la validation reussit.
+        await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, secondMembre);
+        var (successComplet, erreurComplet) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
+        Assert.True(successComplet, erreurComplet);
+
+        var cohorteAvancee = await dbContext.Cohortes.FirstAsync(c => c.Id == cohorteId.Value);
+        Assert.Equal(2, cohorteAvancee.EtapeCourante);
+    }
+
+    [Fact]
     public async Task ValiderEtapeAsync_SurLaDerniereEtape_ClotureLaCohorteEtEnvoieUnEmailDeClotureDistinct()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
@@ -161,6 +207,7 @@ public class CohorteServiceTests
         var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
+        await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, apprenant);
         emailService.Envois.Clear();
 
         var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
@@ -231,7 +278,8 @@ public class CohorteServiceTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
+        var emailService = new FakeEmailService();
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
 
         var (challenge, etapes, cartes) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 3);
 
@@ -247,6 +295,7 @@ public class CohorteServiceTests
         // Lance (etape 1) puis valide une fois (passe a l'etape 2) avant l'arrivee du
         // retardataire : etapes 1 et 2 sont "deja validees jusqu'a l'etape courante".
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
+        await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, premierMembre);
         await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 
         await cohorteService.AjouterMembreManuelAsync(cohorteId.Value, retardataire.Id);
@@ -414,6 +463,7 @@ public class CohorteServiceTests
         // Etapes 1 -> 4 : aucun questionnaire mi-parcours ne doit partir.
         for (var i = 0; i < 3; i++)
         {
+            await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, apprenant);
             await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
         }
         Assert.DoesNotContain(emailService.Envois, e => e.Sujet.Contains("mi-parcours"));
@@ -421,6 +471,7 @@ public class CohorteServiceTests
         emailService.Envois.Clear();
 
         // Passage a l'etape 5 : le questionnaire doit partir, une seule fois.
+        await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, apprenant);
         var (success, errorMessage) = await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
         Assert.True(success, errorMessage);
 
@@ -431,6 +482,7 @@ public class CohorteServiceTests
         emailService.Envois.Clear();
 
         // Etape 6 : plus aucun questionnaire mi-parcours ne doit repartir.
+        await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId.Value, gestionnaire.Id, apprenant);
         await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
         Assert.DoesNotContain(emailService.Envois, e => e.Sujet.Contains("mi-parcours"));
     }

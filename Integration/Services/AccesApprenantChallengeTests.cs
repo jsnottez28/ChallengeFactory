@@ -4,6 +4,7 @@ using Integration.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Web.Data;
 using Web.Services;
+using static Integration.TestSupport.EmargementTestHelper;
 
 namespace Integration.Services;
 
@@ -120,7 +121,8 @@ public class AccesApprenantChallengeTests
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
+        var emailService = new FakeEmailService();
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
         var apprenantService = new CarteApprenantService(dbContext, userManager);
 
         var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local", Statut = StatutUtilisateur.Actif };
@@ -132,6 +134,7 @@ public class AccesApprenantChallengeTests
         Assert.Single(await cohorteService.GetMesParcoursEnCoursAsync(apprenant.Id));
 
         // Une seule etape : la valider cloture la Cohorte.
+        await SignerTousLesEmargementsEtapeCouranteAsync(dbContext, emailService, cohorteId, gestionnaireId, apprenant);
         await cohorteService.ValiderEtapeAsync(cohorteId, gestionnaireId, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 
         var parcours = await cohorteService.GetMesParcoursEnCoursAsync(apprenant.Id);

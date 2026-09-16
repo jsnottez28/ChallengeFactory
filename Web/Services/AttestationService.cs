@@ -58,7 +58,12 @@ public sealed class AttestationService(ApplicationDbContext dbContext) : IAttest
                 .Distinct()
                 .OrderBy(titre => titre)
                 .ToList(),
-            HeuresDisponibles = emargementsSignes.Count > 0,
+            // Depuis que la signature de l'emargement conditionne la validation de l'etape
+            // (cf. CohorteService.TousLesEmargementsSontSignesAsync), emargementsSignes.Count
+            // est presque toujours > 0 : ce qui distingue vraiment un parcours ayant
+            // effectivement declare des heures, c'est qu'au moins une des deux valeurs ait
+            // ete renseignee (les deux champs restent facultatifs a la signature).
+            HeuresDisponibles = emargementsSignes.Any(e => e.HeuresPresence.HasValue || e.HeuresTravailPersonnel.HasValue),
             TotalHeuresPresence = emargementsSignes.Sum(e => e.HeuresPresence ?? 0),
             TotalHeuresTravailPersonnel = emargementsSignes.Sum(e => e.HeuresTravailPersonnel ?? 0),
         };

@@ -138,11 +138,14 @@ public class AttestationServiceTests
     }
 
     [Fact]
-    public async Task GetAttestationAsync_SansEmargementUtilise_ListeQuandMemeLesCartesMaisSansHeures()
+    public async Task GetAttestationAsync_SigneSansHeuresRenseignees_ListeLesCartesMaisSansHeures()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var userManager = TestUserManagerFactory.Create(dbContext);
-        var cohorteService = new CohorteService(dbContext, userManager, new FakeEmailService(), new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
+        var emailService = new FakeEmailService();
+        var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
+        var emargementService = new EmargementService(dbContext, emailService, new FakePreuveFichierStockageService());
+        var visioService = new VisioService(dbContext, emailService);
         var attestationService = new AttestationService(dbContext);
 
         var (challenge, _, cartes) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1);
@@ -155,6 +158,15 @@ public class AttestationServiceTests
         var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Test" });
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
+
+        // Emargement signe, mais sans renseigner les heures (facultatives) - un membre peut
+        // signer sans avoir de volume horaire a declarer, cf. IEmargementService.SignerAsync.
+        await visioService.PlanifierAsync(cohorteId.Value, gestionnaire.Id, DateTime.UtcNow, "https://meet.test.local/seance");
+        await emargementService.EnvoyerEmargementsEtapeCouranteAsync(cohorteId.Value, _ => "https://test.local/emargement");
+        var aSigner = await emargementService.GetPourSignatureAsync(cohorteId.Value, apprenant.Id);
+        var emargementIds = aSigner!.Cartes.Select(c => c.EmargementId).ToList();
+        await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, emargementIds, null, null, [1, 2, 3]);
+
         await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");
 
         var attestation = await attestationService.GetAttestationAsync(cohorteId.Value, apprenant.Id);
