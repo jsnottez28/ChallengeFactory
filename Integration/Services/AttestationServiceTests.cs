@@ -88,7 +88,8 @@ public class AttestationServiceTests
         var userManager = TestUserManagerFactory.Create(dbContext);
         var emailService = new FakeEmailService();
         var cohorteService = new CohorteService(dbContext, userManager, emailService, new PreuveService(dbContext, userManager, new FakePreuveFichierStockageService(), new NotificationService(dbContext), new FakeEmailService()), new NotificationService(dbContext));
-        var emargementService = new EmargementService(dbContext, emailService);
+        var emargementService = new EmargementService(dbContext, emailService, new FakePreuveFichierStockageService());
+        var visioService = new VisioService(dbContext, emailService);
         var attestationService = new AttestationService(dbContext);
 
         var (challenge, _, cartes) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 1);
@@ -102,6 +103,12 @@ public class AttestationServiceTests
         await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
         await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
 
+        // La date de seance emargee reprend celle de la visio planifiee pour l'etape :
+        // impossible d'envoyer des emargements sans l'avoir fixee au prealable, cf.
+        // EmargementService.EnvoyerEmargementsEtapeCouranteAsync.
+        var (visioSuccess, visioError) = await visioService.PlanifierAsync(cohorteId.Value, gestionnaire.Id, DateTime.UtcNow, "https://meet.test.local/seance");
+        Assert.True(visioSuccess, visioError);
+
         // Emargement envoye puis signe par l'apprenant avant la cloture de l'etape (le
         // bouton "Envoyer les emargements" peut etre utilise a tout moment pendant que
         // l'etape est active, cf. EmargementService).
@@ -111,7 +118,8 @@ public class AttestationServiceTests
         var aSigner = await emargementService.GetPourSignatureAsync(cohorteId.Value, apprenant.Id);
         Assert.NotNull(aSigner);
         var emargementIds = aSigner!.Cartes.Select(c => c.EmargementId).ToList();
-        var (signatureSuccess, signatureError) = await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, emargementIds, heuresPresence: 1.5m, heuresTravailPersonnel: 2m);
+        var signaturePng = new byte[] { 1, 2, 3, 4 };
+        var (signatureSuccess, signatureError) = await emargementService.SignerAsync(cohorteId.Value, apprenant.Id, emargementIds, heuresPresence: 1.5m, heuresTravailPersonnel: 2m, signaturePng);
         Assert.True(signatureSuccess, signatureError);
 
         await cohorteService.ValiderEtapeAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/bibliotheque", "https://test.local/satisfaction", "https://test.local/mi-parcours", "https://test.local/attestation");

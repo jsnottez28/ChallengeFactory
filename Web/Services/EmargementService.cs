@@ -5,7 +5,10 @@ using Web.Data;
 
 namespace Web.Services;
 
-public sealed class EmargementService(ApplicationDbContext dbContext, IEmailService emailService) : IEmargementService
+public sealed class EmargementService(
+    ApplicationDbContext dbContext,
+    IEmailService emailService,
+    IPreuveFichierStockageService stockageService) : IEmargementService
 {
     public async Task<(bool Success, string? ErrorMessage)> EnvoyerEmargementsEtapeCouranteAsync(int cohorteId, Func<int, string> construireLienSignature)
     {
@@ -25,6 +28,16 @@ public sealed class EmargementService(ApplicationDbContext dbContext, IEmailServ
         if (etape is null)
         {
             return (false, "Étape introuvable.");
+        }
+
+        // La date de seance emargee est toujours celle de la visio planifiee pour l'etape
+        // (cf. Emargement.DateSeance) : impossible d'envoyer des emargements tant qu'aucune
+        // date de visio n'a ete fixee, pour ne jamais tracer une seance a une date inventee.
+        var visio = await dbContext.EtapesVisio
+            .FirstOrDefaultAsync(v => v.CohorteId == cohorteId && v.NumeroEtape == cohorte.EtapeCourante);
+        if (visio?.DateVisio is null)
+        {
+            return (false, "Planifiez d'abord une date de visio pour cette étape avant d'envoyer les émargements.");
         }
 
         var attributions = await dbContext.CarteAttributions
@@ -54,6 +67,7 @@ public sealed class EmargementService(ApplicationDbContext dbContext, IEmailServ
             }
 
             emargement.EnvoyeLe = maintenant;
+            emargement.DateSeance = visio.DateVisio;
         }
         await dbContext.SaveChangesAsync();
 
@@ -125,6 +139,7 @@ public sealed class EmargementService(ApplicationDbContext dbContext, IEmailServ
                         CarteCompetenceId = a.CarteCompetenceId,
                         CarteTitre = a.CarteCompetence.TitreTheorie,
                         Signe = emargement?.SigneLe is not null,
+                        ASignature = !string.IsNullOrWhiteSpace(emargement?.SignatureCheminStockage),
                     };
                 }).ToList(),
             })
@@ -172,6 +187,7 @@ public sealed class EmargementService(ApplicationDbContext dbContext, IEmailServ
         {
             NumeroEtape = cohorte.EtapeCourante,
             ChallengeTitre = cohorte.Challenge.Titre,
+            DateSeance = emargements.Select(e => e.DateSeance).FirstOrDefault(v => v is not null),
             HeuresPresence = emargements.Select(e => e.HeuresPresence).FirstOrDefault(v => v is not null),
             HeuresTravailPersonnel = emargements.Select(e => e.HeuresTravailPersonnel).FirstOrDefault(v => v is not null),
             Cartes = attributions
@@ -185,12 +201,13 @@ public sealed class EmargementService(ApplicationDbContext dbContext, IEmailServ
                         CarteCompetenceId = a.CarteCompetenceId,
                         CarteTitre = a.CarteCompetence.TitreTheorie,
                         Signe = emargement.SigneLe is not null,
+                        ASignature = !string.IsNullOrWhiteSpace(emargement.SignatureCheminStockage),
                     };
                 }).ToList(),
         };
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> SignerAsync(int cohorteId, string utilisateurId, List<int> emargementIdsConfirmes, decimal? heuresPresence, decimal? heuresTravailPersonnel)
+    public async Task<(bool Success, string? ErrorMessage)> SignerAsync(int cohorteId, string utilisateurId, List<int> emargementIdsConfirmes, decimal? heuresPresence, decimal? heuresTravailPersonnel, byte[]? signaturePng)
     {
         var cohorte = await dbContext.Cohortes.FirstOrDefaultAsync(c => c.Id == cohorteId);
         if (cohorte is null || cohorte.Statut != StatutCohorte.Active)
@@ -221,12 +238,29 @@ public sealed class EmargementService(ApplicationDbContext dbContext, IEmailServ
             return (false, "Aucun émargement à signer pour cette étape.");
         }
 
+        var aSignerMaintenant = emargements.Where(e => e.SigneLe is null && emargementIdsConfirmes.Contains(e.Id)).ToList();
+
+        // La signature dessinee certifie la participation - jamais une simple case cochee
+        // sans trace graphique (cf. Emargement.SignatureCheminStockage).
+        if (aSignerMaintenant.Count > 0 && (signaturePng is null || signaturePng.Length == 0))
+        {
+            return (false, "Votre signature est obligatoire pour valider cet émargement.");
+        }
+
+        string? cheminSignature = null;
+        if (aSignerMaintenant.Count > 0)
+        {
+            using var contenu = new MemoryStream(signaturePng!);
+            cheminSignature = await stockageService.EnregistrerAsync(contenu, $"signature-cohorte{cohorteId}-etape{etape.NumeroEtape}-{utilisateurId}.png");
+        }
+
         var maintenant = DateTime.UtcNow;
         foreach (var emargement in emargements)
         {
             if (emargement.SigneLe is null && emargementIdsConfirmes.Contains(emargement.Id))
             {
                 emargement.SigneLe = maintenant;
+                emargement.SignatureCheminStockage = cheminSignature;
             }
 
             emargement.HeuresPresence = heuresPresence;
@@ -236,6 +270,26 @@ public sealed class EmargementService(ApplicationDbContext dbContext, IEmailServ
         await dbContext.SaveChangesAsync();
 
         return (true, null);
+    }
+
+    public async Task<(Stream Contenu, string NomFichier)?> TelechargerSignatureAsync(int emargementId, string utilisateurId, bool estGestionnaire)
+    {
+        var emargement = await dbContext.Emargements
+            .Include(e => e.CarteAttribution)
+            .FirstOrDefaultAsync(e => e.Id == emargementId);
+
+        if (emargement is null || string.IsNullOrWhiteSpace(emargement.SignatureCheminStockage))
+        {
+            return null;
+        }
+
+        if (!estGestionnaire && emargement.CarteAttribution.UtilisateurId != utilisateurId)
+        {
+            return null;
+        }
+
+        var contenu = await stockageService.TelechargerAsync(emargement.SignatureCheminStockage);
+        return contenu is null ? null : (contenu, $"signature-{emargementId}.png");
     }
 
     private static string NomComplet(ApplicationUser utilisateur)

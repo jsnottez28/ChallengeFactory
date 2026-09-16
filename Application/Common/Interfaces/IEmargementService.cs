@@ -6,6 +6,7 @@ public sealed class EmargementCarteInfo
     public int CarteCompetenceId { get; set; }
     public string CarteTitre { get; set; } = string.Empty;
     public bool Signe { get; set; }
+    public bool ASignature { get; set; }
 }
 
 public sealed class EmargementMembreInfo
@@ -20,6 +21,7 @@ public sealed class EmargementPourSignatureInfo
 {
     public int NumeroEtape { get; set; }
     public string ChallengeTitre { get; set; } = string.Empty;
+    public DateTime? DateSeance { get; set; }
     public List<EmargementCarteInfo> Cartes { get; set; } = [];
 
     // Prefill si un membre a deja partiellement signe (une seule seance -> memes heures sur
@@ -48,5 +50,13 @@ public interface IEmargementService
 
     // emargementIdsConfirmes : uniquement les lignes que le membre coche explicitement -
     // ne signe jamais une carte non cochee, et ne designe jamais une carte deja signee.
-    Task<(bool Success, string? ErrorMessage)> SignerAsync(int cohorteId, string utilisateurId, List<int> emargementIdsConfirmes, decimal? heuresPresence, decimal? heuresTravailPersonnel);
+    // signaturePng : trace de la signature dessinee (PNG), obligatoire des qu'au moins une
+    // carte est confirmee dans cet appel - la signature electronique est ce qui certifie la
+    // participation, pas la simple case cochee.
+    Task<(bool Success, string? ErrorMessage)> SignerAsync(int cohorteId, string utilisateurId, List<int> emargementIdsConfirmes, decimal? heuresPresence, decimal? heuresTravailPersonnel, byte[]? signaturePng);
+
+    // Cote telechargement (auteur de la signature, ou Gestionnaire titulaire de
+    // COHORTE.CONSULTER) : renvoie null si l'emargement, sa signature, ou le droit d'acces
+    // sont introuvables/refuses.
+    Task<(Stream Contenu, string NomFichier)?> TelechargerSignatureAsync(int emargementId, string utilisateurId, bool estGestionnaire);
 }

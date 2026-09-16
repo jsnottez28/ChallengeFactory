@@ -22,7 +22,13 @@
         }
 
         <div class="mb-4">
-            <p class="text-muted mb-1">Émargement de la séance</p>
+            <p class="text-muted mb-1">
+                Émargement de la séance
+                @if (Model.Info?.DateSeance is not null)
+                {
+                    <text>du @Model.Info.DateSeance.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</text>
+                }
+            </p>
             <h1 class="h3 mb-0">@(Model.Info?.ChallengeTitre ?? "Émargement")</h1>
         </div>
 
@@ -74,6 +80,14 @@
                             </div>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Votre signature</label>
+                            <canvas id="signature-pad" width="560" height="180" class="border rounded d-block" style="width:100%;max-width:560px;height:180px;touch-action:none;background:#fff;"></canvas>
+                            <button type="button" id="signature-effacer" class="btn btn-sm btn-outline-secondary mt-2">Effacer</button>
+                            <input type="hidden" asp-for="SignatureDataUrl" id="signature-data" />
+                            <span asp-validation-for="SignatureDataUrl" class="text-danger small d-block mt-1"></span>
+                        </div>
+
                         <button type="submit" class="btn btn-primary">Signer mon émargement</button>
                     </form>
                 }
@@ -81,3 +95,80 @@
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script>
+        (function () {
+            var canvas = document.getElementById('signature-pad');
+            if (!canvas) {
+                return;
+            }
+
+            var ctx = canvas.getContext('2d');
+            var input = document.getElementById('signature-data');
+            var form = canvas.closest('form');
+            var dessin = false;
+            var aDessine = false;
+
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#0f0f0f';
+
+            function position(e) {
+                var rect = canvas.getBoundingClientRect();
+                var scaleX = canvas.width / rect.width;
+                var scaleY = canvas.height / rect.height;
+                var point = e.touches ? e.touches[0] : e;
+                return { x: (point.clientX - rect.left) * scaleX, y: (point.clientY - rect.top) * scaleY };
+            }
+
+            function debuter(e) {
+                dessin = true;
+                aDessine = true;
+                var p = position(e);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                e.preventDefault();
+            }
+
+            function tracer(e) {
+                if (!dessin) {
+                    return;
+                }
+                var p = position(e);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+                e.preventDefault();
+            }
+
+            function arreter() {
+                dessin = false;
+            }
+
+            canvas.addEventListener('mousedown', debuter);
+            canvas.addEventListener('mousemove', tracer);
+            window.addEventListener('mouseup', arreter);
+            canvas.addEventListener('touchstart', debuter, { passive: false });
+            canvas.addEventListener('touchmove', tracer, { passive: false });
+            canvas.addEventListener('touchend', arreter);
+
+            var effacerBtn = document.getElementById('signature-effacer');
+            if (effacerBtn) {
+                effacerBtn.addEventListener('click', function () {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    aDessine = false;
+                    input.value = '';
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', function () {
+                    if (aDessine) {
+                        input.value = canvas.toDataURL('image/png');
+                    }
+                });
+            }
+        })();
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

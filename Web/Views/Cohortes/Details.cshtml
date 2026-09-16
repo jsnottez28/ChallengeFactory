@@ -256,12 +256,25 @@
                 {
                     <div class="card border-0 shadow-sm mt-4">
                         <div class="card-header bg-white border-bottom p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                            <h2 class="h5 mb-0">Émargements de l'étape @Model.EtapeCourante</h2>
+                            <h2 class="h5 mb-0">
+                                Émargements de l'étape @Model.EtapeCourante
+                                @if (visio?.DateVisio is not null)
+                                {
+                                    <span class="text-muted small fw-normal">— séance du @visio.DateVisio.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                }
+                            </h2>
                             <droit-visible code="COHORTE.MODIFIER">
-                                <form method="post" asp-controller="Cohortes" asp-action="EnvoyerEmargements" asp-route-id="@Model.Id">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-primary btn-sm">Envoyer les émargements</button>
-                                </form>
+                                @if (visio?.DateVisio is not null)
+                                {
+                                    <form method="post" asp-controller="Cohortes" asp-action="EnvoyerEmargements" asp-route-id="@Model.Id">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">Envoyer les émargements</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Planifiez d'abord une date de visio ci-dessus.</span>
+                                }
                             </droit-visible>
                         </div>
                         <div class="card-body p-4">
@@ -274,6 +287,7 @@
                                 <ul class="list-unstyled mb-0">
                                     @foreach (var membre in emargements)
                                     {
+                                        var carteAvecSignature = membre.Cartes.FirstOrDefault(c => c.ASignature);
                                         <li class="mb-2">
                                             @membre.NomComplet
                                             @if (membre.TousSignes)
@@ -283,6 +297,10 @@
                                             else
                                             {
                                                 <span class="badge text-bg-warning ms-1">@(membre.Cartes.Count(c => c.Signe))/@(membre.Cartes.Count) carte(s) signée(s)</span>
+                                            }
+                                            @if (carteAvecSignature is not null)
+                                            {
+                                                <a asp-page="/Dashboard/EmargementSignature" asp-route-emargementId="@carteAvecSignature.EmargementId" target="_blank" class="small ms-2">Voir la signature</a>
                                             }
                                         </li>
                                     }
