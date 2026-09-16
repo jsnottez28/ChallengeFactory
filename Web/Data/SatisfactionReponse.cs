@@ -20,6 +20,13 @@ public class SatisfactionReponse
     // ("Recommanderiez-vous ce Challenge a un collegue ?").
     public int Score { get; set; }
 
+    // 3 dimensions complementaires (0 a 10 chacune), ajoutees pour etoffer le recueil
+    // d'appreciation au-dela du seul NPS - une note globale de recommandation ne dit pas
+    // QUOI ameliorer (contenu ? accompagnement ? promesse tenue ?).
+    public int NoteContenus { get; set; }
+    public int NoteAccompagnement { get; set; }
+    public int NoteAdequationAttentes { get; set; }
+
     public string? Commentaire { get; set; }
 
     public DateTime RepondueLe { get; set; } = DateTime.UtcNow;

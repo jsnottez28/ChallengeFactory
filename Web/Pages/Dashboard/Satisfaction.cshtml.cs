@@ -20,6 +20,15 @@ public class SatisfactionModel(ISatisfactionService satisfactionService, ICohort
     public int Score { get; set; } = -1;
 
     [BindProperty]
+    public int NoteContenus { get; set; } = -1;
+
+    [BindProperty]
+    public int NoteAccompagnement { get; set; } = -1;
+
+    [BindProperty]
+    public int NoteAdequationAttentes { get; set; } = -1;
+
+    [BindProperty]
     public string? Commentaire { get; set; }
 
     public string? ChallengeTitre { get; private set; }
@@ -51,14 +60,34 @@ public class SatisfactionModel(ISatisfactionService satisfactionService, ICohort
             return Forbid();
         }
 
-        if (Score < 0 || Score > 10)
+        if (Score is < 0 or > 10)
         {
             ModelState.AddModelError(nameof(Score), "Merci de choisir une note entre 0 et 10.");
+        }
+
+        if (NoteContenus is < 0 or > 10)
+        {
+            ModelState.AddModelError(nameof(NoteContenus), "Merci de choisir une note entre 0 et 10.");
+        }
+
+        if (NoteAccompagnement is < 0 or > 10)
+        {
+            ModelState.AddModelError(nameof(NoteAccompagnement), "Merci de choisir une note entre 0 et 10.");
+        }
+
+        if (NoteAdequationAttentes is < 0 or > 10)
+        {
+            ModelState.AddModelError(nameof(NoteAdequationAttentes), "Merci de choisir une note entre 0 et 10.");
+        }
+
+        if (!ModelState.IsValid)
+        {
             await ChargerAsync(userId);
             return Page();
         }
 
-        var (success, errorMessage) = await satisfactionService.EnregistrerReponseAsync(CohorteId, userId, Score, Commentaire);
+        var (success, errorMessage) = await satisfactionService.EnregistrerReponseAsync(
+            CohorteId, userId, Score, NoteContenus, NoteAccompagnement, NoteAdequationAttentes, Commentaire);
         if (!success)
         {
             ModelState.AddModelError(string.Empty, errorMessage ?? "Impossible d'enregistrer votre réponse.");

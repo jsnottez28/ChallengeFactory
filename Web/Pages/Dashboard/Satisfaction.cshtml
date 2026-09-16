@@ -57,6 +57,45 @@
                         </div>
 
                         <div class="mb-4">
+                            <label class="form-label fw-semibold">Qualité des contenus (cartes de compétences) ? (0 = très mauvaise, 10 = excellente)</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @for (var note = 0; note <= 10; note++)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="btn-check" type="radio" name="NoteContenus" id="notecontenus-@note" value="@note" autocomplete="off" checked="@(Model.NoteContenus == note)">
+                                        <label class="btn btn-outline-secondary btn-sm" for="notecontenus-@note" style="width:42px;">@note</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Qualité de l'accompagnement (Coach/Tuteur/pairs) ? (0 = très mauvaise, 10 = excellente)</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @for (var note = 0; note <= 10; note++)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="btn-check" type="radio" name="NoteAccompagnement" id="noteaccompagnement-@note" value="@note" autocomplete="off" checked="@(Model.NoteAccompagnement == note)">
+                                        <label class="btn btn-outline-secondary btn-sm" for="noteaccompagnement-@note" style="width:42px;">@note</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Ce Challenge a-t-il correspondu à vos attentes initiales ? (0 = pas du tout, 10 = tout à fait)</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @for (var note = 0; note <= 10; note++)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="btn-check" type="radio" name="NoteAdequationAttentes" id="noteadequation-@note" value="@note" autocomplete="off" checked="@(Model.NoteAdequationAttentes == note)">
+                                        <label class="btn btn-outline-secondary btn-sm" for="noteadequation-@note" style="width:42px;">@note</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
                             <label asp-for="Commentaire" class="form-label">Un commentaire ? (facultatif)</label>
                             <textarea asp-for="Commentaire" class="form-control" rows="4"></textarea>
                         </div>
