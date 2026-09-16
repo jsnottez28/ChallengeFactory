@@ -103,6 +103,34 @@ namespace Web.Controllers
             return View();
         }
 
+        // Page publique + canal de contact dedie, exigence Qualiopi indicateur 26
+        // (referent handicap identifiable). Meme circuit email que le formulaire de
+        // contact general (aucune boite dediee distincte pour l'instant) - le sujet
+        // prefixe suffit a distinguer une demande accessibilite en reception.
+        [HttpGet]
+        [Route("accessibilite")]
+        public IActionResult Accessibilite()
+        {
+            return View(new ContactFormModel());
+        }
+
+        [HttpPost]
+        [Route("accessibilite")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Accessibilite(ContactFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var corpsEmail = EmailTemplates.MessageContact(model.Nom, model.Email, model.Message);
+            await _emailService.EnvoyerAsync(EmailDestinataireContact, $"[Référent handicap] Nouveau message de {model.Nom}", corpsEmail);
+
+            TempData["ContactEnvoye"] = true;
+            return RedirectToAction(nameof(Accessibilite));
+        }
+
         [HttpGet]
         [Route("contact")]
         public IActionResult Contact()

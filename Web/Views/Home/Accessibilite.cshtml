@@ -1,0 +1,117 @@
+@model Web.Controllers.ContactFormModel
+@{
+    ViewData["Title"] = "Accessibilité & référent handicap";
+    ViewData["MetaDescription"] = "Challenges Factory adapte ses parcours aux besoins des personnes en situation de handicap. Contactez notre référente handicap, Prisca Tarrago, pour étudier vos aménagements.";
+    var contactEnvoye = TempData["ContactEnvoye"] as bool? ?? false;
+}
+
+<section class="cf-hero-home" style="padding:90px 0 50px;">
+    <div class="container">
+        <span class="cf-badge">Engagement accessibilité</span>
+        <h1 class="cf-h1 mb-3" style="font-size:clamp(34px,4.5vw,52px);">Accessibilité & <span class="cf-accent">référent handicap</span></h1>
+        <p class="cf-lead" style="max-width:640px;">
+            Une situation de handicap ne doit jamais fermer la porte à un parcours Challenges Factory.
+            Nous étudions avec chaque bénéficiaire concerné les aménagements nécessaires pour suivre
+            son Challenge dans de bonnes conditions.
+        </p>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-7">
+                <span class="cf-eyebrow">Notre engagement</span>
+                <h2 class="cf-h2 mb-4">Un accompagnement individualisé, pas une case à cocher</h2>
+                <p class="mb-3">
+                    Que le besoin concerne le rythme du parcours, le format des ressources (supports
+                    écrits, vidéo, audio), les modalités de dépôt d'une preuve, ou tout autre aménagement
+                    pédagogique, notre référente handicap étudie chaque situation au cas par cas avec le
+                    bénéficiaire et, le cas échéant, son entreprise ou son financeur.
+                </p>
+                <p class="mb-0">
+                    Ce contact est ouvert avant, pendant et après le lancement d'un Challenge : le plus tôt
+                    l'échange a lieu, le plus efficacement nous pouvons adapter le parcours.
+                </p>
+
+                <div class="row g-3 mt-4">
+                    <div class="col-md-4">
+                        <div class="cf-card h-100">
+                            <div class="cf-card-icon">🔍</div>
+                            <h3 class="cf-h3" style="font-size:18px;">Écoute</h3>
+                            <p class="mb-0 small">Un échange confidentiel pour comprendre le besoin réel, sans jugement.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="cf-card h-100">
+                            <div class="cf-card-icon">🛠️</div>
+                            <h3 class="cf-h3" style="font-size:18px;">Adaptation</h3>
+                            <p class="mb-0 small">Rythme, supports, modalités de preuve : ajustés au cas par cas.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="cf-card h-100">
+                            <div class="cf-card-icon">🤝</div>
+                            <h3 class="cf-h3" style="font-size:18px;">Suivi</h3>
+                            <p class="mb-0 small">Le point d'aménagement peut être revu à tout moment du parcours.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="cf-card h-100">
+                    <h3 class="cf-h3 mb-2">Notre référente handicap</h3>
+                    <p class="mb-1"><strong>Prisca Tarrago</strong></p>
+                    <p class="text-muted small mb-3">Référente handicap — Challenges Factory</p>
+                    <p class="mb-2"><strong>Email :</strong> <a href="mailto:contact@challenges-factory.fr?subject=Référent handicap">contact@challenges-factory.fr</a></p>
+                    <p class="mb-2"><strong>Téléphone :</strong> <a href="tel:+33699876114">+33 (0)6 99 87 61 14</a></p>
+                    <p class="mb-0"><strong>Disponibilité :</strong> Lun–Ven, 9h–18h</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="cf-card">
+                    <h3 class="cf-h3 mb-3">Nous écrire directement</h3>
+
+                    @if (contactEnvoye)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            Votre message a bien été transmis à notre référente handicap. Nous vous répondons sous 24h.
+                        </div>
+                    }
+
+                    <form asp-controller="Home" asp-action="Accessibilite" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        <div class="mb-3">
+                            <label asp-for="Nom" class="form-label"></label>
+                            <input asp-for="Nom" class="form-control" />
+                            <span asp-validation-for="Nom" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Message" class="form-label">Votre besoin d'aménagement</label>
+                            <textarea asp-for="Message" class="form-control" rows="5" placeholder="Décrivez votre situation et le type d'aménagement dont vous auriez besoin..."></textarea>
+                            <span asp-validation-for="Message" class="text-danger small"></span>
+                        </div>
+                        <button type="submit" class="cf-btn cf-btn-primary">Envoyer à la référente handicap</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
