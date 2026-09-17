@@ -11,7 +11,8 @@ namespace Web.Controllers;
 public class UtilisateursController(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
-    ICarteCompetenceService carteCompetenceService) : Controller
+    ICarteCompetenceService carteCompetenceService,
+    IDiscService discService) : Controller
 {
     [HttpGet("{userId}/Roles")]
     [Authorize(Policy = "Droit:UTILISATEUR.CONSULTER")]
@@ -137,6 +138,35 @@ public class UtilisateursController(
         var (success, errorMessage) = await carteCompetenceService.DesattribuerAsync(attributionId);
         TempData["StatusMessage"] = success ? "Attribution retirée." : errorMessage;
         return RedirectToAction(nameof(Cartes), new { userId });
+    }
+
+    [HttpGet("{userId}/Disc")]
+    [Authorize(Policy = "Droit:TEST.CONSULTER")]
+    public async Task<IActionResult> Disc(string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        var displayName = string.Join(" ", new[] { user.Prenom, user.Nom }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+        var model = new UserDiscViewModel
+        {
+            UserId = user.Id,
+            DisplayName = string.IsNullOrWhiteSpace(displayName) ? (user.Email ?? user.UserName ?? "Utilisateur") : displayName,
+            Resultat = await discService.GetDernierResultatAsync(userId),
+        };
+
+        return View(model);
+    }
+
+    public sealed class UserDiscViewModel
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public DiscResultatInfo? Resultat { get; set; }
     }
 
     public sealed class UserCartesViewModel

@@ -1,0 +1,73 @@
+@page
+@model Web.Pages.Dashboard.TestDiscModel
+@{
+    ViewData["Title"] = "Test DISC";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Test DISC</li>
+            </ol>
+        </nav>
+
+        @if (Model.StatusMessage is not null)
+        {
+            <div class="alert @(Model.DernierEnvoiReussi ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+                @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="mb-4">
+            <h1 class="h3 mb-0">Questionnaire DISC</h1>
+            <p class="text-muted mb-0">Pour chaque question, choisissez l'adjectif qui vous correspond le mieux. Il n'y a pas de bonne ou de mauvaise réponse.</p>
+        </div>
+
+        @if (Model.DernierResultat is not null)
+        {
+            var r = Model.DernierResultat;
+            <div class="card border-0 shadow-sm mb-4" style="max-width: 720px;">
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-2">Dernier résultat — passé le @r.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+                    <h2 class="h5 mb-2">Profil dominant : @r.ProfilDominant – @r.ProfilDominantNom</h2>
+                    <p class="mb-2">@r.ProfilDominantDescription</p>
+                    <p class="text-muted small mb-3">@string.Join(", ", r.ProfilDominantTraits)</p>
+                    <div class="row g-2 text-center">
+                        <div class="col-3"><strong>D</strong><br>@r.ScoreD/25</div>
+                        <div class="col-3"><strong>I</strong><br>@r.ScoreI/25</div>
+                        <div class="col-3"><strong>S</strong><br>@r.ScoreS/25</div>
+                        <div class="col-3"><strong>C</strong><br>@r.ScoreC/25</div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-muted">Vous pouvez repasser le test ci-dessous si besoin.</p>
+        }
+
+        <div class="card border-0 shadow-sm" style="max-width: 720px;">
+            <div class="card-body p-4">
+                <form method="post">
+                    @foreach (var question in Model.Questions)
+                    {
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Question @question.NumeroQuestion</label>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach (var option in question.Options)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="Reponses[@question.NumeroQuestion]" id="q@(question.NumeroQuestion)-@option.Lettre" value="@option.Lettre" required>
+                                        <label class="form-check-label" for="q@(question.NumeroQuestion)-@option.Lettre">@option.Texte</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <button type="submit" class="btn btn-primary">Voir mon profil</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

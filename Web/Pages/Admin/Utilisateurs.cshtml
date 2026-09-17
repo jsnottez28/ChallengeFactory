@@ -135,6 +135,9 @@
                                                         <droit-visible code="CARTE.CONSULTER">
                                                             <a asp-controller="Utilisateurs" asp-action="Cartes" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary">Cartes</a>
                                                         </droit-visible>
+                                                        <droit-visible code="TEST.CONSULTER">
+                                                            <a asp-controller="Utilisateurs" asp-action="Disc" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary">Test DISC</a>
+                                                        </droit-visible>
                                                     </div>
                                                 </td>
                                             </tr>

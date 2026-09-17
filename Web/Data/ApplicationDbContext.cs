@@ -46,6 +46,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Reclamation> Reclamations { get; set; }
     public DbSet<TestPositionnement> TestsPositionnement { get; set; }
     public DbSet<TestPositionnementReponse> TestsPositionnementReponses { get; set; }
+    public DbSet<DiscResultat> DiscResultats { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -473,6 +474,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(r => r.ChallengeEtapeId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<DiscResultat>()
+            .HasOne(r => r.Utilisateur)
+            .WithMany()
+            .HasForeignKey(r => r.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<InvitationCompte>()
             .HasIndex(i => i.Token)

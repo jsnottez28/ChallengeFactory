@@ -235,6 +235,33 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // Test psychotechnique DISC : envoye automatiquement des que le stagiaire termine le
+    // test (cf. DiscService.RepondreAsync) - jamais de lien de reponse ici, le test est deja
+    // termine, seul le resultat est communique.
+    public static (string Sujet, string CorpsHtml) ResultatDisc(Application.Common.Interfaces.DiscResultatInfo resultat)
+    {
+        const string sujet = "Votre profil DISC";
+
+        var traits = string.Join(", ", resultat.ProfilDominantTraits);
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété le test DISC. Voici votre résultat :</p>
+            <p><strong>Profil dominant : {WebUtility.HtmlEncode(resultat.ProfilDominant)} – {WebUtility.HtmlEncode(resultat.ProfilDominantNom)}</strong></p>
+            <p>{WebUtility.HtmlEncode(resultat.ProfilDominantDescription)}</p>
+            <p><em>{WebUtility.HtmlEncode(traits)}</em></p>
+            <p>Détail de vos scores (sur 25 points chacun) :</p>
+            <ul>
+                <li>D – Dominant : {resultat.ScoreD}</li>
+                <li>I – Influent : {resultat.ScoreI}</li>
+                <li>S – Stable : {resultat.ScoreS}</li>
+                <li>C – Consciencieux : {resultat.ScoreC}</li>
+            </ul>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {
         const string sujet = "Bienvenue sur Challenges Factory — Définissez votre mot de passe";
