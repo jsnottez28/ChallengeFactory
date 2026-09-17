@@ -17,11 +17,13 @@ namespace Web.Pages.Dashboard;
 public class IndexModel(
     ICohorteService cohorteService,
     IPreuveService preuveService,
+    IDiscService discService,
     UserManager<ApplicationUser> userManager) : PageModel
 {
     public List<ParcoursEnCoursInfo> ParcoursEnCours { get; private set; } = [];
     public PointsResumeInfo Points { get; private set; } = new();
     public List<BadgeSocialInfo> Badges { get; private set; } = [];
+    public DiscResultatInfo? DiscResultat { get; private set; }
 
     public int NombreSoumises { get; private set; }
     public int NombreValideesParLesPairs { get; private set; }
@@ -38,6 +40,7 @@ public class IndexModel(
         ParcoursEnCours = await cohorteService.GetMesParcoursEnCoursAsync(userId);
         Points = await preuveService.GetMesPointsAsync(userId);
         Badges = await preuveService.GetMesBadgesAsync(userId);
+        DiscResultat = await discService.GetDernierResultatAsync(userId);
 
         foreach (var parcours in ParcoursEnCours)
         {

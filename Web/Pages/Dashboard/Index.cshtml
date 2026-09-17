@@ -108,6 +108,31 @@
             </div>
         }
 
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Mes tests</h2>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <p class="mb-1 fw-semibold">Test DISC</p>
+                        @if (Model.DiscResultat is null)
+                        {
+                            <p class="text-muted small mb-0">Vous n'avez pas encore passé ce test.</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-0">
+                                Profil dominant : <strong>@Model.DiscResultat.ProfilDominant – @Model.DiscResultat.ProfilDominantNom</strong>
+                                — passé le @Model.DiscResultat.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy")
+                            </p>
+                        }
+                    </div>
+                    <a asp-page="/Dashboard/TestDisc" class="btn btn-sm btn-outline-primary">@(Model.DiscResultat is null ? "Passer le test" : "Voir mon résultat")</a>
+                </div>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom p-4">
                 <h2 class="h5 mb-0">Mes badges</h2>
