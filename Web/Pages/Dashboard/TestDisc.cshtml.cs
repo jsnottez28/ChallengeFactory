@@ -16,6 +16,9 @@ public class TestDiscModel(IDiscService discService, UserManager<ApplicationUser
     [BindProperty]
     public Dictionary<int, string> Reponses { get; set; } = [];
 
+    [BindProperty(SupportsGet = true)]
+    public bool Repasser { get; set; }
+
     public List<DiscQuestionInfo> Questions { get; private set; } = [];
 
     public DiscResultatInfo? DernierResultat { get; private set; }
@@ -23,6 +26,13 @@ public class TestDiscModel(IDiscService discService, UserManager<ApplicationUser
     public string? StatusMessage { get; private set; }
 
     public bool DernierEnvoiReussi { get; private set; }
+
+    private bool echecSoumission;
+
+    // Affiche le questionnaire plutot que le dernier resultat quand aucun resultat n'existe
+    // encore, quand l'utilisateur a explicitement demande a repasser le test, ou quand la
+    // derniere soumission a echoue (pour corriger sans perdre le contexte).
+    public bool AfficherQuestionnaire => DernierResultat is null || Repasser || echecSoumission;
 
     public async Task OnGetAsync()
     {
@@ -39,8 +49,9 @@ public class TestDiscModel(IDiscService discService, UserManager<ApplicationUser
         var (success, errorMessage, resultat) = await discService.RepondreAsync(utilisateurId, Reponses);
 
         DernierEnvoiReussi = success;
+        echecSoumission = !success;
         StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
-        DernierResultat = resultat ?? await discService.GetDernierResultatAsync(utilisateurId);
+        DernierResultat = success ? resultat : await discService.GetDernierResultatAsync(utilisateurId);
 
         return Page();
     }

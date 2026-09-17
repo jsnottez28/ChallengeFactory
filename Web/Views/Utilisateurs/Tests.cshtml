@@ -1,0 +1,58 @@
+@model Web.Controllers.UtilisateursController.UserTestsViewModel
+@{
+    ViewData["Title"] = $"Tests psychotechniques de {Model.DisplayName}";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Utilisateurs">Utilisateurs</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Tests psychotechniques de @Model.DisplayName</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Tests psychotechniques de @Model.DisplayName</h1>
+            </div>
+            <a asp-page="/Admin/Utilisateurs" class="btn btn-outline-secondary">Retour aux utilisateurs</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Test DISC</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (Model.ResultatDisc is null)
+                        {
+                            <p class="text-muted mb-0">Cet utilisateur n'a pas encore passé le test DISC.</p>
+                        }
+                        else
+                        {
+                            var r = Model.ResultatDisc;
+                            <p class="text-muted small mb-2">Passé le @r.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+                            <h3 class="h6 mb-2">Profil dominant : @r.ProfilDominant – @r.ProfilDominantNom</h3>
+                            <p class="mb-2">@r.ProfilDominantDescription</p>
+                            <p class="text-muted small mb-3">@string.Join(", ", r.ProfilDominantTraits)</p>
+                            <div class="row g-2 text-center">
+                                <div class="col-3"><strong>D</strong><br>@r.ScoreD/25</div>
+                                <div class="col-3"><strong>I</strong><br>@r.ScoreI/25</div>
+                                <div class="col-3"><strong>S</strong><br>@r.ScoreS/25</div>
+                                <div class="col-3"><strong>C</strong><br>@r.ScoreC/25</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @* D'autres tests psychotechniques s'ajouteront ici, chacun dans sa propre carte -
+               cf. UtilisateursController.Tests / UserTestsViewModel. *@
+        </div>
+    </div>
+</section>

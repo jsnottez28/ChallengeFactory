@@ -140,9 +140,12 @@ public class UtilisateursController(
         return RedirectToAction(nameof(Cartes), new { userId });
     }
 
-    [HttpGet("{userId}/Disc")]
+    // Point d'acces unique aux resultats de tous les tests psychotechniques d'un stagiaire
+    // (aujourd'hui : DISC uniquement). D'autres tests s'ajouteront ici au meme endroit
+    // plutot que d'ajouter un bouton dedie par test sur la liste des utilisateurs.
+    [HttpGet("{userId}/Tests")]
     [Authorize(Policy = "Droit:TEST.CONSULTER")]
-    public async Task<IActionResult> Disc(string userId)
+    public async Task<IActionResult> Tests(string userId)
     {
         var user = await userManager.FindByIdAsync(userId);
         if (user is null)
@@ -152,21 +155,21 @@ public class UtilisateursController(
 
         var displayName = string.Join(" ", new[] { user.Prenom, user.Nom }.Where(value => !string.IsNullOrWhiteSpace(value)));
 
-        var model = new UserDiscViewModel
+        var model = new UserTestsViewModel
         {
             UserId = user.Id,
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? (user.Email ?? user.UserName ?? "Utilisateur") : displayName,
-            Resultat = await discService.GetDernierResultatAsync(userId),
+            ResultatDisc = await discService.GetDernierResultatAsync(userId),
         };
 
         return View(model);
     }
 
-    public sealed class UserDiscViewModel
+    public sealed class UserTestsViewModel
     {
         public string UserId { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
-        public DiscResultatInfo? Resultat { get; set; }
+        public DiscResultatInfo? ResultatDisc { get; set; }
     }
 
     public sealed class UserCartesViewModel

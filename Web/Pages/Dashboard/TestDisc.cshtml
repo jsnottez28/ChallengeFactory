@@ -1,73 +1,555 @@
 @page
 @model Web.Pages.Dashboard.TestDiscModel
 @{
-    ViewData["Title"] = "Test DISC";
+    Layout = null;
+    const int questionsParPage = 5;
+    var pages = Model.Questions
+        .Select((question, index) => new { question, page = index / questionsParPage })
+        .GroupBy(x => x.page)
+        .Select(g => g.Select(x => x.question).ToList())
+        .ToList();
+}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Questionnaire DISC – Challenges Factory</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #f5f4f0;
+  color: #1a1a18;
+  min-height: 100vh;
+  padding: 2rem 1rem;
 }
 
-<section class="backend-page">
-    <div class="container-fluid">
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Test DISC</li>
-            </ol>
-        </nav>
+.page-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+}
 
-        @if (Model.StatusMessage is not null)
-        {
-            <div class="alert @(Model.DernierEnvoiReussi ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
-                @Model.StatusMessage
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-            </div>
-        }
+.disc-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.disc-badge {
+  display: inline-flex;
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+.badge {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px;
+  color: #fff;
+}
+.badge.d { background: #D85A30; }
+.badge.i { background: #BA7517; }
+.badge.s { background: #1D9E75; }
+.badge.c { background: #185FA5; }
 
-        <div class="mb-4">
-            <h1 class="h3 mb-0">Questionnaire DISC</h1>
-            <p class="text-muted mb-0">Pour chaque question, choisissez l'adjectif qui vous correspond le mieux. Il n'y a pas de bonne ou de mauvaise réponse.</p>
-        </div>
+.disc-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a18;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+.disc-subtitle {
+  font-size: 15px;
+  color: #5f5e5a;
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
 
-        @if (Model.DernierResultat is not null)
-        {
-            var r = Model.DernierResultat;
-            <div class="card border-0 shadow-sm mb-4" style="max-width: 720px;">
-                <div class="card-body p-4">
-                    <p class="text-muted small mb-2">Dernier résultat — passé le @r.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
-                    <h2 class="h5 mb-2">Profil dominant : @r.ProfilDominant – @r.ProfilDominantNom</h2>
-                    <p class="mb-2">@r.ProfilDominantDescription</p>
-                    <p class="text-muted small mb-3">@string.Join(", ", r.ProfilDominantTraits)</p>
-                    <div class="row g-2 text-center">
-                        <div class="col-3"><strong>D</strong><br>@r.ScoreD/25</div>
-                        <div class="col-3"><strong>I</strong><br>@r.ScoreI/25</div>
-                        <div class="col-3"><strong>S</strong><br>@r.ScoreS/25</div>
-                        <div class="col-3"><strong>C</strong><br>@r.ScoreC/25</div>
-                    </div>
-                </div>
-            </div>
-            <p class="text-muted">Vous pouvez repasser le test ci-dessous si besoin.</p>
-        }
+.status-msg {
+  font-size: 14px;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.status-msg.ok { background: #E1F5EE; color: #0F6E56; border: 1px solid #1D9E75; }
+.status-msg.ko { background: #FAECE7; color: #993C1D; border: 1px solid #D85A30; }
 
-        <div class="card border-0 shadow-sm" style="max-width: 720px;">
-            <div class="card-body p-4">
-                <form method="post">
-                    @foreach (var question in Model.Questions)
-                    {
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Question @question.NumeroQuestion</label>
-                            <div class="d-flex flex-column gap-2">
-                                @foreach (var option in question.Options)
-                                {
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="Reponses[@question.NumeroQuestion]" id="q@(question.NumeroQuestion)-@option.Lettre" value="@option.Lettre" required>
-                                        <label class="form-check-label" for="q@(question.NumeroQuestion)-@option.Lettre">@option.Texte</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
+.progress-wrap {
+  margin-bottom: 1.5rem;
+}
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #888780;
+  margin-bottom: 6px;
+}
+.progress-track {
+  background: #D3D1C7;
+  border-radius: 99px;
+  height: 6px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #1D9E75, #0F6E56);
+  transition: width 0.4s ease;
+  width: 0%;
+}
 
-                    <button type="submit" class="btn btn-primary">Voir mon profil</button>
-                </form>
-            </div>
-        </div>
+.question-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e0dfd8;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.q-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #888780;
+  margin-bottom: 10px;
+}
+.q-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.q-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #e0dfd8;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+  position: relative;
+}
+.q-option:hover {
+  border-color: #b4b2a9;
+  background: #f9f8f5;
+}
+.q-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+}
+.opt-letter {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid #d3d1c7;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #888780;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  background: #fff;
+  text-transform: uppercase;
+}
+.q-option input[type="radio"]:checked ~ .opt-letter {
+  background: #1D9E75;
+  color: #fff;
+  border-color: #1D9E75;
+}
+.q-option:has(input[type="radio"]:checked) {
+  border-color: #1D9E75;
+  background: #E1F5EE;
+}
+.opt-text {
+  font-size: 14px;
+  color: #2c2c2a;
+  line-height: 1.4;
+}
+
+.quiz-page { display: none; }
+.quiz-page.active { display: block; }
+
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  gap: 12px;
+}
+.btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 1px solid #d3d1c7;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #fff;
+  color: #2c2c2a;
+  transition: all 0.15s;
+}
+.btn:hover { background: #f1efe8; border-color: #b4b2a9; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-primary {
+  background: #1D9E75;
+  color: #fff;
+  border-color: #1D9E75;
+}
+.btn-primary:hover { background: #0F6E56; border-color: #0F6E56; }
+
+.q-counter { font-size: 13px; color: #888780; }
+
+.warn-msg {
+  display: none;
+  font-size: 13px;
+  color: #D85A30;
+  background: #FAECE7;
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+.warn-msg.show { display: block; }
+
+.result-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e0dfd8;
+}
+.result-header h2 { font-size: 24px; font-weight: 700; color: #1a1a18; margin-bottom: 6px; }
+.result-header p { font-size: 14px; color: #5f5e5a; }
+
+.scores-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+.score-card {
+  border-radius: 14px;
+  padding: 1rem 0.75rem;
+  text-align: center;
+  border: 1px solid;
+}
+.score-card.d-card { background: #FAECE7; border-color: #D85A30; }
+.score-card.i-card { background: #FAEEDA; border-color: #BA7517; }
+.score-card.s-card { background: #E1F5EE; border-color: #1D9E75; }
+.score-card.c-card { background: #E6F1FB; border-color: #185FA5; }
+
+.sc-letter { font-size: 24px; font-weight: 700; }
+.score-card.d-card .sc-letter { color: #993C1D; }
+.score-card.i-card .sc-letter { color: #854F0B; }
+.score-card.s-card .sc-letter { color: #0F6E56; }
+.score-card.c-card .sc-letter { color: #0C447C; }
+
+.sc-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin: 3px 0 8px; }
+.score-card.d-card .sc-name { color: #993C1D; }
+.score-card.i-card .sc-name { color: #854F0B; }
+.score-card.s-card .sc-name { color: #0F6E56; }
+.score-card.c-card .sc-name { color: #0C447C; }
+
+.sc-val { font-size: 36px; font-weight: 700; line-height: 1; }
+.score-card.d-card .sc-val { color: #D85A30; }
+.score-card.i-card .sc-val { color: #BA7517; }
+.score-card.s-card .sc-val { color: #1D9E75; }
+.score-card.c-card .sc-val { color: #185FA5; }
+
+.sc-total { font-size: 11px; color: #888780; margin-top: 2px; }
+
+.bar-section { margin-bottom: 1.5rem; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-label { font-size: 13px; font-weight: 600; width: 130px; color: #2c2c2a; }
+.bar-track { flex: 1; background: #e0dfd8; border-radius: 99px; height: 10px; overflow: hidden; }
+.bar-fill { height: 10px; border-radius: 99px; transition: width 0.8s ease; }
+.bar-fill.d { background: #D85A30; }
+.bar-fill.i { background: #BA7517; }
+.bar-fill.s { background: #1D9E75; }
+.bar-fill.c { background: #185FA5; }
+.bar-pct { font-size: 12px; color: #888780; width: 34px; text-align: right; }
+
+.profile-box {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e0dfd8;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.profile-box h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; color: #1a1a18; }
+.profile-box p { font-size: 14px; color: #5f5e5a; line-height: 1.7; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 99px;
+}
+.tag.d { background: #FAECE7; color: #993C1D; }
+.tag.i { background: #FAEEDA; color: #854F0B; }
+.tag.s { background: #E1F5EE; color: #0F6E56; }
+.tag.c { background: #E6F1FB; color: #0C447C; }
+
+.dominant-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+  border: 1px solid;
+}
+.dominant-banner.d { background: #FAECE7; border-color: #D85A30; }
+.dominant-banner.i { background: #FAEEDA; border-color: #BA7517; }
+.dominant-banner.s { background: #E1F5EE; border-color: #1D9E75; }
+.dominant-banner.c { background: #E6F1FB; border-color: #185FA5; }
+
+.dom-circle {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 22px; color: #fff;
+  flex-shrink: 0;
+}
+.dominant-banner.d .dom-circle { background: #D85A30; }
+.dominant-banner.i .dom-circle { background: #BA7517; }
+.dominant-banner.s .dom-circle { background: #1D9E75; }
+.dominant-banner.c .dom-circle { background: #185FA5; }
+
+.dom-text strong { font-size: 15px; display: block; margin-bottom: 2px; }
+.dominant-banner.d .dom-text strong { color: #993C1D; }
+.dominant-banner.i .dom-text strong { color: #854F0B; }
+.dominant-banner.s .dom-text strong { color: #0F6E56; }
+.dominant-banner.c .dom-text strong { color: #0C447C; }
+.dom-text span { font-size: 13px; color: #5f5e5a; }
+
+.restart-row { display: flex; justify-content: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0dfd8; }
+.restart-row a.btn { text-decoration: none; }
+
+.page-footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 12px;
+  color: #b4b2a9;
+}
+
+@@media (max-width: 500px) {
+  .scores-grid { grid-template-columns: repeat(2, 1fr); }
+  .disc-title { font-size: 22px; }
+  .bar-label { width: 90px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div class="disc-header">
+    <div class="disc-badge">
+      <div class="badge d">D</div>
+      <div class="badge i">I</div>
+      <div class="badge s">S</div>
+      <div class="badge c">C</div>
     </div>
-</section>
+    <h1 class="disc-title">Questionnaire DISC</h1>
+    <p class="disc-subtitle">
+      @(Model.AfficherQuestionnaire ? "Pour chaque question, choisissez l'adjectif qui vous correspond le mieux." : "Voici votre profil selon le modèle DISC.")
+    </p>
+  </div>
+
+  @if (Model.StatusMessage is not null)
+  {
+    <div class="status-msg @(Model.DernierEnvoiReussi ? "ok" : "ko")">@Model.StatusMessage</div>
+  }
+
+  @if (Model.AfficherQuestionnaire)
+  {
+    <form method="post" id="discForm">
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span id="progressLabel">0 / @Model.Questions.Count réponses</span>
+          <span id="pageLabel">Page 1 / @pages.Count</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div id="questionnaire">
+        @for (var p = 0; p < pages.Count; p++)
+        {
+          <div class="quiz-page @(p == 0 ? "active" : "")" data-page="@p">
+            @foreach (var question in pages[p])
+            {
+              <div class="question-card">
+                <div class="q-label">Question @question.NumeroQuestion</div>
+                <div class="q-options">
+                  @foreach (var option in question.Options)
+                  {
+                    <label class="q-option">
+                      <input type="radio" name="Reponses[@question.NumeroQuestion]" value="@option.Lettre">
+                      <span class="opt-letter">@option.Lettre</span>
+                      <span class="opt-text">@option.Texte</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="warn-msg" id="warnMsg">⚠ Veuillez répondre à toutes les questions de cette page avant de continuer.</div>
+
+      <div class="nav-row">
+        <button type="button" class="btn" id="btnPrev" disabled>← Précédent</button>
+        <span class="q-counter" id="counter">Questions 1–@Math.Min(questionsParPage, Model.Questions.Count) / @Model.Questions.Count</span>
+        <button type="button" class="btn btn-primary" id="btnNext">Suivant →</button>
+      </div>
+    </form>
+  }
+  else if (Model.DernierResultat is not null)
+  {
+    var r = Model.DernierResultat;
+    var total = r.ScoreD + r.ScoreI + r.ScoreS + r.ScoreC;
+    var scores = new (char Lettre, int Valeur)[] { ('D', r.ScoreD), ('I', r.ScoreI), ('S', r.ScoreS), ('C', r.ScoreC) };
+    var noms = new Dictionary<char, string> { ['D'] = "Dominant", ['I'] = "Influent", ['S'] = "Stable", ['C'] = "Consciencieux" };
+    var classes = new Dictionary<char, string> { ['D'] = "d", ['I'] = "i", ['S'] = "s", ['C'] = "c" };
+    var dominant = r.ProfilDominant.Length > 0 ? r.ProfilDominant[0] : 'D';
+    var cssDominant = classes[dominant];
+
+    <div class="results">
+      <div class="result-header">
+        <h2>Votre profil DISC</h2>
+        <p>Résultats calculés sur 25 points par dimension — passé le @r.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+      </div>
+
+      <div class="dominant-banner @cssDominant">
+        <div class="dom-circle">@dominant</div>
+        <div class="dom-text">
+          <strong>Profil dominant : @dominant – @r.ProfilDominantNom</strong>
+          <span>Score le plus élevé : @scores.First(s => s.Lettre == dominant).Valeur / 25</span>
+        </div>
+      </div>
+
+      <div class="scores-grid">
+        @foreach (var (lettre, valeur) in scores)
+        {
+          <div class="score-card @(classes[lettre])-card">
+            <div class="sc-letter">@lettre</div>
+            <div class="sc-name">@noms[lettre]</div>
+            <div class="sc-val">@valeur</div>
+            <div class="sc-total">/ 25</div>
+          </div>
+        }
+      </div>
+
+      <div class="bar-section">
+        @foreach (var (lettre, valeur) in scores)
+        {
+          var pct = total > 0 ? (int)Math.Round(valeur * 100.0 / total) : 0;
+          <div class="bar-row">
+            <div class="bar-label">@lettre – @noms[lettre]</div>
+            <div class="bar-track"><div class="bar-fill @(classes[lettre])" style="width:@(pct)%;"></div></div>
+            <div class="bar-pct">@pct%</div>
+          </div>
+        }
+      </div>
+
+      <div class="profile-box">
+        <h3>Description du profil @dominant – @r.ProfilDominantNom</h3>
+        <p>@r.ProfilDominantDescription</p>
+        <div class="tag-row">
+          @foreach (var trait in r.ProfilDominantTraits)
+          {
+            <span class="tag @cssDominant">@trait</span>
+          }
+        </div>
+      </div>
+
+      <div class="restart-row">
+        <a class="btn" href="?Repasser=true">↺ Repasser le questionnaire</a>
+      </div>
+    </div>
+  }
+
+  <div class="page-footer">Questionnaire DISC · Dominance · Influence · Stabilité · Conformité · Challenges Factory</div>
+</div>
+
+@if (Model.AfficherQuestionnaire)
+{
+  <script>
+    (function () {
+      var form = document.getElementById('discForm');
+      var pages = Array.from(document.querySelectorAll('.quiz-page'));
+      var totalQuestions = @Model.Questions.Count;
+      var questionsParPage = @questionsParPage;
+      var totalPages = pages.length;
+      var currentPage = 0;
+
+      var btnPrev = document.getElementById('btnPrev');
+      var btnNext = document.getElementById('btnNext');
+      var warnMsg = document.getElementById('warnMsg');
+      var progressFill = document.getElementById('progressFill');
+      var progressLabel = document.getElementById('progressLabel');
+      var pageLabel = document.getElementById('pageLabel');
+      var counter = document.getElementById('counter');
+
+      function updateProgress() {
+        var answered = form.querySelectorAll('input[type="radio"]:checked').length;
+        progressFill.style.width = (answered / totalQuestions * 100) + '%';
+        progressLabel.textContent = answered + ' / ' + totalQuestions + ' réponses';
+      }
+
+      function showPage(n) {
+        pages.forEach(function (p, i) { p.classList.toggle('active', i === n); });
+        var start = n * questionsParPage + 1;
+        var end = Math.min(start + questionsParPage - 1, totalQuestions);
+        counter.textContent = 'Questions ' + start + '–' + end + ' / ' + totalQuestions;
+        pageLabel.textContent = 'Page ' + (n + 1) + ' / ' + totalPages;
+        btnPrev.disabled = n === 0;
+        btnNext.textContent = n === totalPages - 1 ? 'Voir mon profil →' : 'Suivant →';
+        warnMsg.classList.remove('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function pageComplete(n) {
+        return pages[n].querySelectorAll('.question-card').length ===
+          Array.from(pages[n].querySelectorAll('.question-card')).filter(function (card) {
+            return card.querySelector('input[type="radio"]:checked') !== null;
+          }).length;
+      }
+
+      form.addEventListener('change', function (e) {
+        if (e.target.matches('input[type="radio"]')) {
+          updateProgress();
+          warnMsg.classList.remove('show');
+        }
+      });
+
+      btnPrev.addEventListener('click', function () {
+        if (currentPage > 0) { currentPage--; showPage(currentPage); }
+      });
+
+      btnNext.addEventListener('click', function () {
+        if (!pageComplete(currentPage)) {
+          warnMsg.classList.add('show');
+          return;
+        }
+        if (currentPage === totalPages - 1) {
+          form.submit();
+          return;
+        }
+        currentPage++;
+        showPage(currentPage);
+      });
+
+      showPage(0);
+      updateProgress();
+    })();
+  </script>
+}
+
+</body>
+</html>
