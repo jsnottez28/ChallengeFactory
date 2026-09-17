@@ -108,28 +108,40 @@
             </div>
         }
 
+        @{
+            // Consultation seule : le stagiaire ne passe le test que via le lien fourni sur
+            // le defi individuel d'une etape (ou envoye manuellement) - jamais un moyen de le
+            // lancer/relancer depuis son tableau de bord, cf. demande explicite.
+        }
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom p-4">
                 <h2 class="h5 mb-0">Mes tests</h2>
             </div>
             <div class="card-body p-4">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div>
-                        <p class="mb-1 fw-semibold">Test DISC</p>
-                        @if (Model.DiscResultat is null)
+                <p class="mb-2 fw-semibold">Test DISC</p>
+                @if (Model.DiscResultat is null)
+                {
+                    <p class="text-muted small mb-0">Pas encore passé — ce test vous sera proposé au fil de votre parcours.</p>
+                }
+                else
+                {
+                    var r = Model.DiscResultat;
+                    <p class="text-muted small mb-3">Passé le @r.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy")</p>
+                    <p class="mb-2">Profil dominant : <strong>@r.ProfilDominant – @r.ProfilDominantNom</strong></p>
+                    <p class="text-muted small mb-2">@r.ProfilDominantDescription</p>
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        @foreach (var trait in r.ProfilDominantTraits)
                         {
-                            <p class="text-muted small mb-0">Vous n'avez pas encore passé ce test.</p>
-                        }
-                        else
-                        {
-                            <p class="text-muted small mb-0">
-                                Profil dominant : <strong>@Model.DiscResultat.ProfilDominant – @Model.DiscResultat.ProfilDominantNom</strong>
-                                — passé le @Model.DiscResultat.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy")
-                            </p>
+                            <span class="badge text-bg-light">@trait</span>
                         }
                     </div>
-                    <a asp-page="/Dashboard/TestDisc" class="btn btn-sm btn-outline-primary">@(Model.DiscResultat is null ? "Passer le test" : "Voir mon résultat")</a>
-                </div>
+                    <div class="row g-2 text-center" style="max-width: 320px;">
+                        <div class="col-3"><strong>D</strong><br><span class="text-muted small">@r.ScoreD/25</span></div>
+                        <div class="col-3"><strong>I</strong><br><span class="text-muted small">@r.ScoreI/25</span></div>
+                        <div class="col-3"><strong>S</strong><br><span class="text-muted small">@r.ScoreS/25</span></div>
+                        <div class="col-3"><strong>C</strong><br><span class="text-muted small">@r.ScoreC/25</span></div>
+                    </div>
+                }
             </div>
         </div>
 
