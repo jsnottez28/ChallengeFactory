@@ -12,7 +12,8 @@ public class UtilisateursController(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
     ICarteCompetenceService carteCompetenceService,
-    IDiscService discService) : Controller
+    IDiscService discService,
+    IRiasecService riasecService) : Controller
 {
     [HttpGet("{userId}/Roles")]
     [Authorize(Policy = "Droit:UTILISATEUR.CONSULTER")]
@@ -141,8 +142,8 @@ public class UtilisateursController(
     }
 
     // Point d'acces unique aux resultats de tous les tests psychotechniques d'un stagiaire
-    // (aujourd'hui : DISC uniquement). D'autres tests s'ajouteront ici au meme endroit
-    // plutot que d'ajouter un bouton dedie par test sur la liste des utilisateurs.
+    // (aujourd'hui : DISC, RIASEC). D'autres tests s'ajouteront ici au meme endroit plutot
+    // que d'ajouter un bouton dedie par test sur la liste des utilisateurs.
     [HttpGet("{userId}/Tests")]
     [Authorize(Policy = "Droit:TEST.CONSULTER")]
     public async Task<IActionResult> Tests(string userId)
@@ -160,6 +161,7 @@ public class UtilisateursController(
             UserId = user.Id,
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? (user.Email ?? user.UserName ?? "Utilisateur") : displayName,
             ResultatDisc = await discService.GetDernierResultatAsync(userId),
+            ResultatRiasec = await riasecService.GetDernierResultatAsync(userId),
         };
 
         return View(model);
@@ -169,6 +171,7 @@ public class UtilisateursController(
     {
         public string UserId { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
+        public RiasecResultatInfo? ResultatRiasec { get; set; }
         public DiscResultatInfo? ResultatDisc { get; set; }
     }
 

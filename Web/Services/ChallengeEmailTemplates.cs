@@ -262,6 +262,38 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // Test psychotechnique RIASEC : envoye automatiquement des que le stagiaire termine le
+    // test (cf. RiasecService.RepondreAsync).
+    public static (string Sujet, string CorpsHtml) ResultatRiasec(Application.Common.Interfaces.RiasecResultatInfo resultat)
+    {
+        const string sujet = "Votre profil RIASEC";
+
+        var topTrois = resultat.Dimensions
+            .OrderByDescending(d => d.Score)
+            .Take(3)
+            .ToList();
+
+        var listeDimensions = string.Join("", resultat.Dimensions.Select(d =>
+            $"<li>{WebUtility.HtmlEncode(d.Code)} – {WebUtility.HtmlEncode(d.Nom)} : {d.Score}/10</li>"));
+
+        var listeTopTrois = string.Join("", topTrois.Select(d =>
+            $"<p><strong>{WebUtility.HtmlEncode(d.Code)} – {WebUtility.HtmlEncode(d.Nom)}</strong><br>{WebUtility.HtmlEncode(d.Description)}</p>"));
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété le test RIASEC. Voici votre résultat :</p>
+            <p><strong>Code Holland : {WebUtility.HtmlEncode(resultat.CodeHolland)}</strong> (vos 3 dimensions dominantes)</p>
+            {listeTopTrois}
+            <p>Détail de vos scores (sur 10 points chacun) :</p>
+            <ul>
+                {listeDimensions}
+            </ul>
+            <p style="color:#888780; font-size:12px;">Test basé sur l'O*NET Interest Profiler Short Form, U.S. Department of Labor — National Center for O*NET Development, sous licence Creative Commons Attribution 4.0.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {
         const string sujet = "Bienvenue sur Challenges Factory — Définissez votre mot de passe";

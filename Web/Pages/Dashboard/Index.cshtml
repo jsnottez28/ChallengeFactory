@@ -122,13 +122,25 @@
                 <p class="mb-1 fw-semibold">Test DISC</p>
                 @if (Model.DiscResultat is null)
                 {
+                    <p class="text-muted small mb-3">Pas encore passé — ce test vous sera proposé au fil de votre parcours.</p>
+                }
+                else
+                {
+                    <p class="text-muted small mb-3">
+                        Profil dominant : <strong>@Model.DiscResultat.ProfilDominant – @Model.DiscResultat.ProfilDominantNom</strong>
+                        — passé le @Model.DiscResultat.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy")
+                    </p>
+                }
+                <p class="mb-1 fw-semibold">Test RIASEC</p>
+                @if (Model.RiasecResultat is null)
+                {
                     <p class="text-muted small mb-0">Pas encore passé — ce test vous sera proposé au fil de votre parcours.</p>
                 }
                 else
                 {
                     <p class="text-muted small mb-0">
-                        Profil dominant : <strong>@Model.DiscResultat.ProfilDominant – @Model.DiscResultat.ProfilDominantNom</strong>
-                        — passé le @Model.DiscResultat.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy")
+                        Code Holland : <strong>@Model.RiasecResultat.CodeHolland</strong>
+                        — passé le @Model.RiasecResultat.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy")
                     </p>
                 }
             </div>

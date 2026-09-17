@@ -18,12 +18,14 @@ public class IndexModel(
     ICohorteService cohorteService,
     IPreuveService preuveService,
     IDiscService discService,
+    IRiasecService riasecService,
     UserManager<ApplicationUser> userManager) : PageModel
 {
     public List<ParcoursEnCoursInfo> ParcoursEnCours { get; private set; } = [];
     public PointsResumeInfo Points { get; private set; } = new();
     public List<BadgeSocialInfo> Badges { get; private set; } = [];
     public DiscResultatInfo? DiscResultat { get; private set; }
+    public RiasecResultatInfo? RiasecResultat { get; private set; }
 
     public int NombreSoumises { get; private set; }
     public int NombreValideesParLesPairs { get; private set; }
@@ -41,6 +43,7 @@ public class IndexModel(
         Points = await preuveService.GetMesPointsAsync(userId);
         Badges = await preuveService.GetMesBadgesAsync(userId);
         DiscResultat = await discService.GetDernierResultatAsync(userId);
+        RiasecResultat = await riasecService.GetDernierResultatAsync(userId);
 
         foreach (var parcours in ParcoursEnCours)
         {

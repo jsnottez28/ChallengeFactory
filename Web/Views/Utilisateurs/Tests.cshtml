@@ -51,6 +51,32 @@
                 </div>
             </div>
 
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Test RIASEC</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (Model.ResultatRiasec is null)
+                        {
+                            <p class="text-muted mb-0">Cet utilisateur n'a pas encore passé le test RIASEC.</p>
+                        }
+                        else
+                        {
+                            var rr = Model.ResultatRiasec;
+                            <p class="text-muted small mb-2">Passé le @rr.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+                            <h3 class="h6 mb-2">Code Holland : <strong>@rr.CodeHolland</strong></h3>
+                            <div class="row g-2 text-center">
+                                @foreach (var dim in rr.Dimensions)
+                                {
+                                    <div class="col-2"><strong>@dim.Code</strong><br>@dim.Score/10</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
             @* D'autres tests psychotechniques s'ajouteront ici, chacun dans sa propre carte -
                cf. UtilisateursController.Tests / UserTestsViewModel. *@
         </div>

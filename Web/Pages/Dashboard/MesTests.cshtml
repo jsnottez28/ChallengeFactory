@@ -50,6 +50,34 @@
             </div>
         </div>
 
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Test RIASEC</h2>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.RiasecResultat is null)
+                {
+                    <p class="text-muted mb-0">Pas encore passé — ce test vous sera proposé au fil de votre parcours.</p>
+                }
+                else
+                {
+                    var rr = Model.RiasecResultat;
+                    <p class="text-muted small mb-3">Passé le @rr.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+                    <p class="mb-3">Code Holland : <strong>@rr.CodeHolland</strong></p>
+                    <div class="row g-2 text-center mb-3" style="max-width: 420px;">
+                        @foreach (var dim in rr.Dimensions)
+                        {
+                            <div class="col-2"><strong>@dim.Code</strong><br><span class="text-muted small">@dim.Score/10</span></div>
+                        }
+                    </div>
+                    @foreach (var dim in rr.Dimensions.Where(d => rr.CodeHolland.Contains(d.Code)).OrderByDescending(d => d.Score))
+                    {
+                        <p class="mb-2"><strong>@dim.Code — @dim.Nom</strong><br><span class="text-muted small">@dim.Description</span></p>
+                    }
+                }
+            </div>
+        </div>
+
         @* D'autres tests psychotechniques s'ajouteront ici, chacun dans sa propre carte -
            cf. MesTestsModel. *@
     </div>
