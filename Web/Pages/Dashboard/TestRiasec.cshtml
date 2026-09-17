@@ -2,9 +2,6 @@
 @model Web.Pages.Dashboard.TestRiasecModel
 @{
     Layout = null;
-    var parDimension = Model.Questions.GroupBy(q => q.Dimension).ToDictionary(g => g.Key, g => g.ToList());
-    var ordre = new[] { "R", "I", "A", "S", "E", "C" };
-    var noms = new Dictionary<string, string> { ["R"] = "Réaliste", ["I"] = "Investigateur", ["A"] = "Artistique", ["S"] = "Social", ["E"] = "Entreprenant", ["C"] = "Conventionnel" };
     var couleurs = new Dictionary<string, string> { ["R"] = "r", ["I"] = "i", ["A"] = "a", ["S"] = "s", ["E"] = "e", ["C"] = "c" };
 }
 <!DOCTYPE html>
@@ -52,16 +49,9 @@ body {
 .counter-wrap { position: sticky; top: 0; background: #f5f4f0; padding: 8px 0; margin-bottom: 1rem; text-align: center; font-size: 13px; color: #5f5e5a; }
 .counter-wrap strong { color: #1a1a18; }
 
-.dim-section { margin-bottom: 1.5rem; border-radius: 14px; border: 1px solid #e0dfd8; background: #fff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-.dim-header { display: flex; align-items: center; gap: 10px; padding: 0.9rem 1.25rem; color: #fff; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.4px; }
-.dim-header.r { background: #C0392B; }
-.dim-header.i { background: #2980B9; }
-.dim-header.a { background: #8E44AD; }
-.dim-header.s { background: #16A085; }
-.dim-header.e { background: #E67E22; }
-.dim-header.c { background: #B7950B; }
-.dim-body { padding: 1rem 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
-@@media (max-width: 560px) { .dim-body { grid-template-columns: 1fr; } }
+.quiz-card { margin-bottom: 1.5rem; border-radius: 14px; border: 1px solid #e0dfd8; background: #fff; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
+@@media (max-width: 560px) { .quiz-grid { grid-template-columns: 1fr; } }
 
 .q-option { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; user-select: none; }
 .q-option:hover { background: #f9f8f5; }
@@ -141,22 +131,17 @@ body {
     <form method="post" id="riasecForm">
       <div class="counter-wrap"><strong id="counterVal">0</strong> activité(s) cochée(s) sur @Model.Questions.Count</div>
 
-      @foreach (var code in ordre)
-      {
-        if (!parDimension.TryGetValue(code, out var questions)) { continue; }
-        <div class="dim-section">
-          <div class="dim-header @couleurs[code]">@code — @noms[code]</div>
-          <div class="dim-body">
-            @foreach (var question in questions)
-            {
-              <label class="q-option">
-                <input type="checkbox" name="Reponses" value="@question.NumeroQuestion">
-                <span class="q-text">@question.Texte</span>
-              </label>
-            }
-          </div>
+      <div class="quiz-card">
+        <div class="quiz-grid">
+          @foreach (var question in Model.Questions)
+          {
+            <label class="q-option">
+              <input type="checkbox" name="Reponses" value="@question.SlotId">
+              <span class="q-text">@question.Texte</span>
+            </label>
+          }
         </div>
-      }
+      </div>
 
       <div class="nav-row">
         <button type="submit" class="btn btn-primary">Voir mon profil →</button>
@@ -206,6 +191,10 @@ body {
           <p>@dim.Description</p>
         </div>
       }
+
+      <p style="text-align:center; font-size:12px; color:#888780; margin-top:1rem;">
+        Cohérence des réponses : @r.NombrePairesCoherentes/@r.NombrePairesControle (indicateur de fiabilité, sans incidence sur votre profil)
+      </p>
 
       <div class="restart-row">
         <a class="btn" href="?Repasser=true">↺ Repasser le questionnaire</a>

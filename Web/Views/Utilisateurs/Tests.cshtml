@@ -66,12 +66,13 @@
                             var rr = Model.ResultatRiasec;
                             <p class="text-muted small mb-2">Passé le @rr.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
                             <h3 class="h6 mb-2">Code Holland : <strong>@rr.CodeHolland</strong></h3>
-                            <div class="row g-2 text-center">
+                            <div class="row g-2 text-center mb-2">
                                 @foreach (var dim in rr.Dimensions)
                                 {
                                     <div class="col-2"><strong>@dim.Code</strong><br>@dim.Score/10</div>
                                 }
                             </div>
+                            <p class="text-muted small mb-0">Cohérence des réponses : @rr.NombrePairesCoherentes/@rr.NombrePairesControle</p>
                         }
                     </div>
                 </div>

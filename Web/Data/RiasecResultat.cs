@@ -25,5 +25,13 @@ public class RiasecResultat
     // departagees par l'ordre R,I,A,S,E,C en cas d'egalite.
     public string CodeHolland { get; set; } = string.Empty;
 
+    // Echelle de fiabilite : quelques items (un par dimension) sont repris a l'identique
+    // plus loin dans le questionnaire, presente sans en reveler la dimension (cf.
+    // RiasecService.Slots). NombrePairesCoherentes = nombre de ces paires ou la reponse
+    // (coche/pas coche) est restee la meme aux deux occurrences - jamais compte dans les
+    // scores par dimension.
+    public int NombrePairesCoherentes { get; set; }
+    public int NombrePairesControle { get; set; }
+
     public DateTime CompleteLe { get; set; } = DateTime.UtcNow;
 }

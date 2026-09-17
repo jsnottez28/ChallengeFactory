@@ -288,6 +288,7 @@ public static class ChallengeEmailTemplates
             <ul>
                 {listeDimensions}
             </ul>
+            <p style="color:#888780; font-size:12px;">Cohérence des réponses : {resultat.NombrePairesCoherentes}/{resultat.NombrePairesControle} (indicateur de fiabilité, sans incidence sur votre profil)</p>
             <p style="color:#888780; font-size:12px;">Test basé sur l'O*NET Interest Profiler Short Form, U.S. Department of Labor — National Center for O*NET Development, sous licence Creative Commons Attribution 4.0.</p>
             """;
 

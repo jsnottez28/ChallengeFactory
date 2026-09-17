@@ -81,9 +81,52 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         ("C", "Tamponner, trier et distribuer le courrier d'une organisation"),
     ];
 
-    // Ordre fixe utilise pour l'affichage et pour departager les egalites de score lors du
-    // calcul du code Holland (cf. RepondreAsync).
+    // Ordre fixe utilise pour departager les egalites de score lors du calcul du code
+    // Holland (cf. RepondreAsync).
     private static readonly string[] OrdreDimensions = ["R", "I", "A", "S", "E", "C"];
+
+    // Echelle de fiabilite : un item par dimension, repris a l'identique (jamais reformule
+    // - une reformulation romprait la fidelite a l'instrument O*NET valide) a un autre
+    // emplacement du questionnaire. NumeroQuestion (1-60) de l'item d'origine duplique.
+    private static readonly int[] NumerosControle = [3, 13, 23, 33, 43, 53];
+
+    // 66 emplacements de reponse : les 60 items originaux (SlotId 1-60, SlotId ==
+    // NumeroQuestion) puis les 6 doublons de controle (SlotId 61-66, NumeroQuestion pointe
+    // vers l'item duplique). Seuls les slots <= 60 comptent dans les scores par dimension -
+    // les doublons ne servent qu'a la verification de coherence (cf. RepondreAsync).
+    private static readonly (int SlotId, int NumeroQuestion)[] Slots = BuildSlots();
+
+    // Ordre de presentation fixe et "en aveugle" : les 66 emplacements sont melanges une
+    // bonne fois pour toutes (seed fixe -> reproductible, jamais un tirage aleatoire par
+    // utilisateur), jamais groupes par dimension, jamais de libelle de dimension affiche -
+    // cf. GetQuestions.
+    private static readonly int[] OrdrePresentation = BuildOrdrePresentation();
+
+    private static (int SlotId, int NumeroQuestion)[] BuildSlots()
+    {
+        var slots = new List<(int, int)>();
+        for (var numero = 1; numero <= 60; numero++)
+        {
+            slots.Add((numero, numero));
+        }
+        for (var i = 0; i < NumerosControle.Length; i++)
+        {
+            slots.Add((60 + i + 1, NumerosControle[i]));
+        }
+        return [.. slots];
+    }
+
+    private static int[] BuildOrdrePresentation()
+    {
+        var ids = Slots.Select(s => s.SlotId).ToArray();
+        var rng = new Random(20260917);
+        for (var i = ids.Length - 1; i > 0; i--)
+        {
+            var j = rng.Next(i + 1);
+            (ids[i], ids[j]) = (ids[j], ids[i]);
+        }
+        return ids;
+    }
 
     private static readonly Dictionary<string, (string Nom, string Description)> Profils = new()
     {
@@ -95,13 +138,17 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         ["C"] = ("Conventionnel", "Vous aimez l'organisation, la précision et les méthodes établies. Vous êtes à l'aise avec les données, les procédures et le respect des règles."),
     };
 
-    public List<RiasecQuestionInfo> GetQuestions() =>
-        Questions.Select((q, i) => new RiasecQuestionInfo
-        {
-            NumeroQuestion = i + 1,
-            Dimension = q.Dimension,
-            Texte = q.Texte,
-        }).ToList();
+    public List<RiasecQuestionInfo> GetQuestions()
+    {
+        var parSlotId = Slots.ToDictionary(s => s.SlotId, s => s.NumeroQuestion);
+        return OrdrePresentation
+            .Select(slotId => new RiasecQuestionInfo
+            {
+                SlotId = slotId,
+                Texte = Questions[parSlotId[slotId] - 1].Texte,
+            })
+            .ToList();
+    }
 
     public async Task<RiasecResultatInfo?> GetDernierResultatAsync(string utilisateurId)
     {
@@ -126,15 +173,20 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
             return (false, "Merci de cocher au moins une activité qui vous plairait.", null);
         }
 
+        // Seuls les slots 1-60 (les items originaux) comptent dans les scores par
+        // dimension - les doublons de controle (61-66) n'y participent jamais, sans quoi
+        // la dimension concernee depasserait son maximum de 10.
         var scores = OrdreDimensions.ToDictionary(d => d, _ => 0);
-        for (var i = 0; i < Questions.Length; i++)
+        for (var numero = 1; numero <= Questions.Length; numero++)
         {
-            var numero = i + 1;
             if (reponses.Contains(numero))
             {
-                scores[Questions[i].Dimension]++;
+                scores[Questions[numero - 1].Dimension]++;
             }
         }
+
+        var controles = Slots.Where(s => s.SlotId > Questions.Length).ToList();
+        var nombrePairesCoherentes = controles.Count(s => reponses.Contains(s.SlotId) == reponses.Contains(s.NumeroQuestion));
 
         var codeHolland = string.Concat(
             OrdreDimensions
@@ -152,6 +204,8 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
             ScoreE = scores["E"],
             ScoreC = scores["C"],
             CodeHolland = codeHolland,
+            NombrePairesCoherentes = nombrePairesCoherentes,
+            NombrePairesControle = controles.Count,
             CompleteLe = DateTime.UtcNow,
         };
         dbContext.RiasecResultats.Add(resultat);
@@ -183,6 +237,8 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         return new RiasecResultatInfo
         {
             CodeHolland = resultat.CodeHolland,
+            NombrePairesCoherentes = resultat.NombrePairesCoherentes,
+            NombrePairesControle = resultat.NombrePairesControle,
             CompleteLe = resultat.CompleteLe,
             Dimensions = OrdreDimensions.Select(d => new RiasecDimensionInfo
             {
