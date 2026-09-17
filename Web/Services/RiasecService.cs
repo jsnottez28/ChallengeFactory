@@ -10,6 +10,12 @@ namespace Web.Services;
 // Attribution 4.0 International (CC BY 4.0). Traduction en francais par Challenges
 // Factory ; attribution conservee dans le pied de page du test (cf. TestRiasec.cshtml) et
 // dans l'email de resultat, conformement aux termes de la licence.
+//
+// Format a choix force par paires (comparaisons par paires, cf. methode de Thurstone) au
+// lieu du format "cocher les activites" d'origine : pour chaque paire, deux items de
+// dimensions differentes sont proposes et la personne doit choisir celui qui lui
+// correspond le plus. Toujours construit uniquement a partir des 60 items reels traduits -
+// jamais de contenu invente, y compris pour le round 2 adaptatif (cf. PreparerRound2).
 public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService emailService) : IRiasecService
 {
     private static readonly (string Dimension, string Texte)[] Questions =
@@ -81,52 +87,7 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         ("C", "Tamponner, trier et distribuer le courrier d'une organisation"),
     ];
 
-    // Ordre fixe utilise pour departager les egalites de score lors du calcul du code
-    // Holland (cf. RepondreAsync).
     private static readonly string[] OrdreDimensions = ["R", "I", "A", "S", "E", "C"];
-
-    // Echelle de fiabilite : un item par dimension, repris a l'identique (jamais reformule
-    // - une reformulation romprait la fidelite a l'instrument O*NET valide) a un autre
-    // emplacement du questionnaire. NumeroQuestion (1-60) de l'item d'origine duplique.
-    private static readonly int[] NumerosControle = [3, 13, 23, 33, 43, 53];
-
-    // 66 emplacements de reponse : les 60 items originaux (SlotId 1-60, SlotId ==
-    // NumeroQuestion) puis les 6 doublons de controle (SlotId 61-66, NumeroQuestion pointe
-    // vers l'item duplique). Seuls les slots <= 60 comptent dans les scores par dimension -
-    // les doublons ne servent qu'a la verification de coherence (cf. RepondreAsync).
-    private static readonly (int SlotId, int NumeroQuestion)[] Slots = BuildSlots();
-
-    // Ordre de presentation fixe et "en aveugle" : les 66 emplacements sont melanges une
-    // bonne fois pour toutes (seed fixe -> reproductible, jamais un tirage aleatoire par
-    // utilisateur), jamais groupes par dimension, jamais de libelle de dimension affiche -
-    // cf. GetQuestions.
-    private static readonly int[] OrdrePresentation = BuildOrdrePresentation();
-
-    private static (int SlotId, int NumeroQuestion)[] BuildSlots()
-    {
-        var slots = new List<(int, int)>();
-        for (var numero = 1; numero <= 60; numero++)
-        {
-            slots.Add((numero, numero));
-        }
-        for (var i = 0; i < NumerosControle.Length; i++)
-        {
-            slots.Add((60 + i + 1, NumerosControle[i]));
-        }
-        return [.. slots];
-    }
-
-    private static int[] BuildOrdrePresentation()
-    {
-        var ids = Slots.Select(s => s.SlotId).ToArray();
-        var rng = new Random(20260917);
-        for (var i = ids.Length - 1; i > 0; i--)
-        {
-            var j = rng.Next(i + 1);
-            (ids[i], ids[j]) = (ids[j], ids[i]);
-        }
-        return ids;
-    }
 
     private static readonly Dictionary<string, (string Nom, string Description)> Profils = new()
     {
@@ -138,16 +99,122 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         ["C"] = ("Conventionnel", "Vous aimez l'organisation, la précision et les méthodes établies. Vous êtes à l'aise avec les données, les procédures et le respect des règles."),
     };
 
-    public List<RiasecQuestionInfo> GetQuestions()
+    // 30 paires de base couvrant les 60 items une fois chacun (jamais deux items de la
+    // meme dimension dans une paire), construites par un tirage a graine fixe -
+    // reproductible, jamais un tirage aleatoire par utilisateur.
+    private static readonly (int NumeroA, int NumeroB)[] PairesBase = ConstruirePairesBase();
+
+    // 6 des 30 paires de base (une tous les 5) sont reposees a l'identique plus loin dans
+    // le round 1, pour l'echelle de fiabilite - jamais reformulees.
+    private static readonly int[] IndicesPairesControle = [0, 5, 10, 15, 20, 25];
+
+    // PaireId 1-30 = paires de base (dans l'ordre de ConstruirePairesBase), 31-36 = leurs
+    // doublons de controle (31 duplique la paire d'indice 0, etc.).
+    private const int NombrePairesBase = 30;
+
+    // Ordre de presentation fixe et "en aveugle" des 36 paires du round 1 - melange une
+    // bonne fois pour toutes, jamais groupe, jamais de dimension affichee.
+    private static readonly int[] OrdrePresentationRound1 = ConstruireOrdrePresentation(NombrePairesBase + IndicesPairesControle.Length, 20260917 + 1);
+
+    // Le round 2 ne se declenche que si les 2 dimensions les plus proches apres le round 1
+    // ont un ecart de score inferieur ou egal a ce seuil - inutile de redemander si le
+    // resultat est deja tranche.
+    private const int SeuilDepartage = 3;
+
+    // Nombre maximal de paires de departage au round 2 (zip des items gagnants des 2
+    // dimensions les plus proches).
+    private const int MaxPairesRound2 = 5;
+
+    private static (int, int)[] ConstruirePairesBase()
     {
-        var parSlotId = Slots.ToDictionary(s => s.SlotId, s => s.NumeroQuestion);
-        return OrdrePresentation
-            .Select(slotId => new RiasecQuestionInfo
+        var pool = Enumerable.Range(1, Questions.Length).ToList();
+        var rng = new Random(20260917);
+        for (var i = pool.Count - 1; i > 0; i--)
+        {
+            var j = rng.Next(i + 1);
+            (pool[i], pool[j]) = (pool[j], pool[i]);
+        }
+
+        var paires = new List<(int, int)>();
+        while (pool.Count > 0)
+        {
+            var a = pool[0];
+            pool.RemoveAt(0);
+            var dimensionA = Questions[a - 1].Dimension;
+            var indexB = pool.FindIndex(n => Questions[n - 1].Dimension != dimensionA);
+            if (indexB < 0)
             {
-                SlotId = slotId,
-                Texte = Questions[parSlotId[slotId] - 1].Texte,
-            })
-            .ToList();
+                indexB = 0;
+            }
+            var b = pool[indexB];
+            pool.RemoveAt(indexB);
+            paires.Add((a, b));
+        }
+        return [.. paires];
+    }
+
+    private static int[] ConstruireOrdrePresentation(int nombreSlots, int graine)
+    {
+        var ids = Enumerable.Range(1, nombreSlots).ToArray();
+        var rng = new Random(graine);
+        for (var i = ids.Length - 1; i > 0; i--)
+        {
+            var j = rng.Next(i + 1);
+            (ids[i], ids[j]) = (ids[j], ids[i]);
+        }
+        return ids;
+    }
+
+    private static RiasecOptionInfo VersOption(int numeroQuestion) => new()
+    {
+        NumeroQuestion = numeroQuestion,
+        Texte = Questions[numeroQuestion - 1].Texte,
+    };
+
+    // Renvoie la paire de base (NumeroA, NumeroB) pour un PaireId de round 1 (1-30 = paire
+    // de base directe, 31-36 = doublon pointant vers la paire de base correspondante).
+    private static (int NumeroA, int NumeroB) PaireRound1(int paireId) =>
+        paireId <= NombrePairesBase
+            ? PairesBase[paireId - 1]
+            : PairesBase[IndicesPairesControle[paireId - NombrePairesBase - 1]];
+
+    public List<RiasecPaireInfo> GetPairesRound1() =>
+        OrdrePresentationRound1.Select(paireId =>
+        {
+            var (numeroA, numeroB) = PaireRound1(paireId);
+            return new RiasecPaireInfo { PaireId = paireId, OptionA = VersOption(numeroA), OptionB = VersOption(numeroB) };
+        }).ToList();
+
+    public RiasecRound2Info? PreparerRound2(Dictionary<int, int> reponsesRound1)
+    {
+        var (valide, scores, _, _, _) = AnalyserRound1(reponsesRound1);
+        if (!valide)
+        {
+            return null;
+        }
+
+        var (dimensionA, dimensionB, ecart) = TrouverDimensionsLesPlusProches(scores!);
+        if (ecart > SeuilDepartage)
+        {
+            return new RiasecRound2Info { DimensionA = dimensionA, DimensionB = dimensionB, Paires = [] };
+        }
+
+        var gagnantsA = GetNumerosGagnants(reponsesRound1, dimensionA);
+        var gagnantsB = GetNumerosGagnants(reponsesRound1, dimensionB);
+        var nombrePaires = Math.Min(Math.Min(gagnantsA.Count, gagnantsB.Count), MaxPairesRound2);
+
+        var paires = new List<RiasecPaireInfo>();
+        for (var i = 0; i < nombrePaires; i++)
+        {
+            paires.Add(new RiasecPaireInfo
+            {
+                PaireId = 1000 + i + 1,
+                OptionA = VersOption(gagnantsA[i]),
+                OptionB = VersOption(gagnantsB[i]),
+            });
+        }
+
+        return new RiasecRound2Info { DimensionA = dimensionA, DimensionB = dimensionB, Paires = paires };
     }
 
     public async Task<RiasecResultatInfo?> GetDernierResultatAsync(string utilisateurId)
@@ -160,7 +227,8 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         return resultat is null ? null : VersInfo(resultat);
     }
 
-    public async Task<(bool Success, string? ErrorMessage, RiasecResultatInfo? Resultat)> RepondreAsync(string utilisateurId, HashSet<int> reponses)
+    public async Task<(bool Success, string? ErrorMessage, RiasecResultatInfo? Resultat)> RepondreAsync(
+        string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesRound2)
     {
         var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
         if (utilisateur is null)
@@ -168,36 +236,40 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
             return (false, "Utilisateur introuvable.", null);
         }
 
-        if (reponses.Count == 0)
+        var (valide, scores, nombrePairesCoherentes, nombrePairesControle, _) = AnalyserRound1(reponsesRound1);
+        if (!valide)
         {
-            return (false, "Merci de cocher au moins une activité qui vous plairait.", null);
+            return (false, "Merci de répondre à toutes les paires du questionnaire.", null);
         }
 
-        // Seuls les slots 1-60 (les items originaux) comptent dans les scores par
-        // dimension - les doublons de controle (61-66) n'y participent jamais, sans quoi
-        // la dimension concernee depasserait son maximum de 10.
-        var scores = OrdreDimensions.ToDictionary(d => d, _ => 0);
-        for (var numero = 1; numero <= Questions.Length; numero++)
+        var round2Attendu = PreparerRound2(reponsesRound1)!;
+        string? depDimA = null;
+        string? depDimB = null;
+        string? depGagnant = null;
+
+        if (round2Attendu.Paires.Count > 0)
         {
-            if (reponses.Contains(numero))
+            if (reponsesRound2.Count != round2Attendu.Paires.Count ||
+                round2Attendu.Paires.Any(p => !reponsesRound2.TryGetValue(p.PaireId, out var choix) ||
+                    (choix != p.OptionA.NumeroQuestion && choix != p.OptionB.NumeroQuestion)))
             {
-                scores[Questions[numero - 1].Dimension]++;
+                return (false, "Merci de répondre à toutes les paires de départage.", null);
             }
+
+            var victoiresA = round2Attendu.Paires.Count(p => reponsesRound2[p.PaireId] == p.OptionA.NumeroQuestion);
+            depDimA = round2Attendu.DimensionA;
+            depDimB = round2Attendu.DimensionB;
+            depGagnant = victoiresA > round2Attendu.Paires.Count - victoiresA ? round2Attendu.DimensionA
+                : victoiresA < round2Attendu.Paires.Count - victoiresA ? round2Attendu.DimensionB
+                : null; // egalite au departage : aucune conclusion supplementaire
         }
 
-        var controles = Slots.Where(s => s.SlotId > Questions.Length).ToList();
-        var nombrePairesCoherentes = controles.Count(s => reponses.Contains(s.SlotId) == reponses.Contains(s.NumeroQuestion));
-
-        var codeHolland = string.Concat(
-            OrdreDimensions
-                .OrderByDescending(d => scores[d])
-                .ThenBy(d => Array.IndexOf(OrdreDimensions, d))
-                .Take(3));
+        var codeHolland = CalculerCodeHolland(scores!, depDimA, depDimB, depGagnant);
 
         var resultat = new RiasecResultat
         {
             UtilisateurId = utilisateurId,
-            ScoreR = scores["R"],
+            ScoreR = scores!["R"],
             ScoreI = scores["I"],
             ScoreA = scores["A"],
             ScoreS = scores["S"],
@@ -205,7 +277,10 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
             ScoreC = scores["C"],
             CodeHolland = codeHolland,
             NombrePairesCoherentes = nombrePairesCoherentes,
-            NombrePairesControle = controles.Count,
+            NombrePairesControle = nombrePairesControle,
+            DepartageDimensionA = depDimA,
+            DepartageDimensionB = depDimB,
+            DepartageGagnant = depGagnant,
             CompleteLe = DateTime.UtcNow,
         };
         dbContext.RiasecResultats.Add(resultat);
@@ -220,6 +295,106 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         }
 
         return (true, null, info);
+    }
+
+    // Valide et depouille le round 1 : les 36 paires doivent toutes etre repondues avec un
+    // choix valide (l'une des deux options de la paire). Renvoie les scores par dimension
+    // (sur les 30 paires de base uniquement) et la coherence sur les 6 paires de controle.
+    private static (bool Valide, Dictionary<string, int>? Scores, int NombrePairesCoherentes, int NombrePairesControle, Dictionary<int, int>? _)
+        AnalyserRound1(Dictionary<int, int> reponsesRound1)
+    {
+        for (var paireId = 1; paireId <= NombrePairesBase + IndicesPairesControle.Length; paireId++)
+        {
+            var (numeroA, numeroB) = PaireRound1(paireId);
+            if (!reponsesRound1.TryGetValue(paireId, out var choix) || (choix != numeroA && choix != numeroB))
+            {
+                return (false, null, 0, 0, null);
+            }
+        }
+
+        var scores = OrdreDimensions.ToDictionary(d => d, _ => 0);
+        for (var paireId = 1; paireId <= NombrePairesBase; paireId++)
+        {
+            var choix = reponsesRound1[paireId];
+            scores[Questions[choix - 1].Dimension]++;
+        }
+
+        var nombrePairesCoherentes = 0;
+        for (var i = 0; i < IndicesPairesControle.Length; i++)
+        {
+            var paireIdBase = IndicesPairesControle[i] + 1;
+            var paireIdDoublon = NombrePairesBase + i + 1;
+            if (reponsesRound1[paireIdBase] == reponsesRound1[paireIdDoublon])
+            {
+                nombrePairesCoherentes++;
+            }
+        }
+
+        return (true, scores, nombrePairesCoherentes, IndicesPairesControle.Length, null);
+    }
+
+    private static (string DimensionA, string DimensionB, int Ecart) TrouverDimensionsLesPlusProches(Dictionary<string, int> scores)
+    {
+        var meilleur = (DimensionA: OrdreDimensions[0], DimensionB: OrdreDimensions[1], Ecart: int.MaxValue, Somme: -1);
+        for (var i = 0; i < OrdreDimensions.Length; i++)
+        {
+            for (var j = i + 1; j < OrdreDimensions.Length; j++)
+            {
+                var dimA = OrdreDimensions[i];
+                var dimB = OrdreDimensions[j];
+                var ecart = Math.Abs(scores[dimA] - scores[dimB]);
+                var somme = scores[dimA] + scores[dimB];
+                if (ecart < meilleur.Ecart || (ecart == meilleur.Ecart && somme > meilleur.Somme))
+                {
+                    meilleur = (dimA, dimB, ecart, somme);
+                }
+            }
+        }
+        return (meilleur.DimensionA, meilleur.DimensionB, meilleur.Ecart);
+    }
+
+    // Items de la dimension donnee choisis par l'utilisateur parmi les 30 paires de base -
+    // ce sont les "gagnants" de cette dimension au round 1, dans lesquels le round 2 puise
+    // (jamais de contenu hors des 60 items reels).
+    private static List<int> GetNumerosGagnants(Dictionary<int, int> reponsesRound1, string dimension)
+    {
+        var gagnants = new List<int>();
+        for (var paireId = 1; paireId <= NombrePairesBase; paireId++)
+        {
+            var choix = reponsesRound1[paireId];
+            if (Questions[choix - 1].Dimension == dimension)
+            {
+                gagnants.Add(choix);
+            }
+        }
+        return gagnants;
+    }
+
+    private static string CalculerCodeHolland(Dictionary<string, int> scores, string? depDimA, string? depDimB, string? depGagnant)
+    {
+        var scoresEffectifs = OrdreDimensions.ToDictionary(d => d, d => (double)scores[d]);
+
+        // Le departage (round 2) fait "permuter" les deux dimensions comparees a
+        // l'interieur de l'intervalle [min, max] de leurs propres scores d'origine : la
+        // gagnante du departage prend la position du plus haut des deux scores, la
+        // perdante celle du plus bas (a peine en-dessous). Ca renverse leur ordre relatif
+        // meme si l'ecart de round 1 n'etait pas une egalite stricte, sans jamais faire
+        // sauter l'une des deux devant une troisieme dimension qui n'a pas ete comparee.
+        if (depGagnant is not null && depDimA is not null && depDimB is not null)
+        {
+            var perdant = depGagnant == depDimA ? depDimB : depDimA;
+            var scoreMax = Math.Max(scoresEffectifs[depDimA], scoresEffectifs[depDimB]);
+            var scoreMin = Math.Min(scoresEffectifs[depDimA], scoresEffectifs[depDimB]);
+            scoresEffectifs[depGagnant] = scoreMax;
+            scoresEffectifs[perdant] = scoreMin - 0.01;
+        }
+
+        var classement = OrdreDimensions
+            .OrderByDescending(d => scoresEffectifs[d])
+            .ThenBy(d => Array.IndexOf(OrdreDimensions, d))
+            .Take(3);
+
+        return string.Concat(classement);
     }
 
     private static RiasecResultatInfo VersInfo(RiasecResultat resultat)
@@ -239,6 +414,9 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
             CodeHolland = resultat.CodeHolland,
             NombrePairesCoherentes = resultat.NombrePairesCoherentes,
             NombrePairesControle = resultat.NombrePairesControle,
+            DepartageDimensionA = resultat.DepartageDimensionA,
+            DepartageDimensionB = resultat.DepartageDimensionB,
+            DepartageGagnant = resultat.DepartageGagnant,
             CompleteLe = resultat.CompleteLe,
             Dimensions = OrdreDimensions.Select(d => new RiasecDimensionInfo
             {

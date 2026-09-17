@@ -49,14 +49,22 @@ body {
 .counter-wrap { position: sticky; top: 0; background: #f5f4f0; padding: 8px 0; margin-bottom: 1rem; text-align: center; font-size: 13px; color: #5f5e5a; }
 .counter-wrap strong { color: #1a1a18; }
 
-.quiz-card { margin-bottom: 1.5rem; border-radius: 14px; border: 1px solid #e0dfd8; background: #fff; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-.quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
-@@media (max-width: 560px) { .quiz-grid { grid-template-columns: 1fr; } }
-
-.q-option { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; user-select: none; }
-.q-option:hover { background: #f9f8f5; }
-.q-option input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; flex-shrink: 0; }
-.q-text { font-size: 14px; color: #2c2c2a; line-height: 1.4; }
+.pair-card {
+  display: flex; align-items: stretch; gap: 10px;
+  margin-bottom: 12px; border-radius: 14px; border: 1px solid #e0dfd8; background: #fff;
+  padding: 0.9rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+@@media (max-width: 560px) { .pair-card { flex-direction: column; } }
+.pair-option {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px; border: 1px solid #e0dfd8;
+  cursor: pointer; user-select: none; transition: all 0.15s;
+}
+.pair-option:hover { border-color: #b4b2a9; background: #f9f8f5; }
+.pair-option input[type="radio"] { width: 16px; height: 16px; flex-shrink: 0; }
+.pair-option:has(input:checked) { border-color: #16A085; background: #E1F5EE; }
+.pair-text { font-size: 14px; color: #2c2c2a; line-height: 1.35; }
+.pair-vs { display: flex; align-items: center; justify-content: center; font-size: 12px; color: #b4b2a9; font-weight: 600; padding: 0 4px; }
 
 .nav-row { display: flex; justify-content: center; margin-top: 1.5rem; }
 .btn { padding: 12px 28px; border-radius: 10px; border: 1px solid #d3d1c7; font-size: 15px; font-weight: 500; cursor: pointer; background: #fff; color: #2c2c2a; transition: all 0.15s; }
@@ -117,7 +125,18 @@ body {
     </div>
     <h1 class="riasec-title">Questionnaire RIASEC</h1>
     <p class="riasec-subtitle">
-      @(Model.AfficherQuestionnaire ? "Cochez les activités que vous aimeriez faire, sans penser à la formation nécessaire ou au salaire." : "Voici votre profil selon le modèle RIASEC de Holland.")
+      @if (Model.AfficherQuestionnaire && Model.Etape == 1)
+      {
+        <text>Pour chaque paire, choisissez l'activité qui vous correspond le plus.</text>
+      }
+      else if (Model.AfficherQuestionnaire && Model.Etape == 2)
+      {
+        <text>Encore quelques paires pour affiner votre profil.</text>
+      }
+      else
+      {
+        <text>Voici votre profil selon le modèle RIASEC de Holland.</text>
+      }
     </p>
   </div>
 
@@ -126,22 +145,55 @@ body {
     <div class="status-msg @(Model.DernierEnvoiReussi ? "ok" : "ko")">@Model.StatusMessage</div>
   }
 
-  @if (Model.AfficherQuestionnaire)
+  @if (Model.AfficherQuestionnaire && Model.Etape == 1)
   {
-    <form method="post" id="riasecForm">
-      <div class="counter-wrap"><strong id="counterVal">0</strong> activité(s) cochée(s) sur @Model.Questions.Count</div>
+    <form method="post" asp-page-handler="Round1" id="riasecForm">
+      <div class="counter-wrap"><strong id="counterVal">0</strong> paire(s) répondue(s) sur @Model.PairesRound1.Count</div>
 
-      <div class="quiz-card">
-        <div class="quiz-grid">
-          @foreach (var question in Model.Questions)
-          {
-            <label class="q-option">
-              <input type="checkbox" name="Reponses" value="@question.SlotId">
-              <span class="q-text">@question.Texte</span>
-            </label>
-          }
+      @foreach (var paire in Model.PairesRound1)
+      {
+        <div class="pair-card">
+          <label class="pair-option">
+            <input type="radio" name="ReponsesRound1[@paire.PaireId]" value="@paire.OptionA.NumeroQuestion">
+            <span class="pair-text">@paire.OptionA.Texte</span>
+          </label>
+          <div class="pair-vs">ou</div>
+          <label class="pair-option">
+            <input type="radio" name="ReponsesRound1[@paire.PaireId]" value="@paire.OptionB.NumeroQuestion">
+            <span class="pair-text">@paire.OptionB.Texte</span>
+          </label>
         </div>
+      }
+
+      <div class="nav-row">
+        <button type="submit" class="btn btn-primary">Continuer →</button>
       </div>
+    </form>
+  }
+  else if (Model.AfficherQuestionnaire && Model.Etape == 2)
+  {
+    <form method="post" asp-page-handler="Round2" id="riasecForm">
+      @foreach (var kv in Model.ReponsesRound1)
+      {
+        <input type="hidden" name="ReponsesRound1[@kv.Key]" value="@kv.Value">
+      }
+
+      <div class="counter-wrap"><strong id="counterVal">0</strong> paire(s) répondue(s) sur @Model.PairesRound2.Count</div>
+
+      @foreach (var paire in Model.PairesRound2)
+      {
+        <div class="pair-card">
+          <label class="pair-option">
+            <input type="radio" name="ReponsesRound2[@paire.PaireId]" value="@paire.OptionA.NumeroQuestion">
+            <span class="pair-text">@paire.OptionA.Texte</span>
+          </label>
+          <div class="pair-vs">ou</div>
+          <label class="pair-option">
+            <input type="radio" name="ReponsesRound2[@paire.PaireId]" value="@paire.OptionB.NumeroQuestion">
+            <span class="pair-text">@paire.OptionB.Texte</span>
+          </label>
+        </div>
+      }
 
       <div class="nav-row">
         <button type="submit" class="btn btn-primary">Voir mon profil →</button>
@@ -192,7 +244,15 @@ body {
         </div>
       }
 
-      <p style="text-align:center; font-size:12px; color:#888780; margin-top:1rem;">
+      @if (r.DepartageDimensionA is not null && r.DepartageDimensionB is not null)
+      {
+        <p style="text-align:center; font-size:12px; color:#888780;">
+          Départage effectué entre @r.DepartageDimensionA et @r.DepartageDimensionB
+          @(r.DepartageGagnant is not null ? $"— {r.DepartageGagnant} confirmée en priorité" : "— toujours à égalité après départage")
+        </p>
+      }
+
+      <p style="text-align:center; font-size:12px; color:#888780; margin-top:0.25rem;">
         Cohérence des réponses : @r.NombrePairesCoherentes/@r.NombrePairesControle (indicateur de fiabilité, sans incidence sur votre profil)
       </p>
 
@@ -208,17 +268,38 @@ body {
   </div>
 </div>
 
-@if (Model.AfficherQuestionnaire)
+@if (Model.AfficherQuestionnaire && (Model.Etape == 1 || Model.Etape == 2))
 {
   <script>
     (function () {
       var form = document.getElementById('riasecForm');
       var counterVal = document.getElementById('counterVal');
+      var pairCards = form.querySelectorAll('.pair-card');
+
+      function updateCounter() {
+        var repondues = 0;
+        pairCards.forEach(function (card) {
+          if (card.querySelector('input[type="radio"]:checked')) { repondues++; }
+        });
+        counterVal.textContent = repondues;
+      }
+
       form.addEventListener('change', function (e) {
-        if (e.target.matches('input[type="checkbox"]')) {
-          counterVal.textContent = form.querySelectorAll('input[type="checkbox"]:checked').length;
+        if (e.target.matches('input[type="radio"]')) { updateCounter(); }
+      });
+
+      form.addEventListener('submit', function (e) {
+        var manquantes = 0;
+        pairCards.forEach(function (card) {
+          if (!card.querySelector('input[type="radio"]:checked')) { manquantes++; }
+        });
+        if (manquantes > 0) {
+          e.preventDefault();
+          alert('Merci de répondre à toutes les paires (' + manquantes + ' restante(s)) avant de continuer.');
         }
       });
+
+      updateCounter();
     })();
   </script>
 }

@@ -1,3 +1,4 @@
+using Application.Common.Interfaces;
 using Integration.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Web.Data;
@@ -7,23 +8,78 @@ namespace Integration.Services;
 
 public class RiasecServiceTests
 {
-    [Fact]
-    public void GetQuestions_Renvoie66EmplacementsSansDoublonDeSlotId_EtNexposePasLaDimension()
+    // Par construction (cf. RiasecService.Questions), NumeroQuestion 1-10 = Realiste,
+    // 11-20 = Investigateur, 21-30 = Artistique, 31-40 = Social, 41-50 = Entreprenant,
+    // 51-60 = Conventionnel - utilise ici pour construire des strategies de reponse
+    // controlees, jamais expose par le DTO public (presentation "en aveugle").
+    private static string DimensionDe(int numeroQuestion) => numeroQuestion switch
     {
-        // 60 items originaux + 6 doublons de controle de coherence (un par dimension, cf.
-        // RiasecService.NumerosControle) = 66 emplacements. La dimension mesuree par chaque
-        // item n'est jamais exposee cote client (presentation "en aveugle").
-        var riasecService = new RiasecService(InMemoryDbContextFactory.Create(), new FakeEmailService());
+        <= 10 => "R",
+        <= 20 => "I",
+        <= 30 => "A",
+        <= 40 => "S",
+        <= 50 => "E",
+        _ => "C",
+    };
 
-        var questions = riasecService.GetQuestions();
-
-        Assert.Equal(66, questions.Count);
-        Assert.Equal(66, questions.Select(q => q.SlotId).Distinct().Count());
-        Assert.All(questions, q => Assert.False(string.IsNullOrWhiteSpace(q.Texte)));
+    private static Dictionary<int, int> RepondreEnPreferant(List<RiasecPaireInfo> paires, params string[] dimensionsPreferees)
+    {
+        var reponses = new Dictionary<int, int>();
+        foreach (var paire in paires)
+        {
+            var choix = dimensionsPreferees.Contains(DimensionDe(paire.OptionA.NumeroQuestion)) ? paire.OptionA.NumeroQuestion
+                : dimensionsPreferees.Contains(DimensionDe(paire.OptionB.NumeroQuestion)) ? paire.OptionB.NumeroQuestion
+                : paire.OptionA.NumeroQuestion;
+            reponses[paire.PaireId] = choix;
+        }
+        return reponses;
     }
 
     [Fact]
-    public async Task RepondreAsync_Echoue_SiAucuneActiviteCochee()
+    public void GetPairesRound1_Renvoie36PairesValides()
+    {
+        var riasecService = new RiasecService(InMemoryDbContextFactory.Create(), new FakeEmailService());
+
+        var paires = riasecService.GetPairesRound1();
+
+        Assert.Equal(36, paires.Count);
+        Assert.Equal(36, paires.Select(p => p.PaireId).Distinct().Count());
+        Assert.All(paires, p =>
+        {
+            Assert.NotEqual(p.OptionA.NumeroQuestion, p.OptionB.NumeroQuestion);
+            Assert.False(string.IsNullOrWhiteSpace(p.OptionA.Texte));
+            Assert.False(string.IsNullOrWhiteSpace(p.OptionB.Texte));
+        });
+    }
+
+    [Fact]
+    public void GetPairesRound1_LesPairesDeControleDupliquentLesPairesDeBaseALIdentique()
+    {
+        // Les paires de controle (PaireId 31-36) reprennent exactement les memes options
+        // que certaines paires de base (jamais de reformulation), pour l'echelle de
+        // fiabilite - cf. RiasecService.IndicesPairesControle = [0,5,10,15,20,25], donc
+        // PaireId 31 duplique PaireId 1, 32 duplique PaireId 6, etc.
+        var riasecService = new RiasecService(InMemoryDbContextFactory.Create(), new FakeEmailService());
+        var paires = riasecService.GetPairesRound1().ToDictionary(p => p.PaireId);
+
+        var correspondances = new (int Base, int Doublon)[] { (1, 31), (6, 32), (11, 33), (16, 34), (21, 35), (26, 36) };
+        foreach (var (baseId, doublonId) in correspondances)
+        {
+            Assert.Equal(paires[baseId].OptionA.NumeroQuestion, paires[doublonId].OptionA.NumeroQuestion);
+            Assert.Equal(paires[baseId].OptionB.NumeroQuestion, paires[doublonId].OptionB.NumeroQuestion);
+        }
+    }
+
+    [Fact]
+    public void PreparerRound2_RenvoieNull_SiReponsesIncompletes()
+    {
+        var riasecService = new RiasecService(InMemoryDbContextFactory.Create(), new FakeEmailService());
+
+        Assert.Null(riasecService.PreparerRound2([]));
+    }
+
+    [Fact]
+    public async Task RepondreAsync_Echoue_SiRound1Incomplet()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var utilisateur = new ApplicationUser { UserName = "stagiaire@test.local", Email = "stagiaire@test.local" };
@@ -32,7 +88,7 @@ public class RiasecServiceTests
 
         var riasecService = new RiasecService(dbContext, new FakeEmailService());
 
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, []);
+        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, [], []);
 
         Assert.False(success);
         Assert.NotNull(errorMessage);
@@ -41,71 +97,62 @@ public class RiasecServiceTests
     }
 
     [Fact]
-    public async Task RepondreAsync_CompteLesCochesParDimension_EtCalculeLeCodeHolland()
+    public async Task RepondreAsync_ScenarioCompletAvecDepartage_CalculeScoresCodeHollandEtCoherence()
     {
-        // Les questions 1-10 sont toutes "Realiste" (cf. RiasecService.Questions) : cocher
-        // exactement ces 10 doit donner ScoreR=10 et tout le reste a 0. En cas d'egalite a
-        // 0, le code Holland se departage par l'ordre fixe R,I,A,S,E,C -> "RIA".
+        // Strategie deterministe "preferer Realiste" (vérifiée manuellement) : donne
+        // Scores R=10,I=1,A=4,S=5,E=2,C=8 sur les 30 paires de base, et declenche un
+        // round 2 de departage entre A (4) et S (5) - 4 paires, toujours "OptionA =
+        // Artistique" vs "OptionB = Social".
         await using var dbContext = InMemoryDbContextFactory.Create();
         var utilisateur = new ApplicationUser { UserName = "stagiaire@test.local", Email = "stagiaire@test.local" };
         dbContext.Users.Add(utilisateur);
         await dbContext.SaveChangesAsync();
 
         var riasecService = new RiasecService(dbContext, new FakeEmailService());
-        var reponses = Enumerable.Range(1, 10).ToHashSet();
+        var pairesRound1 = riasecService.GetPairesRound1();
+        var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
 
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, reponses);
+        var round2 = riasecService.PreparerRound2(reponsesRound1);
+        Assert.NotNull(round2);
+        Assert.Equal("A", round2!.DimensionA);
+        Assert.Equal("S", round2.DimensionB);
+        Assert.Equal(4, round2.Paires.Count);
+        Assert.All(round2.Paires, p =>
+        {
+            Assert.Equal("A", DimensionDe(p.OptionA.NumeroQuestion));
+            Assert.Equal("S", DimensionDe(p.OptionB.NumeroQuestion));
+        });
+
+        // Choisit systematiquement l'option Artistique (OptionA) au round 2 : Artistique
+        // gagne le departage 4-0 malgre un score de round 1 inferieur a Social (4 < 5).
+        var reponsesRound2 = round2.Paires.ToDictionary(p => p.PaireId, p => p.OptionA.NumeroQuestion);
+
+        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesRound2);
 
         Assert.True(success, errorMessage);
         Assert.NotNull(resultat);
         Assert.Equal(10, resultat!.Dimensions.Single(d => d.Code == "R").Score);
-        Assert.All(resultat.Dimensions.Where(d => d.Code != "R"), d => Assert.Equal(0, d.Score));
-        Assert.Equal("RIA", resultat.CodeHolland);
+        Assert.Equal(4, resultat.Dimensions.Single(d => d.Code == "A").Score);
+        Assert.Equal(5, resultat.Dimensions.Single(d => d.Code == "S").Score);
+        Assert.Equal(8, resultat.Dimensions.Single(d => d.Code == "C").Score);
+        // Le departage inverse l'ordre naturel (A=4 < S=5) : Artistique passe devant Social
+        // dans le code Holland malgre son score de round 1 plus faible.
+        Assert.Equal("RCA", resultat.CodeHolland);
+        Assert.Equal("A", resultat.DepartageDimensionA);
+        Assert.Equal("S", resultat.DepartageDimensionB);
+        Assert.Equal("A", resultat.DepartageGagnant);
+        // Strategie deterministe (le choix ne depend que des options proposees) : les 6
+        // paires de controle sont necessairement repondues de la meme facon que leur paire
+        // de base -> coherence parfaite.
+        Assert.Equal(6, resultat.NombrePairesCoherentes);
+        Assert.Equal(6, resultat.NombrePairesControle);
+
+        var enBase = await dbContext.RiasecResultats.SingleAsync();
+        Assert.Equal("RCA", enBase.CodeHolland);
     }
 
     [Fact]
-    public async Task RepondreAsync_LesDoublonsDeControleNeComptentJamaisDansLeScoreDeDimension()
-    {
-        // La question 3 (Realiste) est aussi le doublon de controle au SlotId 61. Cocher
-        // les deux ne doit compter qu'une seule fois pour R (le doublon ne doit jamais
-        // gonfler le score au-dessus de 10).
-        await using var dbContext = InMemoryDbContextFactory.Create();
-        var utilisateur = new ApplicationUser { UserName = "stagiaire@test.local", Email = "stagiaire@test.local" };
-        dbContext.Users.Add(utilisateur);
-        await dbContext.SaveChangesAsync();
-
-        var riasecService = new RiasecService(dbContext, new FakeEmailService());
-
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, [3, 61]);
-
-        Assert.True(success, errorMessage);
-        Assert.Equal(1, resultat!.Dimensions.Single(d => d.Code == "R").Score);
-    }
-
-    [Fact]
-    public async Task RepondreAsync_CalculeLaCoherenceDesReponsesSurLesPairesDeControle()
-    {
-        // Paires de controle : (3,61)=R, (13,62)=I, (23,63)=A, (33,64)=S, (43,65)=E,
-        // (53,66)=C. On coche 3 ET 61 (paire coherente : meme reponse aux deux
-        // emplacements) et 13 seul (paire incoherente : cochee a l'original, pas au
-        // doublon). Les 4 autres paires ne sont cochees nulle part -> coherentes (les deux
-        // a false). Total attendu : 5/6 coherentes.
-        await using var dbContext = InMemoryDbContextFactory.Create();
-        var utilisateur = new ApplicationUser { UserName = "stagiaire@test.local", Email = "stagiaire@test.local" };
-        dbContext.Users.Add(utilisateur);
-        await dbContext.SaveChangesAsync();
-
-        var riasecService = new RiasecService(dbContext, new FakeEmailService());
-
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, [3, 61, 13]);
-
-        Assert.True(success, errorMessage);
-        Assert.Equal(6, resultat!.NombrePairesControle);
-        Assert.Equal(5, resultat.NombrePairesCoherentes);
-    }
-
-    [Fact]
-    public async Task RepondreAsync_EnregistreLeResultatEtLenvoieParEmail()
+    public async Task RepondreAsync_EnvoieUnEmailDeResultat()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
         var utilisateur = new ApplicationUser { UserName = "stagiaire@test.local", Email = "stagiaire@test.local" };
@@ -114,16 +161,36 @@ public class RiasecServiceTests
 
         var emailService = new FakeEmailService();
         var riasecService = new RiasecService(dbContext, emailService);
+        var pairesRound1 = riasecService.GetPairesRound1();
+        var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
+        var round2 = riasecService.PreparerRound2(reponsesRound1)!;
+        var reponsesRound2 = round2.Paires.ToDictionary(p => p.PaireId, p => p.OptionA.NumeroQuestion);
 
-        await riasecService.RepondreAsync(utilisateur.Id, [1, 2, 3]);
-
-        var enBase = await dbContext.RiasecResultats.SingleAsync();
-        Assert.Equal(utilisateur.Id, enBase.UtilisateurId);
-        Assert.Equal(3, enBase.ScoreR);
+        await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesRound2);
 
         var envoi = Assert.Single(emailService.Envois);
         Assert.Equal("stagiaire@test.local", envoi.Destinataire);
         Assert.Contains("RIASEC", envoi.Sujet);
+    }
+
+    [Fact]
+    public async Task RepondreAsync_Echoue_SiReponsesRound2Incompletes()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var utilisateur = new ApplicationUser { UserName = "stagiaire@test.local", Email = "stagiaire@test.local" };
+        dbContext.Users.Add(utilisateur);
+        await dbContext.SaveChangesAsync();
+
+        var riasecService = new RiasecService(dbContext, new FakeEmailService());
+        var pairesRound1 = riasecService.GetPairesRound1();
+        var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
+
+        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, []);
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+        Assert.Null(resultat);
+        Assert.False(await dbContext.RiasecResultats.AnyAsync());
     }
 
     [Fact]
@@ -135,10 +202,14 @@ public class RiasecServiceTests
         await dbContext.SaveChangesAsync();
 
         var riasecService = new RiasecService(dbContext, new FakeEmailService());
+        var pairesRound1 = riasecService.GetPairesRound1();
+        var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
+        var round2 = riasecService.PreparerRound2(reponsesRound1)!;
+        var reponsesRound2 = round2.Paires.ToDictionary(p => p.PaireId, p => p.OptionA.NumeroQuestion);
 
-        await riasecService.RepondreAsync(utilisateur.Id, [1]);
+        await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesRound2);
         await Task.Delay(10);
-        var (_, _, deuxiemeResultat) = await riasecService.RepondreAsync(utilisateur.Id, [11, 12]);
+        var (_, _, deuxiemeResultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesRound2);
 
         var dernier = await riasecService.GetDernierResultatAsync(utilisateur.Id);
 
