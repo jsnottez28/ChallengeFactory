@@ -104,8 +104,19 @@ body {
 .profile-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
 .profile-box p { font-size: 14px; color: #5f5e5a; line-height: 1.6; }
 .profile-box .metiers-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #888780; margin-top: 12px; margin-bottom: 6px; }
-.metiers-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.metiers-tags, .traits-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .metier-tag { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #f1efe8; color: #2c2c2a; border: 1px solid #e0dfd8; }
+.trait-tag { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #E1F5EE; color: #0F6E56; border: 1px solid #16A085; font-weight: 500; }
+
+.synthese-section { background: #fff; border-radius: 14px; border: 1px solid #e0dfd8; padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.synthese-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.synthese-section p { font-size: 14px; color: #5f5e5a; line-height: 1.6; }
+.type-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 10px; border-radius: 999px; background: #16A085; color: #fff; }
+.detail-list { margin: 0; padding-left: 1.1rem; }
+.detail-list li { font-size: 14px; color: #5f5e5a; line-height: 1.6; margin-bottom: 4px; }
+.synthese-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@@media (max-width: 620px) { .synthese-grid { grid-template-columns: 1fr; } }
+.resume-box { background: #f1efe8; border-radius: 12px; padding: 1rem 1.25rem; font-size: 14px; color: #2c2c2a; line-height: 1.6; }
 
 .restart-row { display: flex; justify-content: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0dfd8; }
 .restart-row a.btn { text-decoration: none; }
@@ -244,6 +255,15 @@ body {
         <div class="profile-box">
           <h3>@dim.Code — @dim.Nom</h3>
           <p>@dim.Description</p>
+          @if (dim.Traits.Count > 0)
+          {
+            <div class="traits-tags" style="margin-top:10px;">
+              @foreach (var trait in dim.Traits)
+              {
+                <span class="trait-tag">@trait</span>
+              }
+            </div>
+          }
           @if (dim.Metiers.Count > 0)
           {
             <p class="metiers-label">Exemples de métiers associés</p>
@@ -256,6 +276,83 @@ body {
           }
         </div>
       }
+
+      @{ var s = r.Synthese; }
+      <div class="synthese-section">
+        <h3><span class="type-badge">Profil @s.TypeProfil</span></h3>
+        <p>@s.TypeProfilDescription</p>
+      </div>
+
+      @if (s.Synergies.Count > 0)
+      {
+        <div class="synthese-section">
+          <h3>Ce que vos dimensions dominantes créent ensemble</h3>
+          <ul class="detail-list">
+            @foreach (var synergie in s.Synergies)
+            {
+              <li>@synergie</li>
+            }
+          </ul>
+        </div>
+      }
+
+      <div class="synthese-grid" style="margin-bottom:1rem;">
+        @if (s.MotivationsCles.Count > 0)
+        {
+          <div class="synthese-section" style="margin-bottom:0;">
+            <h3>Vos motivations professionnelles</h3>
+            <ul class="detail-list">
+              @foreach (var motivation in s.MotivationsCles)
+              {
+                <li>@motivation</li>
+              }
+            </ul>
+          </div>
+        }
+        @if (s.TachesPreferees.Count > 0)
+        {
+          <div class="synthese-section" style="margin-bottom:0;">
+            <h3>Types de tâches qui vous conviennent</h3>
+            <ul class="detail-list">
+              @foreach (var tache in s.TachesPreferees)
+              {
+                <li>@tache</li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+
+      @if (s.EnvironnementIdeal.Count > 0)
+      {
+        <div class="synthese-section">
+          <h3>Environnement professionnel idéal</h3>
+          <ul class="detail-list">
+            @foreach (var env in s.EnvironnementIdeal)
+            {
+              <li>Un environnement offrant @env.</li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (s.PointsVigilance.Count > 0)
+      {
+        <div class="synthese-section">
+          <h3>Points de vigilance</h3>
+          <ul class="detail-list">
+            @foreach (var point in s.PointsVigilance)
+            {
+              <li>@point</li>
+            }
+          </ul>
+        </div>
+      }
+
+      <div class="synthese-section">
+        <h3>En résumé</h3>
+        <div class="resume-box">@s.Resume</div>
+      </div>
 
       @if (r.DepartageDimensionA is not null && r.DepartageDimensionB is not null)
       {

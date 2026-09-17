@@ -89,25 +89,189 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
 
     private static readonly string[] OrdreDimensions = ["R", "I", "A", "S", "E", "C"];
 
-    // Descriptions et exemples de metiers : caracterisation generale des 6 types de
-    // Holland telle qu'enseignee couramment en psychologie de l'orientation (theorie
-    // publique, pas un contenu proprietaire de l'O*NET) - illustratif, jamais un outil
-    // d'orientation professionnelle exhaustif ou predictif a lui seul.
-    private static readonly Dictionary<string, (string Nom, string Description, string[] Metiers)> Profils = new()
+    // Caracterisation generale des 6 types de Holland (nom, description, traits, exemples
+    // de metiers, motivations/taches types, environnement favorable, point de vigilance si
+    // la dimension est faible) telle qu'enseignee couramment en psychologie de
+    // l'orientation - theorie publique, pas un contenu proprietaire de l'O*NET ni copie
+    // d'un rapport tiers. Illustratif, jamais un outil d'orientation professionnelle
+    // exhaustif ou predictif a lui seul. La synthese globale (cf. ConstruireSynthese)
+    // combine ces elements par dimension dominante plutot que de repeter un paragraphe
+    // type identique pour chaque dimension.
+    private sealed record ProfilDimension(
+        string Nom,
+        string Description,
+        string[] Metiers,
+        string[] Traits,
+        string[] Motivations,
+        string[] Taches,
+        string EnvironnementFavorable,
+        string PointVigilance);
+
+    private static readonly Dictionary<string, ProfilDimension> Profils = new()
     {
-        ["R"] = ("Réaliste", "Vous aimez les activités concrètes, techniques et manuelles. Vous êtes à l'aise avec les outils, les machines ou le travail en extérieur, et préférez des résultats tangibles à la théorie.",
-            ["Technicien(ne) de maintenance", "Électricien(ne)", "Agriculteur / Agricultrice", "Mécanicien(ne)", "Artisan(e) (menuisier, plombier…)", "Sapeur-pompier"]),
-        ["I"] = ("Investigateur", "Vous aimez comprendre, analyser et résoudre des problèmes complexes. Vous êtes attiré par la recherche, l'observation et le raisonnement scientifique.",
-            ["Chercheur / Chercheuse", "Ingénieur(e)", "Data analyst / Data scientist", "Développeur(euse) informatique", "Médecin", "Biologiste"]),
-        ["A"] = ("Artistique", "Vous aimez créer, imaginer et vous exprimer librement. Vous êtes attiré par l'originalité, l'esthétique et les activités qui laissent place à l'interprétation personnelle.",
-            ["Designer graphique", "Architecte", "Musicien(ne)", "Rédacteur(rice) / Écrivain(e)", "Décorateur(rice) d'intérieur", "Réalisateur(rice)"]),
-        ["S"] = ("Social", "Vous aimez aider, enseigner et accompagner les autres. Vous êtes à l'aise dans la relation, l'écoute et le travail en équipe au service d'autrui.",
-            ["Enseignant(e)", "Infirmier(ère)", "Travailleur(euse) social(e)", "Responsable RH", "Coach / Formateur(rice)", "Conseiller(ère) en orientation"]),
-        ["E"] = ("Entreprenant", "Vous aimez convaincre, diriger et entreprendre. Vous êtes attiré par la prise de décision, la négociation et l'atteinte d'objectifs concrets.",
-            ["Commercial(e)", "Chef(fe) d'entreprise", "Manager", "Responsable marketing", "Avocat(e)", "Business developer"]),
-        ["C"] = ("Conventionnel", "Vous aimez l'organisation, la précision et les méthodes établies. Vous êtes à l'aise avec les données, les procédures et le respect des règles.",
-            ["Comptable", "Gestionnaire administratif(ve)", "Analyste financier(ère)", "Assistant(e) de direction", "Auditeur(rice)", "Bibliothécaire / Documentaliste"]),
+        ["R"] = new ProfilDimension(
+            "Réaliste",
+            "Vous aimez les activités concrètes, techniques et manuelles. Vous êtes à l'aise avec les outils, les machines ou le travail en extérieur, et préférez des résultats tangibles à la théorie.",
+            ["Technicien(ne) de maintenance", "Électricien(ne)", "Agriculteur / Agricultrice", "Mécanicien(ne)", "Artisan(e) (menuisier, plombier…)", "Sapeur-pompier"],
+            ["Sens pratique", "Autonomie dans l'action", "Goût du concret", "Fiabilité technique"],
+            ["Voir le résultat concret de son travail", "Travailler avec des outils, des machines ou sur le terrain", "Résoudre des problèmes matériels"],
+            ["Manipuler des outils ou des équipements techniques", "Intervenir directement sur le terrain", "Réparer, assembler ou construire quelque chose de concret"],
+            "un cadre où l'on peut agir concrètement, avec des outils ou des équipements, plutôt qu'un environnement purement théorique",
+            "Un score plus faible en Réaliste peut signaler un moindre confort dans les tâches très manuelles ou techniques : un environnement trop axé sur le concret pourrait vous sembler limité."),
+        ["I"] = new ProfilDimension(
+            "Investigateur",
+            "Vous aimez comprendre, analyser et résoudre des problèmes complexes. Vous êtes attiré par la recherche, l'observation et le raisonnement scientifique.",
+            ["Chercheur / Chercheuse", "Ingénieur(e)", "Data analyst / Data scientist", "Développeur(euse) informatique", "Médecin", "Biologiste"],
+            ["Curiosité intellectuelle", "Esprit d'analyse", "Rigueur scientifique", "Goût de comprendre"],
+            ["Comprendre en profondeur avant d'agir", "Résoudre des problèmes complexes par la logique", "Explorer des sujets nouveaux"],
+            ["Analyser des données ou des situations complexes", "Mener une recherche ou une investigation", "Tester des hypothèses de façon méthodique"],
+            "des temps de réflexion et d'analyse protégés des interruptions, avec un accès facile à l'information",
+            "Un score plus faible en Investigateur peut indiquer une préférence pour l'action directe plutôt que pour une longue phase d'analyse : un environnement trop théorique pourrait vous sembler pesant."),
+        ["A"] = new ProfilDimension(
+            "Artistique",
+            "Vous aimez créer, imaginer et vous exprimer librement. Vous êtes attiré par l'originalité, l'esthétique et les activités qui laissent place à l'interprétation personnelle.",
+            ["Designer graphique", "Architecte", "Musicien(ne)", "Rédacteur(rice) / Écrivain(e)", "Décorateur(rice) d'intérieur", "Réalisateur(rice)"],
+            ["Créativité", "Sensibilité esthétique", "Liberté d'expression", "Goût de l'originalité"],
+            ["Exprimer une vision personnelle", "Créer quelque chose d'original", "Sortir des cadres établis"],
+            ["Imaginer ou concevoir une création originale", "Mettre en forme une idée de façon esthétique", "Explorer des solutions non conventionnelles"],
+            "un cadre flexible, peu formaté, qui laisse de la place à l'initiative et à l'expression personnelle",
+            "Un score plus faible en Artistique peut indiquer un moindre confort dans les environnements peu structurés ou exigeant une créativité totalement libre : vous êtes sans doute plus à l'aise avec des méthodes et des repères établis."),
+        ["S"] = new ProfilDimension(
+            "Social",
+            "Vous aimez aider, enseigner et accompagner les autres. Vous êtes à l'aise dans la relation, l'écoute et le travail en équipe au service d'autrui.",
+            ["Enseignant(e)", "Infirmier(ère)", "Travailleur(euse) social(e)", "Responsable RH", "Coach / Formateur(rice)", "Conseiller(ère) en orientation"],
+            ["Empathie", "Sens de l'écoute", "Goût de la transmission", "Esprit de coopération"],
+            ["Aider ou accompagner les autres", "Transmettre un savoir ou une compétence", "Contribuer au bien-être d'un groupe"],
+            ["Écouter, conseiller ou accompagner une personne", "Former, enseigner ou expliquer", "Collaborer étroitement avec une équipe"],
+            "des interactions humaines fréquentes et authentiques, dans une ambiance de coopération plutôt que de compétition",
+            "Un score plus faible en Social peut indiquer une préférence pour un travail plus autonome, avec moins d'interactions ou d'accompagnement direct des autres."),
+        ["E"] = new ProfilDimension(
+            "Entreprenant",
+            "Vous aimez convaincre, diriger et entreprendre. Vous êtes attiré par la prise de décision, la négociation et l'atteinte d'objectifs concrets.",
+            ["Commercial(e)", "Chef(fe) d'entreprise", "Manager", "Responsable marketing", "Avocat(e)", "Business developer"],
+            ["Esprit d'initiative", "Confiance en soi", "Goût du challenge", "Capacité à convaincre"],
+            ["Porter et mener un projet", "Convaincre, négocier ou influencer", "Prendre des décisions et des responsabilités"],
+            ["Piloter un projet ou une équipe", "Négocier ou défendre une idée", "Prendre des initiatives et des décisions rapides"],
+            "un cadre dynamique, orienté résultats, qui laisse de l'autonomie de décision et valorise l'initiative",
+            "Un score plus faible en Entreprenant peut indiquer une préférence pour des rôles d'expertise ou d'exécution plutôt que pour des responsabilités de pilotage, de négociation ou de management commercial."),
+        ["C"] = new ProfilDimension(
+            "Conventionnel",
+            "Vous aimez l'organisation, la précision et les méthodes établies. Vous êtes à l'aise avec les données, les procédures et le respect des règles.",
+            ["Comptable", "Gestionnaire administratif(ve)", "Analyste financier(ère)", "Assistant(e) de direction", "Auditeur(rice)", "Bibliothécaire / Documentaliste"],
+            ["Sens de l'organisation", "Rigueur", "Fiabilité", "Attention au détail"],
+            ["Travailler de façon structurée et méthodique", "Garantir la fiabilité et la qualité d'un résultat", "Suivre des procédures claires"],
+            ["Organiser, classer ou structurer de l'information", "Suivre des procédures avec précision", "Gérer des données ou des documents avec rigueur"],
+            "un cadre structuré, avec des procédures claires et des attentes bien définies",
+            "Un score plus faible en Conventionnel peut indiquer un moindre confort face aux tâches très administratives ou répétitives : vous préférez sans doute des missions moins encadrées par des procédures fixes."),
     };
+
+    // Synergies entre paires de dimensions (theorie publique de l'hexagone de Holland) -
+    // cle canonique via ClePaire (ordre fixe par OrdreDimensions, independant de l'ordre
+    // d'appel).
+    private static readonly Dictionary<string, string> Synergies = new()
+    {
+        ["RI"] = "Pragmatisme technique et rigueur scientifique : vous aimez comprendre en profondeur avant d'agir, puis mettre la solution en pratique.",
+        ["RA"] = "Sens pratique et créativité : vous aimez concevoir des solutions concrètes qui sortent des sentiers battus, à la croisée du faire et de l'imaginer.",
+        ["RS"] = "Compétence technique au service des autres : votre expertise concrète prend tout son sens quand elle aide ou accompagne quelqu'un.",
+        ["RE"] = "Sens de l'action et goût d'entreprendre : vous aimez transformer une idée en résultat concret, avec l'envie de porter et piloter le projet.",
+        ["RC"] = "Rigueur pratique et sens de l'organisation : vous savez structurer votre travail manuel ou technique avec méthode et fiabilité.",
+        ["IA"] = "Curiosité intellectuelle et créativité : vous aimez explorer des idées nouvelles et les traduire en solutions originales.",
+        ["IS"] = "Analyse au service de l'humain : votre goût pour comprendre en profondeur nourrit une réelle volonté d'aider ou de faire progresser les autres.",
+        ["IE"] = "Analyse et esprit d'initiative : vous savez creuser un sujet en profondeur puis en tirer des décisions et des opportunités concrètes.",
+        ["IC"] = "Rigueur analytique et méthode : vous aimez structurer une analyse complexe avec précision et exactitude.",
+        ["AS"] = "Créativité et relation à l'autre : vous aimez utiliser votre sensibilité pour transmettre, exprimer ou accompagner.",
+        ["AE"] = "Créativité et esprit d'initiative : vous aimez porter des idées originales et convaincre les autres de les suivre.",
+        ["AC"] = "Créativité et sens du cadre : vous savez donner une forme structurée et soignée à vos idées.",
+        ["SE"] = "Relation humaine et leadership : vous aimez mobiliser, motiver et emmener un groupe vers un objectif commun.",
+        ["SC"] = "Sens de l'autre et fiabilité : vous accompagnez les autres avec constance, méthode et un vrai souci du détail.",
+        ["EC"] = "Esprit d'initiative et rigueur : vous savez allier ambition et sens de l'organisation pour mener un projet à bien.",
+    };
+
+    private static string ClePaire(string a, string b)
+    {
+        var ia = Array.IndexOf(OrdreDimensions, a);
+        var ib = Array.IndexOf(OrdreDimensions, b);
+        return ia < ib ? a + b : b + a;
+    }
+
+    // Distance sur l'hexagone de Holland (R-I-A-S-E-C-R…) : 1 = voisines, 2 = alternees,
+    // 3 = opposees. Fonde sur la disposition hexagonale standard du modele (position
+    // relative des 6 dimensions), pas une mesure inventee.
+    private static int DistanceHexagone(string a, string b)
+    {
+        var ia = Array.IndexOf(OrdreDimensions, a);
+        var ib = Array.IndexOf(OrdreDimensions, b);
+        var diff = Math.Abs(ia - ib);
+        return Math.Min(diff, OrdreDimensions.Length - diff);
+    }
+
+    private static (string Type, string Description) AnalyserCoherence(string[] lettres)
+    {
+        var distances = new[]
+        {
+            DistanceHexagone(lettres[0], lettres[1]),
+            DistanceHexagone(lettres[1], lettres[2]),
+            DistanceHexagone(lettres[0], lettres[2]),
+        };
+
+        if (distances.Any(d => d == 3))
+        {
+            return ("Contrasté",
+                "Votre profil combine des dimensions opposées sur l'hexagone de Holland : des intérêts a priori éloignés cohabitent chez vous. C'est souvent le signe d'un profil polyvalent, capable de faire le pont entre des univers différents - à condition de trouver un environnement qui laisse une vraie place à chacune de ces facettes plutôt que d'en sacrifier une.");
+        }
+        if (distances.All(d => d == 2))
+        {
+            return ("Complémentaire",
+                "Vos trois dimensions dominantes sont réparties de façon équilibrée sur l'hexagone de Holland, sans être ni immédiatement voisines ni opposées. Cette configuration traduit des facettes complémentaires plutôt que redondantes - une combinaison de forces qui peut être un vrai atout dans des rôles transverses.");
+        }
+        return ("Cohérent",
+            "Vos trois dimensions dominantes se suivent sur l'hexagone de Holland : elles s'articulent naturellement entre elles et dessinent une orientation professionnelle claire et cohérente.");
+    }
+
+    // Construit la synthese interpretative du profil a partir des 3 dimensions dominantes
+    // (CodeHolland, deja ordonnees par score decroissant) et des scores complets - jamais
+    // dimension par dimension, pour ne pas repeter un paragraphe type identique 6 fois.
+    private static RiasecSyntheseInfo ConstruireSynthese(string codeHolland, Dictionary<string, int> scores)
+    {
+        var lettres = codeHolland.Select(c => c.ToString()).ToArray();
+        var (type, descriptionType) = AnalyserCoherence(lettres);
+
+        var synergies = new List<string>();
+        foreach (var (a, b) in new[] { (lettres[0], lettres[1]), (lettres[1], lettres[2]), (lettres[0], lettres[2]) })
+        {
+            if (Synergies.TryGetValue(ClePaire(a, b), out var texte) && !synergies.Contains(texte))
+            {
+                synergies.Add(texte);
+            }
+        }
+
+        var motivations = lettres.SelectMany(l => Profils[l].Motivations.Take(2)).Distinct().ToList();
+        var taches = lettres.SelectMany(l => Profils[l].Taches.Take(2)).Distinct().ToList();
+
+        var dimensionsFaibles = OrdreDimensions
+            .Where(d => !lettres.Contains(d))
+            .OrderBy(d => scores[d])
+            .Take(2)
+            .ToList();
+        var pointsVigilance = dimensionsFaibles.Select(d => Profils[d].PointVigilance).ToList();
+
+        var environnementIdeal = lettres.Select(l => Profils[l].EnvironnementFavorable).ToList();
+
+        var noms = lettres.Select(l => Profils[l].Nom).ToList();
+        var resume = $"Avec un profil {noms[0]} / {noms[1]} / {noms[2]} (code {codeHolland}), vous êtes sans doute plus à l'aise dans un poste qui combine ces trois dimensions plutôt que dans un poste qui n'en mobilise qu'une seule. Utilisez le code Holland et les exemples de métiers ci-dessus comme point de départ pour explorer des pistes - pas comme une liste fermée : de nombreux métiers combinent ces dimensions autrement.";
+
+        return new RiasecSyntheseInfo
+        {
+            TypeProfil = type,
+            TypeProfilDescription = descriptionType,
+            Synergies = synergies,
+            MotivationsCles = motivations,
+            TachesPreferees = taches,
+            PointsVigilance = pointsVigilance,
+            EnvironnementIdeal = environnementIdeal,
+            Resume = resume,
+        };
+    }
 
     // 30 paires de base couvrant les 60 items une fois chacun (jamais deux items de la
     // meme dimension dans une paire), construites par un tirage a graine fixe -
@@ -434,8 +598,10 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
                 Nom = Profils[d].Nom,
                 Description = Profils[d].Description,
                 Metiers = [.. Profils[d].Metiers],
+                Traits = [.. Profils[d].Traits],
                 Score = scores[d],
             }).ToList(),
+            Synthese = ConstruireSynthese(resultat.CodeHolland, scores),
         };
     }
 }

@@ -284,15 +284,23 @@ public static class ChallengeEmailTemplates
             return $"<p><strong>{WebUtility.HtmlEncode(d.Code)} – {WebUtility.HtmlEncode(d.Nom)}</strong><br>{WebUtility.HtmlEncode(d.Description)}{metiers}</p>";
         }));
 
+        var listeSynergies = resultat.Synthese.Synergies.Count > 0
+            ? $"<ul>{string.Join("", resultat.Synthese.Synergies.Select(s => $"<li>{WebUtility.HtmlEncode(s)}</li>"))}</ul>"
+            : "";
+
         var corps = $"""
             <p>Bonjour,</p>
             <p>Merci d'avoir complété le test RIASEC. Voici votre résultat :</p>
-            <p><strong>Code Holland : {WebUtility.HtmlEncode(resultat.CodeHolland)}</strong> (vos 3 dimensions dominantes)</p>
+            <p><strong>Code Holland : {WebUtility.HtmlEncode(resultat.CodeHolland)}</strong> (vos 3 dimensions dominantes) — <strong>Profil {WebUtility.HtmlEncode(resultat.Synthese.TypeProfil)}</strong></p>
             {listeTopTrois}
+            <p>{WebUtility.HtmlEncode(resultat.Synthese.TypeProfilDescription)}</p>
+            {listeSynergies}
             <p>Détail de vos scores (sur 10 points chacun) :</p>
             <ul>
                 {listeDimensions}
             </ul>
+            <p>{WebUtility.HtmlEncode(resultat.Synthese.Resume)}</p>
+            <p style="color:#888780; font-size:12px;">Retrouvez le détail complet (motivations, tâches, environnement idéal, points de vigilance) sur votre espace.</p>
             <p style="color:#888780; font-size:12px;">Cohérence des réponses : {resultat.NombrePairesCoherentes}/{resultat.NombrePairesControle} (indicateur de fiabilité, sans incidence sur votre profil)</p>
             <p style="color:#888780; font-size:12px;">Test basé sur l'O*NET Interest Profiler Short Form, U.S. Department of Labor — National Center for O*NET Development, sous licence Creative Commons Attribution 4.0.</p>
             """;

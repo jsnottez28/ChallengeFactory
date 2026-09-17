@@ -38,6 +38,29 @@ public sealed class RiasecDimensionInfo
     // Holland - illustratif, pas une liste exhaustive ni un outil d'orientation
     // professionnelle a lui seul.
     public List<string> Metiers { get; set; } = [];
+    // Traits caracteristiques courts (tags), en complement de Description.
+    public List<string> Traits { get; set; } = [];
+}
+
+// Synthese interpretative du profil complet, construite a partir des 3 dimensions
+// dominantes (CodeHolland) plutot que dimension par dimension, pour eviter la repetition
+// d'un meme paragraphe type sur chaque dimension. Fondee sur la theorie publique de
+// l'hexagone de Holland (positions relatives des 6 dimensions) - cf. RiasecService.
+public sealed class RiasecSyntheseInfo
+{
+    // "Cohérent" (dimensions consecutives sur l'hexagone), "Complémentaire" (dimensions
+    // reparties de facon egale, ni voisines ni opposees) ou "Contrasté" (au moins deux
+    // dimensions dominantes opposees sur l'hexagone).
+    public string TypeProfil { get; set; } = string.Empty;
+    public string TypeProfilDescription { get; set; } = string.Empty;
+    // Jusqu'a 3 textes, un par paire parmi les 3 dimensions dominantes.
+    public List<string> Synergies { get; set; } = [];
+    public List<string> MotivationsCles { get; set; } = [];
+    public List<string> TachesPreferees { get; set; } = [];
+    // Bases sur la ou les dimensions les plus faibles (hors dimensions dominantes).
+    public List<string> PointsVigilance { get; set; } = [];
+    public List<string> EnvironnementIdeal { get; set; } = [];
+    public string Resume { get; set; } = string.Empty;
 }
 
 public sealed class RiasecResultatInfo
@@ -51,6 +74,7 @@ public sealed class RiasecResultatInfo
     public string? DepartageDimensionB { get; set; }
     public string? DepartageGagnant { get; set; }
     public DateTime CompleteLe { get; set; }
+    public RiasecSyntheseInfo Synthese { get; set; } = new();
 }
 
 // Test psychotechnique RIASEC (modele de Holland), a choix force par paires : pour chaque

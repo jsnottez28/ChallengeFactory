@@ -149,6 +149,21 @@ public class RiasecServiceTests
 
         var enBase = await dbContext.RiasecResultats.SingleAsync();
         Assert.Equal("RCA", enBase.CodeHolland);
+
+        // Synthese interpretative (cf. RiasecService.ConstruireSynthese) : pour le code
+        // RCA, R-C sont voisines sur l'hexagone (distance 1) mais C-A sont opposees
+        // (distance 3) -> profil "Contrasté". Verifie aussi que le contenu est construit a
+        // partir des 3 dimensions dominantes uniquement (jamais dimension par dimension).
+        var synthese = resultat.Synthese;
+        Assert.Equal("Contrasté", synthese.TypeProfil);
+        Assert.False(string.IsNullOrWhiteSpace(synthese.TypeProfilDescription));
+        Assert.Equal(3, synthese.Synergies.Count);
+        Assert.Equal(6, synthese.MotivationsCles.Count);
+        Assert.Equal(6, synthese.TachesPreferees.Count);
+        Assert.Equal(3, synthese.EnvironnementIdeal.Count);
+        // Dimensions les plus faibles hors du code Holland (I=1, E=2, S=5) : I et E.
+        Assert.Equal(2, synthese.PointsVigilance.Count);
+        Assert.Contains("RCA", synthese.Resume);
     }
 
     [Fact]
