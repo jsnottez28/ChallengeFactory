@@ -154,12 +154,12 @@ body {
       {
         <div class="pair-card">
           <label class="pair-option">
-            <input type="radio" name="ReponsesRound1[@paire.PaireId]" value="@paire.OptionA.NumeroQuestion">
+            <input type="radio" name="pair_@paire.PaireId" value="@paire.OptionA.NumeroQuestion">
             <span class="pair-text">@paire.OptionA.Texte</span>
           </label>
           <div class="pair-vs">ou</div>
           <label class="pair-option">
-            <input type="radio" name="ReponsesRound1[@paire.PaireId]" value="@paire.OptionB.NumeroQuestion">
+            <input type="radio" name="pair_@paire.PaireId" value="@paire.OptionB.NumeroQuestion">
             <span class="pair-text">@paire.OptionB.Texte</span>
           </label>
         </div>
@@ -173,9 +173,9 @@ body {
   else if (Model.AfficherQuestionnaire && Model.Etape == 2)
   {
     <form method="post" asp-page-handler="Round2" id="riasecForm">
-      @foreach (var kv in Model.ReponsesRound1)
+      @foreach (var kv in Model.ReponsesRound1Portees)
       {
-        <input type="hidden" name="ReponsesRound1[@kv.Key]" value="@kv.Value">
+        <input type="hidden" name="pair_@kv.Key" value="@kv.Value">
       }
 
       <div class="counter-wrap"><strong id="counterVal">0</strong> paire(s) répondue(s) sur @Model.PairesRound2.Count</div>
@@ -184,12 +184,12 @@ body {
       {
         <div class="pair-card">
           <label class="pair-option">
-            <input type="radio" name="ReponsesRound2[@paire.PaireId]" value="@paire.OptionA.NumeroQuestion">
+            <input type="radio" name="pair2_@paire.PaireId" value="@paire.OptionA.NumeroQuestion">
             <span class="pair-text">@paire.OptionA.Texte</span>
           </label>
           <div class="pair-vs">ou</div>
           <label class="pair-option">
-            <input type="radio" name="ReponsesRound2[@paire.PaireId]" value="@paire.OptionB.NumeroQuestion">
+            <input type="radio" name="pair2_@paire.PaireId" value="@paire.OptionB.NumeroQuestion">
             <span class="pair-text">@paire.OptionB.Texte</span>
           </label>
         </div>
