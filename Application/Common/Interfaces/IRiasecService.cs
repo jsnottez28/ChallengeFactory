@@ -34,6 +34,10 @@ public sealed class RiasecDimensionInfo
     public string Nom { get; set; } = string.Empty; // "Réaliste"
     public string Description { get; set; } = string.Empty;
     public int Score { get; set; } // 0 a 10
+    // Exemples de metiers frequemment associes a cette dimension dans le modele de
+    // Holland - illustratif, pas une liste exhaustive ni un outil d'orientation
+    // professionnelle a lui seul.
+    public List<string> Metiers { get; set; } = [];
 }
 
 public sealed class RiasecResultatInfo

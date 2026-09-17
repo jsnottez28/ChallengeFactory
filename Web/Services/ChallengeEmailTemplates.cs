@@ -277,7 +277,12 @@ public static class ChallengeEmailTemplates
             $"<li>{WebUtility.HtmlEncode(d.Code)} – {WebUtility.HtmlEncode(d.Nom)} : {d.Score}/10</li>"));
 
         var listeTopTrois = string.Join("", topTrois.Select(d =>
-            $"<p><strong>{WebUtility.HtmlEncode(d.Code)} – {WebUtility.HtmlEncode(d.Nom)}</strong><br>{WebUtility.HtmlEncode(d.Description)}</p>"));
+        {
+            var metiers = d.Metiers.Count > 0
+                ? $"<br><span style=\"color:#5f5e5a; font-size:13px;\">Exemples de métiers : {WebUtility.HtmlEncode(string.Join(", ", d.Metiers))}</span>"
+                : "";
+            return $"<p><strong>{WebUtility.HtmlEncode(d.Code)} – {WebUtility.HtmlEncode(d.Nom)}</strong><br>{WebUtility.HtmlEncode(d.Description)}{metiers}</p>";
+        }));
 
         var corps = $"""
             <p>Bonjour,</p>

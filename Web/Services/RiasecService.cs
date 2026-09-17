@@ -89,14 +89,24 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
 
     private static readonly string[] OrdreDimensions = ["R", "I", "A", "S", "E", "C"];
 
-    private static readonly Dictionary<string, (string Nom, string Description)> Profils = new()
+    // Descriptions et exemples de metiers : caracterisation generale des 6 types de
+    // Holland telle qu'enseignee couramment en psychologie de l'orientation (theorie
+    // publique, pas un contenu proprietaire de l'O*NET) - illustratif, jamais un outil
+    // d'orientation professionnelle exhaustif ou predictif a lui seul.
+    private static readonly Dictionary<string, (string Nom, string Description, string[] Metiers)> Profils = new()
     {
-        ["R"] = ("Réaliste", "Vous aimez les activités concrètes, techniques et manuelles. Vous êtes à l'aise avec les outils, les machines ou le travail en extérieur, et préférez des résultats tangibles à la théorie."),
-        ["I"] = ("Investigateur", "Vous aimez comprendre, analyser et résoudre des problèmes complexes. Vous êtes attiré par la recherche, l'observation et le raisonnement scientifique."),
-        ["A"] = ("Artistique", "Vous aimez créer, imaginer et vous exprimer librement. Vous êtes attiré par l'originalité, l'esthétique et les activités qui laissent place à l'interprétation personnelle."),
-        ["S"] = ("Social", "Vous aimez aider, enseigner et accompagner les autres. Vous êtes à l'aise dans la relation, l'écoute et le travail en équipe au service d'autrui."),
-        ["E"] = ("Entreprenant", "Vous aimez convaincre, diriger et entreprendre. Vous êtes attiré par la prise de décision, la négociation et l'atteinte d'objectifs concrets."),
-        ["C"] = ("Conventionnel", "Vous aimez l'organisation, la précision et les méthodes établies. Vous êtes à l'aise avec les données, les procédures et le respect des règles."),
+        ["R"] = ("Réaliste", "Vous aimez les activités concrètes, techniques et manuelles. Vous êtes à l'aise avec les outils, les machines ou le travail en extérieur, et préférez des résultats tangibles à la théorie.",
+            ["Technicien(ne) de maintenance", "Électricien(ne)", "Agriculteur / Agricultrice", "Mécanicien(ne)", "Artisan(e) (menuisier, plombier…)", "Sapeur-pompier"]),
+        ["I"] = ("Investigateur", "Vous aimez comprendre, analyser et résoudre des problèmes complexes. Vous êtes attiré par la recherche, l'observation et le raisonnement scientifique.",
+            ["Chercheur / Chercheuse", "Ingénieur(e)", "Data analyst / Data scientist", "Développeur(euse) informatique", "Médecin", "Biologiste"]),
+        ["A"] = ("Artistique", "Vous aimez créer, imaginer et vous exprimer librement. Vous êtes attiré par l'originalité, l'esthétique et les activités qui laissent place à l'interprétation personnelle.",
+            ["Designer graphique", "Architecte", "Musicien(ne)", "Rédacteur(rice) / Écrivain(e)", "Décorateur(rice) d'intérieur", "Réalisateur(rice)"]),
+        ["S"] = ("Social", "Vous aimez aider, enseigner et accompagner les autres. Vous êtes à l'aise dans la relation, l'écoute et le travail en équipe au service d'autrui.",
+            ["Enseignant(e)", "Infirmier(ère)", "Travailleur(euse) social(e)", "Responsable RH", "Coach / Formateur(rice)", "Conseiller(ère) en orientation"]),
+        ["E"] = ("Entreprenant", "Vous aimez convaincre, diriger et entreprendre. Vous êtes attiré par la prise de décision, la négociation et l'atteinte d'objectifs concrets.",
+            ["Commercial(e)", "Chef(fe) d'entreprise", "Manager", "Responsable marketing", "Avocat(e)", "Business developer"]),
+        ["C"] = ("Conventionnel", "Vous aimez l'organisation, la précision et les méthodes établies. Vous êtes à l'aise avec les données, les procédures et le respect des règles.",
+            ["Comptable", "Gestionnaire administratif(ve)", "Analyste financier(ère)", "Assistant(e) de direction", "Auditeur(rice)", "Bibliothécaire / Documentaliste"]),
     };
 
     // 30 paires de base couvrant les 60 items une fois chacun (jamais deux items de la
@@ -423,6 +433,7 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
                 Code = d,
                 Nom = Profils[d].Nom,
                 Description = Profils[d].Description,
+                Metiers = [.. Profils[d].Metiers],
                 Score = scores[d],
             }).ToList(),
         };

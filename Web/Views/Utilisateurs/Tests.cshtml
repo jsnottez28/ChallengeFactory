@@ -72,6 +72,14 @@
                                     <div class="col-2"><strong>@dim.Code</strong><br>@dim.Score/10</div>
                                 }
                             </div>
+                            @foreach (var dim in rr.Dimensions.Where(d => rr.CodeHolland.Contains(d.Code)).OrderByDescending(d => d.Score))
+                            {
+                                <p class="mb-1"><strong>@dim.Code — @dim.Nom</strong></p>
+                                @if (dim.Metiers.Count > 0)
+                                {
+                                    <p class="text-muted small mb-2">Exemples de métiers : @string.Join(", ", dim.Metiers)</p>
+                                }
+                            }
                             <p class="text-muted small mb-0">Cohérence des réponses : @rr.NombrePairesCoherentes/@rr.NombrePairesControle</p>
                         }
                     </div>

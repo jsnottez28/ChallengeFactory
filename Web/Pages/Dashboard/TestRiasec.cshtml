@@ -103,6 +103,9 @@ body {
 .profile-box { background: #fff; border-radius: 14px; border: 1px solid #e0dfd8; padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
 .profile-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
 .profile-box p { font-size: 14px; color: #5f5e5a; line-height: 1.6; }
+.profile-box .metiers-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #888780; margin-top: 12px; margin-bottom: 6px; }
+.metiers-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.metier-tag { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #f1efe8; color: #2c2c2a; border: 1px solid #e0dfd8; }
 
 .restart-row { display: flex; justify-content: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0dfd8; }
 .restart-row a.btn { text-decoration: none; }
@@ -241,6 +244,16 @@ body {
         <div class="profile-box">
           <h3>@dim.Code — @dim.Nom</h3>
           <p>@dim.Description</p>
+          @if (dim.Metiers.Count > 0)
+          {
+            <p class="metiers-label">Exemples de métiers associés</p>
+            <div class="metiers-tags">
+              @foreach (var metier in dim.Metiers)
+              {
+                <span class="metier-tag">@metier</span>
+              }
+            </div>
+          }
         </div>
       }
 
