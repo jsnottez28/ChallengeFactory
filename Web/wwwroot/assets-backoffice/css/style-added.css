@@ -646,6 +646,20 @@ body:has(.meeting-report-full-height) .footer-wrapper {
     text-decoration: underline;
 }
 
+/* Logo de marque (barres + feuille) dans la navbar backoffice : la variante "dark" (barre
+   blanche au lieu de noire) prend le relais quand le theme sombre est actif, sinon la
+   barre noire du logo se fondrait dans le fond sombre de la navbar (bg-body) - cf.
+   Web/Views/Shared/_LayoutBackend.cshtml. */
+.cf-backend-logo-dark {
+    display: none;
+}
+[data-bs-theme="dark"] .cf-backend-logo-light {
+    display: none;
+}
+[data-bs-theme="dark"] .cf-backend-logo-dark {
+    display: inline-block;
+}
+
 .carte-flip-hint {
     text-align: center;
     font-size: 0.72rem;

@@ -15,6 +15,9 @@
   --cf-indigo: #2b4c6f;
   --cf-indigo-light: #3d6690;
   --cf-indigo-pale: #eef2f6;
+  /* Vert de la feuille du logo (bars + feuille) - echantillonne directement sur les
+     fichiers de marque fournis, cf. Web/wwwroot/brand/mark.png. */
+  --cf-green: #2e7d57;
   --cf-black: #0f0f0f;
   --cf-dark: #1c1c1c;
   --cf-white: #ffffff;
@@ -38,13 +41,27 @@
   --cf-shadow-md: 0 8px 32px rgba(0,0,0,.10);
 }
 
-/* Wordmark logo (texte stylise, comme sur challenges-factory.com) */
+/* Wordmark logo (texte stylise, comme sur challenges-factory.com) + icone de marque
+   (barres + feuille, cf. Web/wwwroot/brand/mark.png) accolee devant le texte. */
 .cf-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  line-height: 1;
+}
+.cf-logo-mark {
+  height: 34px;
+  width: auto;
+  flex-shrink: 0;
+}
+.cf-logo-text {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  text-decoration: none;
-  line-height: 1;
+}
+@media (max-width: 399.98px) {
+  .cf-logo-mark { height: 26px; }
 }
 .cf-logo-name {
   font-family: var(--cf-font-display);
