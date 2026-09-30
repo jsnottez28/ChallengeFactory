@@ -16,7 +16,7 @@
         // seul https://challenges-factory.com fait foi pour le canonical et les balises Open
         // Graph, quel que soit l'hote sur lequel la requete arrive reellement (dev, staging...).
         var metaDescription = ViewData["MetaDescription"] as string
-            ?? "Challenges Factory réalise votre Bilan Carbone® puis transforme votre plan de transition en défis terrain de 9 semaines, avec vos équipes.";
+            ?? "Challenges Factory réalise votre Bilan Carbone® puis transforme votre plan de transition en défis terrain, au rythme de votre objectif, avec vos équipes.";
         var domainePublic = "https://challenges-factory.com";
         var urlCanonique = domainePublic + Context.Request.Path.Value?.TrimEnd('/');
         if (string.IsNullOrEmpty(Context.Request.Path.Value) || Context.Request.Path.Value == "/")
