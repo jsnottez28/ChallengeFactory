@@ -335,10 +335,17 @@
    lors du correctif du 2026-09-11, cf. plus haut). L'ajout du lien "Se connecter" dans le
    header a fait deborder le bouton Pre-diagnostic sur sa propre ligne (retest apres son
    reajout) : resserre legerement nav/bouton/gap ici aussi, memes leviers que le mode
-   compact ci-dessus mais moins agressifs (ce palier reste "confortable" par design). */
+   compact ci-dessus mais moins agressifs (ce palier reste "confortable" par design).
+   Redimensionnee lors de l'ajout de l'icone de marque devant le wordmark (cf. .cf-logo
+   plus haut) : l'icone ajoute ~48px (icone + gap) qui n'entraient plus dans la marge
+   d'origine - mesure via Playwright (getBoundingClientRect) sur ce palier : container
+   1346px, logo+nav+bouton+gaps totalisaient 1369px (deborde de 23px) avec les marges de
+   nav a 10px. Reduites a 7px (-42px sur les 7 liens) pour repasser sous le total
+   disponible avec une marge de securite, confirme sans repli sur 2 lignes de 1400 a
+   1920px inclus. */
 @media (min-width: 1400px) {
-  .tdmenu__navbar-wrap > ul > li a { margin: 0 10px; }
-  .header-auth { gap: 12px !important; }
+  .tdmenu__navbar-wrap > ul > li a { margin: 0 7px; }
+  .header-auth { gap: 10px !important; }
   .header-auth .cf-btn { padding: 13px 24px; }
 }
 
