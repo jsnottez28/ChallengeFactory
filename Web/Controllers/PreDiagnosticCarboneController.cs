@@ -33,9 +33,9 @@ public class PreDiagnosticCarboneController(IPreBilanCarboneService preBilanServ
         var valeurs = new Dictionary<string, decimal>();
         foreach (var facteur in facteurs)
         {
-            if (model.Valeurs.TryGetValue(facteur.Code, out var valeur) && valeur > 0)
+            if (model.Valeurs.TryGetValue(facteur.Code, out var valeur) && valeur is > 0)
             {
-                valeurs[facteur.Code] = valeur;
+                valeurs[facteur.Code] = valeur.Value;
             }
         }
 
@@ -104,7 +104,10 @@ public class PreDiagnosticCarboneController(IPreBilanCarboneService preBilanServ
         // Cle = FacteurEmissionInfo.Code, lu depuis Request.Form["Valeurs[CODE]"] via le
         // binder par defaut - meme principe que les autres formulaires dynamiques de la
         // plateforme (montants/quantites par categorie, jamais de liste fixe en dur cote
-        // vue).
-        public Dictionary<string, decimal> Valeurs { get; set; } = [];
+        // vue). decimal? (et non decimal) : un champ laisse vide soumet une chaine vide,
+        // que le binder ASP.NET Core refuse pour un type valeur non-nullable ("The value
+        // '' is invalid.", un par champ vide) - nullable, il la traite simplement comme
+        // "non renseigne" (null), sans erreur de validation.
+        public Dictionary<string, decimal?> Valeurs { get; set; } = [];
     }
 }
