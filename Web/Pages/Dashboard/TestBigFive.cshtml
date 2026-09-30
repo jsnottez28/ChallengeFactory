@@ -1,0 +1,342 @@
+@page
+@model Web.Pages.Dashboard.TestBigFiveModel
+@{
+    Layout = null;
+    const int questionsParPage = 10;
+    var pages = Model.Questions
+        .Select((question, index) => new { question, page = index / questionsParPage })
+        .GroupBy(x => x.page)
+        .Select(g => g.Select(x => x.question).ToList())
+        .ToList();
+    var couleurs = new Dictionary<string, string> { ["N"] = "n", ["E"] = "e", ["O"] = "o", ["A"] = "a", ["C"] = "c" };
+}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test de personnalité Big Five – Challenges Factory</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #f5f4f0;
+  color: #1a1a18;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.page-wrap { max-width: 780px; margin: 0 auto; }
+
+.bf-header { text-align: center; margin-bottom: 2rem; }
+.bf-badge { display: inline-flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; justify-content: center; }
+.badge {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
+  color: #fff;
+}
+.badge.n { background: #C0392B; }
+.badge.e { background: #E67E22; }
+.badge.o { background: #8E44AD; }
+.badge.a { background: #16A085; }
+.badge.c { background: #2980B9; }
+
+.bf-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+.bf-subtitle { font-size: 15px; color: #5f5e5a; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+
+.status-msg { font-size: 14px; border-radius: 10px; padding: 10px 16px; margin-bottom: 1.5rem; text-align: center; }
+.status-msg.ok { background: #E1F5EE; color: #0F6E56; border: 1px solid #16A085; }
+.status-msg.ko { background: #FAECE7; color: #993C1D; border: 1px solid #C0392B; }
+
+.progress-wrap { margin-bottom: 1.5rem; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: #888780; margin-bottom: 6px; }
+.progress-track { background: #D3D1C7; border-radius: 99px; height: 6px; overflow: hidden; }
+.progress-fill { height: 6px; border-radius: 99px; background: linear-gradient(90deg, #8E44AD, #5B2C6F); transition: width 0.4s ease; width: 0%; }
+
+.scale-legend { display: flex; justify-content: space-between; font-size: 11px; color: #888780; margin-bottom: 10px; padding: 0 4px; }
+
+.question-card {
+  background: #fff; border-radius: 14px; border: 1px solid #e0dfd8;
+  padding: 1rem 1.25rem; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.q-text { font-size: 14px; color: #2c2c2a; margin-bottom: 10px; line-height: 1.4; }
+.q-scale { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.q-scale-option { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+.q-scale-option input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.q-dot {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid #d3d1c7; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: #888780; background: #fff; transition: all 0.15s;
+}
+.q-scale-option input[type="radio"]:checked ~ .q-dot { background: #8E44AD; color: #fff; border-color: #8E44AD; }
+.q-scale-option:hover .q-dot { border-color: #b4b2a9; }
+
+.quiz-page { display: none; }
+.quiz-page.active { display: block; }
+
+.nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; gap: 12px; }
+.btn { padding: 10px 22px; border-radius: 10px; border: 1px solid #d3d1c7; font-size: 14px; font-weight: 500; cursor: pointer; background: #fff; color: #2c2c2a; transition: all 0.15s; }
+.btn:hover { background: #f1efe8; border-color: #b4b2a9; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-primary { background: #8E44AD; color: #fff; border-color: #8E44AD; }
+.btn-primary:hover { background: #5B2C6F; border-color: #5B2C6F; }
+
+.q-counter { font-size: 13px; color: #888780; }
+
+.warn-msg { display: none; font-size: 13px; color: #D85A30; background: #FAECE7; border-radius: 8px; padding: 8px 14px; margin-top: 10px; text-align: center; }
+.warn-msg.show { display: block; }
+
+.result-header { text-align: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e0dfd8; }
+.result-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+.result-header p { font-size: 14px; color: #5f5e5a; }
+
+.domaine-box { background: #fff; border-radius: 14px; border: 1px solid; padding: 1.25rem 1.5rem; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.domaine-box.n { border-color: #C0392B; } .domaine-box.e { border-color: #E67E22; } .domaine-box.o { border-color: #8E44AD; } .domaine-box.a { border-color: #16A085; } .domaine-box.c { border-color: #2980B9; }
+.domaine-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+.domaine-nom { font-size: 16px; font-weight: 700; }
+.domaine-niveau { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 999px; color: #fff; }
+.domaine-niveau.n { background: #C0392B; } .domaine-niveau.e { background: #E67E22; } .domaine-niveau.o { background: #8E44AD; } .domaine-niveau.a { background: #16A085; } .domaine-niveau.c { background: #2980B9; }
+.domaine-bar-track { background: #e0dfd8; border-radius: 99px; height: 10px; overflow: hidden; margin-bottom: 10px; }
+.domaine-bar-fill { height: 10px; border-radius: 99px; }
+.domaine-bar-fill.n { background: #C0392B; } .domaine-bar-fill.e { background: #E67E22; } .domaine-bar-fill.o { background: #8E44AD; } .domaine-bar-fill.a { background: #16A085; } .domaine-bar-fill.c { background: #2980B9; }
+.domaine-desc { font-size: 14px; color: #5f5e5a; line-height: 1.6; margin-bottom: 10px; }
+.facette-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.facette-tag { font-size: 11px; padding: 3px 9px; border-radius: 999px; background: #f1efe8; color: #2c2c2a; border: 1px solid #e0dfd8; }
+
+.synthese-section { background: #fff; border-radius: 14px; border: 1px solid #e0dfd8; padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.synthese-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+.detail-list { margin: 0; padding-left: 1.1rem; }
+.detail-list li { font-size: 14px; color: #5f5e5a; line-height: 1.6; margin-bottom: 6px; }
+.resume-box { background: #f1efe8; border-radius: 12px; padding: 1rem 1.25rem; font-size: 14px; color: #2c2c2a; line-height: 1.6; }
+
+.restart-row { display: flex; justify-content: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0dfd8; }
+.restart-row a.btn { text-decoration: none; }
+
+.page-footer { text-align: center; margin-top: 2rem; font-size: 12px; color: #b4b2a9; line-height: 1.6; }
+
+@@media (max-width: 500px) {
+  .q-dot { width: 26px; height: 26px; font-size: 11px; }
+  .bf-title { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div class="bf-header">
+    <div class="bf-badge">
+      <div class="badge n">N</div>
+      <div class="badge e">E</div>
+      <div class="badge o">O</div>
+      <div class="badge a">A</div>
+      <div class="badge c">C</div>
+    </div>
+    <h1 class="bf-title">Test de personnalité Big Five</h1>
+    <p class="bf-subtitle">
+      @(Model.AfficherQuestionnaire ? "Pour chaque affirmation, indiquez à quel point elle vous correspond." : "Voici votre profil selon le modèle Big Five (OCEAN).")
+    </p>
+  </div>
+
+  @if (Model.StatusMessage is not null)
+  {
+    <div class="status-msg @(Model.DernierEnvoiReussi ? "ok" : "ko")">@Model.StatusMessage</div>
+  }
+
+  @if (Model.AfficherQuestionnaire)
+  {
+    <form method="post" id="bfForm">
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span id="progressLabel">0 / @Model.Questions.Count réponses</span>
+          <span id="pageLabel">Page 1 / @pages.Count</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div class="scale-legend"><span>Très inexact</span><span>Très exact</span></div>
+
+      <div id="questionnaire">
+        @for (var p = 0; p < pages.Count; p++)
+        {
+          <div class="quiz-page @(p == 0 ? "active" : "")" data-page="@p">
+            @foreach (var question in pages[p])
+            {
+              <div class="question-card">
+                <div class="q-text">@question.Texte</div>
+                <div class="q-scale">
+                  @for (var note = 1; note <= 5; note++)
+                  {
+                    <label class="q-scale-option">
+                      <input type="radio" name="Reponses[@question.NumeroQuestion]" value="@note">
+                      <span class="q-dot">@note</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="warn-msg" id="warnMsg">⚠ Veuillez répondre à toutes les affirmations de cette page avant de continuer.</div>
+
+      <div class="nav-row">
+        <button type="button" class="btn" id="btnPrev" disabled>← Précédent</button>
+        <span class="q-counter" id="counter">Questions 1–@Math.Min(questionsParPage, Model.Questions.Count) / @Model.Questions.Count</span>
+        <button type="button" class="btn btn-primary" id="btnNext">Suivant →</button>
+      </div>
+    </form>
+  }
+  else if (Model.DernierResultat is not null)
+  {
+    var r = Model.DernierResultat;
+
+    <div class="results">
+      <div class="result-header">
+        <h2>Votre profil Big Five</h2>
+        <p>Passé le @r.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+      </div>
+
+      @foreach (var dom in r.Domaines)
+      {
+        var css = couleurs[dom.Code];
+        <div class="domaine-box @css">
+          <div class="domaine-head">
+            <span class="domaine-nom">@dom.Code — @dom.Nom</span>
+            <span class="domaine-niveau @css">@dom.Niveau</span>
+          </div>
+          <div class="domaine-bar-track"><div class="domaine-bar-fill @css" style="width:@(dom.PourcentagePosition)%;"></div></div>
+          <p class="domaine-desc">@dom.Description</p>
+          <div class="facette-tags">
+            @foreach (var facette in dom.Facettes)
+            {
+              <span class="facette-tag">@facette.Nom : @facette.Score/20</span>
+            }
+          </div>
+        </div>
+      }
+
+      @{ var s = r.Synthese; }
+      @if (s.PointsForts.Count > 0)
+      {
+        <div class="synthese-section">
+          <h3>Vos points forts</h3>
+          <ul class="detail-list">
+            @foreach (var point in s.PointsForts)
+            {
+              <li>@point</li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (s.PointsVigilance.Count > 0)
+      {
+        <div class="synthese-section">
+          <h3>Points de vigilance</h3>
+          <ul class="detail-list">
+            @foreach (var point in s.PointsVigilance)
+            {
+              <li>@point</li>
+            }
+          </ul>
+        </div>
+      }
+
+      <div class="synthese-section">
+        <h3>En résumé</h3>
+        <div class="resume-box">@s.Resume</div>
+      </div>
+
+      <div class="restart-row">
+        <a class="btn" href="?Repasser=true">↺ Repasser le test</a>
+      </div>
+    </div>
+  }
+
+  <div class="page-footer">
+    Test Big Five · Névrosisme · Extraversion · Ouverture · Agréabilité · Conscienciosité · Challenges Factory<br>
+    Contenu basé sur l'IPIP-NEO-120 (Johnson, 2014), issu de l'International Personality Item Pool (ipip.ori.org), domaine public.
+  </div>
+</div>
+
+@if (Model.AfficherQuestionnaire)
+{
+  <script>
+    (function () {
+      var form = document.getElementById('bfForm');
+      var pages = Array.from(document.querySelectorAll('.quiz-page'));
+      var totalQuestions = @Model.Questions.Count;
+      var questionsParPage = @questionsParPage;
+      var totalPages = pages.length;
+      var currentPage = 0;
+
+      var btnPrev = document.getElementById('btnPrev');
+      var btnNext = document.getElementById('btnNext');
+      var warnMsg = document.getElementById('warnMsg');
+      var progressFill = document.getElementById('progressFill');
+      var progressLabel = document.getElementById('progressLabel');
+      var pageLabel = document.getElementById('pageLabel');
+      var counter = document.getElementById('counter');
+
+      function updateProgress() {
+        var answered = form.querySelectorAll('input[type="radio"]:checked').length;
+        progressFill.style.width = (answered / totalQuestions * 100) + '%';
+        progressLabel.textContent = answered + ' / ' + totalQuestions + ' réponses';
+      }
+
+      function showPage(n) {
+        pages.forEach(function (p, i) { p.classList.toggle('active', i === n); });
+        var start = n * questionsParPage + 1;
+        var end = Math.min(start + questionsParPage - 1, totalQuestions);
+        counter.textContent = 'Questions ' + start + '–' + end + ' / ' + totalQuestions;
+        pageLabel.textContent = 'Page ' + (n + 1) + ' / ' + totalPages;
+        btnPrev.disabled = n === 0;
+        btnNext.textContent = n === totalPages - 1 ? 'Voir mon profil →' : 'Suivant →';
+        warnMsg.classList.remove('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function pageComplete(n) {
+        return pages[n].querySelectorAll('.question-card').length ===
+          Array.from(pages[n].querySelectorAll('.question-card')).filter(function (card) {
+            return card.querySelector('input[type="radio"]:checked') !== null;
+          }).length;
+      }
+
+      form.addEventListener('change', function (e) {
+        if (e.target.matches('input[type="radio"]')) {
+          updateProgress();
+          warnMsg.classList.remove('show');
+        }
+      });
+
+      btnPrev.addEventListener('click', function () {
+        if (currentPage > 0) { currentPage--; showPage(currentPage); }
+      });
+
+      btnNext.addEventListener('click', function () {
+        if (!pageComplete(currentPage)) {
+          warnMsg.classList.add('show');
+          return;
+        }
+        if (currentPage === totalPages - 1) {
+          form.submit();
+          return;
+        }
+        currentPage++;
+        showPage(currentPage);
+      });
+
+      showPage(0);
+      updateProgress();
+    })();
+  </script>
+}
+
+</body>
+</html>

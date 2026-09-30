@@ -310,6 +310,40 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // Test psychotechnique Big Five (modele OCEAN) : envoye automatiquement des que
+    // l'utilisateur termine le test (cf. BigFiveService.RepondreAsync).
+    public static (string Sujet, string CorpsHtml) ResultatBigFive(Application.Common.Interfaces.BigFiveResultatInfo resultat)
+    {
+        const string sujet = "Votre profil de personnalité (Big Five)";
+
+        var listeDomaines = string.Join("", resultat.Domaines.Select(d =>
+            $"""
+            <p><strong>{WebUtility.HtmlEncode(d.Nom)} — {WebUtility.HtmlEncode(d.Niveau)}</strong><br>
+            {WebUtility.HtmlEncode(d.Description)}</p>
+            """));
+
+        var listePointsForts = resultat.Synthese.PointsForts.Count > 0
+            ? $"<p><strong>Points forts</strong></p><ul>{string.Join("", resultat.Synthese.PointsForts.Select(p => $"<li>{WebUtility.HtmlEncode(p)}</li>"))}</ul>"
+            : "";
+
+        var listePointsVigilance = resultat.Synthese.PointsVigilance.Count > 0
+            ? $"<p><strong>Points de vigilance</strong></p><ul>{string.Join("", resultat.Synthese.PointsVigilance.Select(p => $"<li>{WebUtility.HtmlEncode(p)}</li>"))}</ul>"
+            : "";
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété le test de personnalité Big Five. Voici votre résultat :</p>
+            {listeDomaines}
+            {listePointsForts}
+            {listePointsVigilance}
+            <p>{WebUtility.HtmlEncode(resultat.Synthese.Resume)}</p>
+            <p style="color:#888780; font-size:12px;">Retrouvez le détail par facette sur votre espace.</p>
+            <p style="color:#888780; font-size:12px;">Test basé sur l'IPIP-NEO-120 (Johnson, 2014), issu de l'International Personality Item Pool (ipip.ori.org), domaine public.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
     // Pre-diagnostic carbone : jamais nomme "Bilan Carbone®" (marque deposee de
     // l'Association Bilan Carbone, reservee a la methode complete realisee par un
     // praticien) - cf. IPreBilanCarboneService.

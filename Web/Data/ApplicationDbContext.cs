@@ -48,6 +48,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<TestPositionnementReponse> TestsPositionnementReponses { get; set; }
     public DbSet<DiscResultat> DiscResultats { get; set; }
     public DbSet<RiasecResultat> RiasecResultats { get; set; }
+    public DbSet<BigFiveResultat> BigFiveResultats { get; set; }
+    public DbSet<BigFiveResultatFacette> BigFiveResultatFacettes { get; set; }
     public DbSet<FacteurEmission> FacteursEmission { get; set; }
     public DbSet<PreBilanCarbone> PreBilansCarbone { get; set; }
     public DbSet<PreBilanLigne> PreBilanLignes { get; set; }
@@ -490,6 +492,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(r => r.Utilisateur)
             .WithMany()
             .HasForeignKey(r => r.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<BigFiveResultat>()
+            .HasOne(r => r.Utilisateur)
+            .WithMany()
+            .HasForeignKey(r => r.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<BigFiveResultatFacette>()
+            .HasOne(f => f.BigFiveResultat)
+            .WithMany(r => r.Facettes)
+            .HasForeignKey(f => f.BigFiveResultatId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<InvitationCompte>()

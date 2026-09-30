@@ -85,6 +85,28 @@
             </div>
         </div>
 
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom p-4">
+                <h2 class="h5 mb-0">Test Big Five</h2>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.BigFiveResultat is null)
+                {
+                    <p class="text-muted mb-0">Pas encore passé — ce test vous sera proposé au fil de votre parcours.</p>
+                }
+                else
+                {
+                    var bf = Model.BigFiveResultat;
+                    <p class="text-muted small mb-3">Passé le @bf.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+                    @foreach (var dom in bf.Domaines)
+                    {
+                        <p class="mb-1"><strong>@dom.Code — @dom.Nom</strong> : @dom.Niveau (@dom.Score/@dom.ScoreMax)</p>
+                    }
+                    <p class="text-muted mb-0 mt-2">@bf.Synthese.Resume</p>
+                }
+            </div>
+        </div>
+
         @* D'autres tests psychotechniques s'ajouteront ici, chacun dans sa propre carte -
            cf. MesTestsModel. *@
     </div>
