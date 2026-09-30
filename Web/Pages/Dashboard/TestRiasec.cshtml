@@ -143,7 +143,7 @@ body {
       {
         <text>Pour chaque paire, choisissez l'activité qui vous correspond le plus.</text>
       }
-      else if (Model.AfficherQuestionnaire && Model.Etape == 2)
+      else if (Model.AfficherQuestionnaire && (Model.Etape == 2 || Model.Etape == 3))
       {
         <text>Encore quelques paires pour affiner votre profil.</text>
       }
@@ -186,10 +186,44 @@ body {
   }
   else if (Model.AfficherQuestionnaire && Model.Etape == 2)
   {
+    <form method="post" asp-page-handler="Fiabilite" id="riasecForm">
+      @foreach (var kv in Model.ReponsesRound1Portees)
+      {
+        <input type="hidden" name="pair_@kv.Key" value="@kv.Value">
+      }
+
+      <div class="counter-wrap"><strong id="counterVal">0</strong> paire(s) répondue(s) sur @Model.PairesFiabilite.Count</div>
+
+      @foreach (var paire in Model.PairesFiabilite)
+      {
+        <div class="pair-card">
+          <label class="pair-option">
+            <input type="radio" name="fiab_@paire.PaireId" value="@paire.OptionA.NumeroQuestion">
+            <span class="pair-text">@paire.OptionA.Texte</span>
+          </label>
+          <div class="pair-vs">ou</div>
+          <label class="pair-option">
+            <input type="radio" name="fiab_@paire.PaireId" value="@paire.OptionB.NumeroQuestion">
+            <span class="pair-text">@paire.OptionB.Texte</span>
+          </label>
+        </div>
+      }
+
+      <div class="nav-row">
+        <button type="submit" class="btn btn-primary">Continuer →</button>
+      </div>
+    </form>
+  }
+  else if (Model.AfficherQuestionnaire && Model.Etape == 3)
+  {
     <form method="post" asp-page-handler="Round2" id="riasecForm">
       @foreach (var kv in Model.ReponsesRound1Portees)
       {
         <input type="hidden" name="pair_@kv.Key" value="@kv.Value">
+      }
+      @foreach (var kv in Model.ReponsesFiabilitePortees)
+      {
+        <input type="hidden" name="fiab_@kv.Key" value="@kv.Value">
       }
 
       <div class="counter-wrap"><strong id="counterVal">0</strong> paire(s) répondue(s) sur @Model.PairesRound2.Count</div>
@@ -378,7 +412,7 @@ body {
   </div>
 </div>
 
-@if (Model.AfficherQuestionnaire && (Model.Etape == 1 || Model.Etape == 2))
+@if (Model.AfficherQuestionnaire && (Model.Etape == 1 || Model.Etape == 2 || Model.Etape == 3))
 {
   <script>
     (function () {

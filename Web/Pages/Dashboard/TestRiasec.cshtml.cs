@@ -7,20 +7,22 @@ using Web.Data;
 
 namespace Web.Pages.Dashboard;
 
-// Test psychotechnique RIASEC a choix force par paires, en 2 rounds - accessible a tout
-// utilisateur connecte via un lien fixe (copie-colle manuellement dans le champ "Defi
-// individuel" d'une etape, ou envoye manuellement), pas rattache a une Cohorte/etape
-// particuliere - cf. IRiasecService.
+// Test psychotechnique RIASEC a choix force par paires, en 2 ou 3 rounds - accessible a
+// tout utilisateur connecte via un lien fixe (copie-colle manuellement dans le champ
+// "Defi individuel" d'une etape, ou envoye manuellement), pas rattache a une
+// Cohorte/etape particuliere - cf. IRiasecService.
 //
-// Flux : OnGetAsync affiche le round 1 (36 paires). OnPostRound1Async verifie s'il faut un
-// round 2 de departage (cf. IRiasecService.PreparerRound2) ; si oui, reaffiche la page avec
-// les paires de departage et les reponses du round 1 portees en champs caches ; sinon
-// finalise directement. OnPostRound2Async recoit le round 1 (champs caches) + le round 2 et
-// finalise.
+// Flux : OnGetAsync affiche le round 1 (30 paires). OnPostRound1Async construit le round
+// de fiabilite (cf. IRiasecService.PreparerFiabilite, toujours 6 paires, jamais
+// conditionnel) et reaffiche la page avec ces paires + le round 1 porte en champs caches.
+// OnPostFiabiliteAsync recoit round 1 + fiabilite, verifie s'il faut un round 2 de
+// departage (cf. IRiasecService.PreparerRound2) ; si oui, reaffiche avec les paires de
+// departage et round 1 + fiabilite portes en champs caches ; sinon finalise directement.
+// OnPostRound2Async recoit round 1 + fiabilite (champs caches) + round 2 et finalise.
 //
-// Les reponses sont lues directement depuis Request.Form (prefixe "pair_"/"pair2_" +
-// PaireId) plutot que via [BindProperty] sur un Dictionary<int,int> : le binder de
-// dictionnaire d'ASP.NET Core s'est avere instable sur ce flux a deux formulaires avec
+// Les reponses sont lues directement depuis Request.Form (prefixe "pair_"/"fiab_"/"pair2_"
+// + PaireId) plutot que via [BindProperty] sur un Dictionary<int,int> : le binder de
+// dictionnaire d'ASP.NET Core s'est avere instable sur ce flux a plusieurs formulaires avec
 // report de valeurs en champs caches (FormatException sur le nom de propriete lui-meme).
 // Lecture manuelle, simple et explicite - le meme principe que Niveaux[...] ailleurs sur la
 // plateforme (TestPositionnement) fonctionne en formulaire unique, mais pas ici.
@@ -30,14 +32,17 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
     [BindProperty(SupportsGet = true)]
     public bool Repasser { get; set; }
 
-    // 1 = round 1 a afficher, 2 = round 2 a afficher (round 1 deja rempli, porte en champs
-    // caches par la vue).
+    // 1 = round 1, 2 = round de fiabilite (toujours affiche apres le round 1), 3 = round 2
+    // de departage (conditionnel) - les etapes precedentes sont portees en champs caches
+    // par la vue.
     public int Etape { get; private set; } = 1;
 
     public List<RiasecPaireInfo> PairesRound1 { get; private set; } = [];
+    public List<RiasecPaireInfo> PairesFiabilite { get; private set; } = [];
     public List<RiasecPaireInfo> PairesRound2 { get; private set; } = [];
 
     public Dictionary<int, int> ReponsesRound1Portees { get; private set; } = [];
+    public Dictionary<int, int> ReponsesFiabilitePortees { get; private set; } = [];
 
     public RiasecResultatInfo? DernierResultat { get; private set; }
 
@@ -66,9 +71,9 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
         var pairesRound1 = riasecService.GetPairesRound1();
         var reponsesRound1 = LireReponses(pairesRound1, "pair_");
 
-        var round2 = riasecService.PreparerRound2(reponsesRound1);
+        var fiabilite = riasecService.PreparerFiabilite(reponsesRound1);
 
-        if (round2 is null)
+        if (fiabilite is null)
         {
             StatusMessage = "Merci de répondre à toutes les paires avant de continuer.";
             DernierEnvoiReussi = false;
@@ -76,14 +81,40 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
             return Page();
         }
 
-        if (round2.Paires.Count == 0)
+        Etape = 2;
+        PairesFiabilite = fiabilite;
+        ReponsesRound1Portees = reponsesRound1;
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostFiabiliteAsync()
+    {
+        var utilisateurId = userManager.GetUserId(User)!;
+        var pairesRound1 = riasecService.GetPairesRound1();
+        var reponsesRound1 = LireReponses(pairesRound1, "pair_");
+
+        var pairesFiabilite = riasecService.PreparerFiabilite(reponsesRound1) ?? [];
+        var reponsesFiabilite = LireReponses(pairesFiabilite, "fiab_");
+
+        var round2 = riasecService.PreparerRound2(reponsesRound1);
+
+        if (round2 is null)
         {
-            return await FinaliserAsync(utilisateurId, reponsesRound1, []);
+            StatusMessage = "Merci de répondre à toutes les paires avant de continuer.";
+            DernierEnvoiReussi = false;
+            PairesRound1 = riasecService.GetPairesRound1();
+            return Page();
         }
 
-        Etape = 2;
+        if (round2.Paires.Count == 0)
+        {
+            return await FinaliserAsync(utilisateurId, reponsesRound1, reponsesFiabilite, []);
+        }
+
+        Etape = 3;
         PairesRound2 = round2.Paires;
         ReponsesRound1Portees = reponsesRound1;
+        ReponsesFiabilitePortees = reponsesFiabilite;
         return Page();
     }
 
@@ -93,11 +124,14 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
         var pairesRound1 = riasecService.GetPairesRound1();
         var reponsesRound1 = LireReponses(pairesRound1, "pair_");
 
+        var pairesFiabilite = riasecService.PreparerFiabilite(reponsesRound1) ?? [];
+        var reponsesFiabilite = LireReponses(pairesFiabilite, "fiab_");
+
         var round2 = riasecService.PreparerRound2(reponsesRound1);
         var pairesRound2 = round2?.Paires ?? [];
         var reponsesRound2 = LireReponses(pairesRound2, "pair2_");
 
-        return await FinaliserAsync(utilisateurId, reponsesRound1, reponsesRound2);
+        return await FinaliserAsync(utilisateurId, reponsesRound1, reponsesFiabilite, reponsesRound2);
     }
 
     private Dictionary<int, int> LireReponses(List<RiasecPaireInfo> paires, string prefixe)
@@ -114,9 +148,9 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
         return reponses;
     }
 
-    private async Task<IActionResult> FinaliserAsync(string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesRound2)
+    private async Task<IActionResult> FinaliserAsync(string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2)
     {
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateurId, reponsesRound1, reponsesRound2);
+        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateurId, reponsesRound1, reponsesFiabilite, reponsesRound2);
 
         DernierEnvoiReussi = success;
         echecSoumission = !success;
