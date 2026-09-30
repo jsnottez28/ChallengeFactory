@@ -77,6 +77,7 @@ builder.Services.AddScoped<IReclamationService, ReclamationService>();
 builder.Services.AddScoped<ITestPositionnementService, TestPositionnementService>();
 builder.Services.AddScoped<IDiscService, DiscService>();
 builder.Services.AddScoped<IRiasecService, RiasecService>();
+builder.Services.AddScoped<IPreBilanCarboneService, PreBilanCarboneService>();
 
 builder.Services.Configure<PreuveFichierStockageSettings>(
     builder.Configuration.GetSection("PreuveFichierStockage"));

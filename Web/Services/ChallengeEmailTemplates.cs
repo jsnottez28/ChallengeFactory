@@ -1,4 +1,6 @@
 using System.Net;
+using Application.Common.Interfaces;
+using Domain.Entities;
 
 namespace Web.Services;
 
@@ -307,6 +309,50 @@ public static class ChallengeEmailTemplates
 
         return (sujet, corps);
     }
+
+    // Pre-diagnostic carbone : jamais nomme "Bilan Carbone®" (marque deposee de
+    // l'Association Bilan Carbone, reservee a la methode complete realisee par un
+    // praticien) - cf. IPreBilanCarboneService.
+    public static (string Sujet, string CorpsHtml) ResultatPreBilanCarbone(PreBilanResultatInfo resultat)
+    {
+        const string sujet = "Votre pré-diagnostic carbone";
+
+        var totalTonnes = resultat.TotalEmissionsKgCO2e / 1000m;
+
+        var listePostes = string.Join("", resultat.ParPoste.Select(p =>
+            $"<li>{WebUtility.HtmlEncode(LibellePoste(p.Poste))} : <strong>{(p.EmissionsTotalesKgCO2e / 1000m):N1} t CO2e</strong></li>"));
+
+        var listeLignes = string.Join("", resultat.Lignes.Take(5).Select(l =>
+            $"<li>{WebUtility.HtmlEncode(l.Nom)} : {(l.EmissionsKgCO2e / 1000m):N2} t CO2e</li>"));
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété votre pré-diagnostic carbone. Voici votre estimation :</p>
+            <p style="font-size:22px;"><strong>{totalTonnes:N1} tonnes CO2e / an</strong></p>
+            <p>Répartition par poste :</p>
+            <ul>
+                {listePostes}
+            </ul>
+            <p>Principaux postes contributeurs :</p>
+            <ul>
+                {listeLignes}
+            </ul>
+            <p style="color:#888780; font-size:12px;">Cette estimation est une approche monétaire simplifiée (ratios d'émission par euro dépensé), utile pour prioriser vos actions. Elle ne remplace pas un Bilan Carbone® complet réalisé par un praticien certifié, qui reste nécessaire pour toute démarche réglementaire ou de certification.</p>
+            <p style="color:#888780; font-size:12px;">Facteurs d'émission : ADEME, Base Carbone, France continentale — données publiques (licence ouverte).</p>
+            <p>Notre équipe peut vous accompagner pour aller plus loin : <a href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo">réserver un échange</a>.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    private static string LibellePoste(PosteEmission poste) => poste switch
+    {
+        PosteEmission.AchatsBiensEtServices => "Achats de biens et services",
+        PosteEmission.Immobilisations => "Immobilisations",
+        PosteEmission.Energie => "Énergie",
+        PosteEmission.Deplacements => "Déplacements",
+        _ => poste.ToString(),
+    };
 
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {

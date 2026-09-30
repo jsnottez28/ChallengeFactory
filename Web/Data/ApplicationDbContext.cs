@@ -48,6 +48,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<TestPositionnementReponse> TestsPositionnementReponses { get; set; }
     public DbSet<DiscResultat> DiscResultats { get; set; }
     public DbSet<RiasecResultat> RiasecResultats { get; set; }
+    public DbSet<FacteurEmission> FacteursEmission { get; set; }
+    public DbSet<PreBilanCarbone> PreBilansCarbone { get; set; }
+    public DbSet<PreBilanLigne> PreBilanLignes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -106,6 +109,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         ConfigureChallenges(builder);
         ConfigurePreuvesPointsEtForum(builder);
         ConfigureNotifications(builder);
+        ConfigurePreBilanCarbone(builder);
     }
 
     private static void ConfigureDroitsEtPermissions(ModelBuilder builder)
@@ -654,5 +658,33 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(n => n.UtilisateurId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    private static void ConfigurePreBilanCarbone(ModelBuilder builder)
+    {
+        builder.Entity<FacteurEmission>()
+            .HasIndex(f => f.Code)
+            .IsUnique();
+        // 8 decimales : certains facteurs sources (ex. avion moyen courrier) sont donnes
+        // avec cette precision dans le fichier Bilan Carbone(R) - a preserver telle quelle.
+        builder.Entity<FacteurEmission>().Property(f => f.ValeurKgCO2eParUnite).HasPrecision(14, 8);
+
+        builder.Entity<PreBilanCarbone>().Property(p => p.ChiffreAffairesKEuros).HasPrecision(14, 2);
+        builder.Entity<PreBilanCarbone>().Property(p => p.TotalEmissionsKgCO2e).HasPrecision(14, 2);
+
+        builder.Entity<PreBilanLigne>().Property(l => l.ValeurSaisie).HasPrecision(14, 2);
+        builder.Entity<PreBilanLigne>().Property(l => l.EmissionsKgCO2e).HasPrecision(14, 2);
+
+        builder.Entity<PreBilanLigne>()
+            .HasOne(l => l.PreBilanCarbone)
+            .WithMany(p => p.Lignes)
+            .HasForeignKey(l => l.PreBilanCarboneId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PreBilanLigne>()
+            .HasOne(l => l.FacteurEmission)
+            .WithMany()
+            .HasForeignKey(l => l.FacteurEmissionId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

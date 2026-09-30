@@ -1,0 +1,132 @@
+@model Application.Common.Interfaces.PreBilanResultatInfo
+@using Application.Common.Interfaces
+@using Domain.Entities
+@{
+    ViewData["Title"] = "Pré-diagnostic carbone";
+    var infoCrm = ViewData["InfoCrm"] as PreBilanCarboneInfo;
+
+    string LibellePoste(PosteEmission poste) => poste switch
+    {
+        PosteEmission.AchatsBiensEtServices => "Achats de biens et services",
+        PosteEmission.Immobilisations => "Immobilisations",
+        PosteEmission.Energie => "Énergie",
+        PosteEmission.Deplacements => "Déplacements",
+        _ => poste.ToString(),
+    };
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="PreDiagnosticsCarbone" asp-action="Index">Pré-diagnostics carbone</a></li>
+                <li class="breadcrumb-item active" aria-current="page">#@Model.Id</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration — CRM</p>
+                <h1 class="h3 mb-0">@($"{infoCrm?.Prenom} {infoCrm?.Nom}".Trim())</h1>
+                <p class="text-muted mb-0">Déposé le @Model.DeposeLe.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Résultat</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="mb-3"><strong>@((Model.TotalEmissionsKgCO2e / 1000m).ToString("N1")) t CO2e / an</strong></p>
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var poste in Model.ParPoste)
+                            {
+                                <li class="d-flex justify-content-between border-bottom py-2">
+                                    <span>@LibellePoste(poste.Poste)</span>
+                                    <strong>@((poste.EmissionsTotalesKgCO2e / 1000m).ToString("N1")) t CO2e</strong>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Détail des lignes saisies</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Catégorie</th>
+                                        <th scope="col" class="text-end">Donnée saisie</th>
+                                        <th scope="col" class="text-end">Émissions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ligne in Model.Lignes)
+                                    {
+                                        <tr>
+                                            <td>@ligne.Nom</td>
+                                            <td class="text-end">@ligne.ValeurSaisie.ToString("N0")</td>
+                                            <td class="text-end">@((ligne.EmissionsKgCO2e / 1000m).ToString("N2")) t CO2e</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Coordonnées</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="mb-1"><strong>Email :</strong> <a href="mailto:@infoCrm?.Email">@infoCrm?.Email</a></p>
+                        @if (!string.IsNullOrWhiteSpace(infoCrm?.Telephone)) { <p class="mb-1"><strong>Téléphone :</strong> @infoCrm.Telephone</p> }
+                        @if (!string.IsNullOrWhiteSpace(infoCrm?.Societe)) { <p class="mb-1"><strong>Société :</strong> @infoCrm.Societe</p> }
+                        @if (!string.IsNullOrWhiteSpace(infoCrm?.SecteurActivite)) { <p class="mb-1"><strong>Secteur :</strong> @infoCrm.SecteurActivite</p> }
+                        @if (infoCrm?.EffectifEtp is not null) { <p class="mb-1"><strong>Effectif :</strong> @infoCrm.EffectifEtp ETP</p> }
+                        @if (infoCrm?.ChiffreAffairesKEuros is not null) { <p class="mb-0"><strong>CA :</strong> @infoCrm.ChiffreAffairesKEuros.Value.ToString("N0") k€</p> }
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Suivi commercial</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <droit-visible code="PREBILAN.MODIFIER">
+                            <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="ChangerStatut" asp-route-id="@Model.Id" class="d-flex gap-2">
+                                @Html.AntiForgeryToken()
+                                <select name="statut" class="form-select">
+                                    @foreach (var statut in Enum.GetValues<StatutPreBilanCrm>())
+                                    {
+                                        <option value="@statut" selected="@(statut == infoCrm?.StatutCrm)">@statut</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                            </form>
+                        </droit-visible>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
