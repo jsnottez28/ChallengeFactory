@@ -30,6 +30,12 @@ public class TestsPsychotechniquesModel : PageModel
                 Description = "60 activités à cocher, profil d'intérêts professionnels selon le modèle de Holland (Réaliste, Investigateur, Artistique, Social, Entreprenant, Conventionnel).",
                 LienAcces = Url.Page("/Dashboard/TestRiasec", null, null, Request.Scheme) ?? "/Dashboard/TestRiasec",
             },
+            new TestPsychotechniqueItem
+            {
+                Nom = "Test Big Five",
+                Description = "116 affirmations notées de 1 à 5, profil de personnalité selon le modèle OCEAN (Névrosisme, Extraversion, Ouverture, Agréabilité, Conscienciosité).",
+                LienAcces = Url.Page("/Dashboard/TestBigFive", null, null, Request.Scheme) ?? "/Dashboard/TestBigFive",
+            },
         ];
     }
 
