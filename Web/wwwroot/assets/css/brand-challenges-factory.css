@@ -304,15 +304,29 @@
   }
 }
 
-/* Mode compact du header, palier xl uniquement (1200-1399.98px) : resserre nav et
-   bouton pour que logo + menu + bouton tiennent sur une seule ligne avec de la marge
-   (cf. commentaire ci-dessus). Charge apres main.css (voir _Layout.cshtml) : memes
-   selecteurs, l'emporte par ordre de cascade sans besoin de !important - SAUF pour la
-   regle de marge des liens de nav, ou main.css utilise un selecteur plus specifique
-   (.tdmenu-2 .tdmenu__navbar-wrap ul li a, 2 classes) qu'il faut reprendre a
-   l'identique pour l'emporter (la cascade seule ne suffit pas en cas de specificite
-   inferieure). */
-@media (min-width: 1200px) and (max-width: 1399.98px) {
+/* Mode compact du header, tout le palier desktop (>= 1200px, pas de plafond) : resserre
+   nav et bouton pour que logo + menu + bouton tiennent sur une seule ligne avec de la
+   marge. Charge apres main.css (voir _Layout.cshtml) : memes selecteurs, l'emporte par
+   ordre de cascade sans besoin de !important - SAUF pour la regle de marge des liens de
+   nav, ou main.css utilise un selecteur plus specifique (.tdmenu-2 .tdmenu__navbar-wrap
+   ul li a, 2 classes) qu'il faut reprendre a l'identique pour l'emporter (la cascade
+   seule ne suffit pas en cas de specificite inferieure).
+
+   Historique : ce mode compact n'etait applique qu'entre 1200 et 1399.98px, avec un
+   palier ">= 1400px" plus "confortable" (marges plus larges) au-dela, sur l'hypothese
+   qu'un ecran plus large laisserait toujours plus de place. C'est faux ici : le
+   .container Bootstrap plafonne a 1370px des 1400px de viewport et ne grandit plus
+   jamais au-dela (pas de palier xxl superieur dans ce theme) - mesure via Playwright
+   (getBoundingClientRect) : container ~1346px de large aussi bien a 1400 qu'a 2560px de
+   viewport. Le palier "confortable" partait donc d'une marge insuffisante des que le
+   contenu du header s'alourdissait (ajout du lien "Se connecter", puis de l'icone de
+   marque ~48px devant le wordmark) et repartait en repli sur 2 lignes de facon
+   difficile a prevoir (marge de securite ecrasee par de simples variations de rendu de
+   police entre environnements). Le mode compact ci-dessous, lui, a toujours ete
+   confirme avec une marge confortable dans le plus petit des deux containers
+   (~1116px, palier 1200-1399) : applique maintenant sans plafond, il dispose donc de
+   strictement plus de place a tous les paliers >= 1400px, jamais moins. */
+@media (min-width: 1200px) {
   #header-sticky .container > .d-flex { gap: 8px; }
   .cf-logo-name { font-size: 17px; letter-spacing: 1.5px; }
   .cf-logo-tagline { display: none; }
@@ -329,24 +343,6 @@
     gap: 5px;
   }
   .cf-header-login-link { font-size: 12px; }
-}
-
-/* Palier >= 1400px : jusqu'ici la marge exacte pour tenir sur une seule ligne (mesuree
-   lors du correctif du 2026-09-11, cf. plus haut). L'ajout du lien "Se connecter" dans le
-   header a fait deborder le bouton Pre-diagnostic sur sa propre ligne (retest apres son
-   reajout) : resserre legerement nav/bouton/gap ici aussi, memes leviers que le mode
-   compact ci-dessus mais moins agressifs (ce palier reste "confortable" par design).
-   Redimensionnee lors de l'ajout de l'icone de marque devant le wordmark (cf. .cf-logo
-   plus haut) : l'icone ajoute ~48px (icone + gap) qui n'entraient plus dans la marge
-   d'origine - mesure via Playwright (getBoundingClientRect) sur ce palier : container
-   1346px, logo+nav+bouton+gaps totalisaient 1369px (deborde de 23px) avec les marges de
-   nav a 10px. Reduites a 7px (-42px sur les 7 liens) pour repasser sous le total
-   disponible avec une marge de securite, confirme sans repli sur 2 lignes de 1400 a
-   1920px inclus. */
-@media (min-width: 1400px) {
-  .tdmenu__navbar-wrap > ul > li a { margin: 0 7px; }
-  .header-auth { gap: 10px !important; }
-  .header-auth .cf-btn { padding: 13px 24px; }
 }
 
 /* Hero (fond clair, degrade orange decoratif) */
