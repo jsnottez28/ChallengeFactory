@@ -14,57 +14,65 @@
     };
 }
 
-<section class="cf-hero-home" style="padding:90px 0 50px;">
+@* Le header du site est en position absolute (cf. .td-transparent) : le degagement en
+   haut de page (padding-top: var(--cf-header-clearance)) reste necessaire pour ne pas
+   passer sous le header. Le reste de la page est volontairement compact - resultat court
+   (un chiffre + deux listes courtes), pas une page vitrine, pas besoin des espacements
+   d'une section cf-section standard (100px). *@
+<section class="cf-hero-home" style="padding-bottom:16px;">
     <div class="container">
         <span class="cf-badge">Résultat</span>
-        <h1 class="cf-h1 mb-3" style="font-size:clamp(34px,4.5vw,52px);">Votre estimation carbone</h1>
-        <p class="cf-lead" style="max-width:620px;">
-            Le détail vient également de vous être envoyé par email.
-        </p>
+        <h1 class="cf-h1 mb-1" style="font-size:clamp(26px,4vw,38px);">Votre estimation carbone</h1>
+        <p class="text-muted mb-0" style="max-width:620px;">Le détail vient également de vous être envoyé par email.</p>
     </div>
 </section>
 
-<section class="cf-section pt-0">
+<section style="padding: 12px 0 50px;">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="cf-card mb-4 text-center">
-                    <p class="text-muted small mb-1">Estimation annuelle</p>
-                    <div style="font-size:48px; font-weight:700; color:var(--cf-orange);">@totalTonnes.ToString("N1") <span style="font-size:22px;">t CO2e / an</span></div>
+            <div class="col-lg-9">
+                <div class="cf-card mb-3 text-center py-3" style="height:auto;">
+                    <p class="text-muted small mb-0">Estimation annuelle</p>
+                    <div style="font-size:40px; font-weight:700; color:var(--cf-orange); line-height:1.2;">@totalTonnes.ToString("N1") <span style="font-size:18px;">t CO2e / an</span></div>
                 </div>
 
-                <div class="cf-card mb-4">
-                    <h3 class="cf-h3 mb-3">Répartition par poste</h3>
-                    <ul class="list-unstyled mb-0">
-                        @foreach (var poste in Model.ParPoste)
-                        {
-                            <li class="d-flex justify-content-between border-bottom py-2">
-                                <span>@LibellePoste(poste.Poste)</span>
-                                <strong>@((poste.EmissionsTotalesKgCO2e / 1000m).ToString("N1")) t CO2e</strong>
-                            </li>
-                        }
-                    </ul>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="cf-card h-100">
+                            <h3 class="cf-h3 mb-2" style="font-size:16px;">Répartition par poste</h3>
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var poste in Model.ParPoste)
+                                {
+                                    <li class="d-flex justify-content-between border-bottom py-1 small">
+                                        <span>@LibellePoste(poste.Poste)</span>
+                                        <strong>@((poste.EmissionsTotalesKgCO2e / 1000m).ToString("N1")) t</strong>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="cf-card h-100">
+                            <h3 class="cf-h3 mb-2" style="font-size:16px;">Principaux postes contributeurs</h3>
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var ligne in Model.Lignes.Take(6))
+                                {
+                                    <li class="d-flex justify-content-between align-items-center border-bottom py-1 small gap-2">
+                                        <span class="text-truncate">@ligne.Nom</span>
+                                        <span class="text-muted text-nowrap">@((ligne.EmissionsKgCO2e / 1000m).ToString("N2")) t</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="cf-card mb-4">
-                    <h3 class="cf-h3 mb-3">Principaux postes contributeurs</h3>
-                    <ul class="list-unstyled mb-0">
-                        @foreach (var ligne in Model.Lignes.Take(8))
-                        {
-                            <li class="d-flex justify-content-between border-bottom py-2">
-                                <span>@ligne.Nom</span>
-                                <span class="text-muted">@((ligne.EmissionsKgCO2e / 1000m).ToString("N2")) t CO2e</span>
-                            </li>
-                        }
-                    </ul>
-                </div>
-
-                <p class="text-muted small">
+                <p class="text-muted small mb-3">
                     Estimation en approche monétaire (ratios ADEME Base Carbone, données publiques), à titre
                     indicatif. Elle ne remplace pas un Bilan Carbone® complet réalisé par un praticien certifié.
                 </p>
 
-                <div class="text-center mt-4">
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
                     <a class="cf-btn cf-btn-primary" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Échanger avec un expert</a>
                     <a class="cf-btn" asp-controller="PreDiagnosticCarbone" asp-action="Index">Refaire une estimation</a>
                 </div>
