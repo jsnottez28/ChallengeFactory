@@ -50,6 +50,34 @@ public class ChallengeServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ConserveLeFormatCollectifParDefaut_EtPermetBilanCompetencesIndividuel()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var challengeService = new ChallengeService(dbContext);
+
+        var (_, _, challengeParDefaut) = await challengeService.CreateAsync(new ChallengeInput { Titre = "Sans format précisé", Mode = ModePlateforme.BtoC });
+        Assert.Equal(FormatChallenge.Collectif, challengeParDefaut!.Format);
+
+        var (_, _, challengeBilan) = await challengeService.CreateAsync(new ChallengeInput
+        {
+            Titre = "Bilan de compétences",
+            Mode = ModePlateforme.BtoC,
+            Format = FormatChallenge.BilanCompetencesIndividuel,
+        });
+        Assert.Equal(FormatChallenge.BilanCompetencesIndividuel, challengeBilan!.Format);
+
+        var (success, _) = await challengeService.UpdateAsync(challengeParDefaut.Id, new ChallengeInput
+        {
+            Titre = challengeParDefaut.Titre,
+            Mode = challengeParDefaut.Mode,
+            Format = FormatChallenge.BilanCompetencesIndividuel,
+        });
+        Assert.True(success);
+        var challengeMisAJour = await challengeService.GetByIdAsync(challengeParDefaut.Id);
+        Assert.Equal(FormatChallenge.BilanCompetencesIndividuel, challengeMisAJour!.Format);
+    }
+
+    [Fact]
     public async Task PublierAsync_Echoue_SiAucuneEtape()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
