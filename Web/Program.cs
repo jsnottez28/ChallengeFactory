@@ -79,6 +79,7 @@ builder.Services.AddScoped<IDiscService, DiscService>();
 builder.Services.AddScoped<IRiasecService, RiasecService>();
 builder.Services.AddScoped<IBigFiveService, BigFiveService>();
 builder.Services.AddScoped<IPreBilanCarboneService, PreBilanCarboneService>();
+builder.Services.AddScoped<IQualiopiDashboardService, QualiopiDashboardService>();
 
 builder.Services.Configure<PreuveFichierStockageSettings>(
     builder.Configuration.GetSection("PreuveFichierStockage"));
