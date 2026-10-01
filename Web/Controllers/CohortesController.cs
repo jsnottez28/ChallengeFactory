@@ -343,11 +343,17 @@ public class CohortesController(
     [HttpPost("{cohorteId:int}/Membres/{cohorteMembreId:int}/Etapes/{etapeId:int}/Cartes")]
     [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CartesSupplementairesMembre(int cohorteId, int cohorteMembreId, int etapeId, [FromForm] List<int>? carteIds)
+    public async Task<IActionResult> CartesSupplementairesMembre(int cohorteId, int cohorteMembreId, int etapeId, [FromForm] List<int>? carteIds, string? instructionsPersonnalisees)
     {
         var gestionnaireId = userManager.GetUserId(User)!;
-        var (success, errorMessage) = await cohorteService.DefinirCartesSupplementairesMembreAsync(cohorteMembreId, etapeId, carteIds ?? [], gestionnaireId);
-        TempData["StatusMessage"] = success ? "Cartes personnalisées mises à jour." : errorMessage;
+
+        var (successCartes, errorMessageCartes) = await cohorteService.DefinirCartesSupplementairesMembreAsync(cohorteMembreId, etapeId, carteIds ?? [], gestionnaireId);
+        var (successInstructions, errorMessageInstructions) = await cohorteService.DefinirInstructionsPersonnaliseesMembreAsync(cohorteMembreId, etapeId, instructionsPersonnalisees, gestionnaireId);
+
+        TempData["StatusMessage"] = successCartes && successInstructions
+            ? "Personnalisation mise à jour."
+            : errorMessageCartes ?? errorMessageInstructions;
+
         return RedirectToAction(nameof(Details), new { id = cohorteId });
     }
 

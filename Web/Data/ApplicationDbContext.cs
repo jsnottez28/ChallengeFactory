@@ -29,6 +29,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Cohorte> Cohortes { get; set; }
     public DbSet<CohorteMembre> CohorteMembres { get; set; }
     public DbSet<CohorteMembreCarteSupplementaire> CohorteMembreCartesSupplementaires { get; set; }
+    public DbSet<CohorteMembreEtapePersonnalisation> CohorteMembreEtapePersonnalisations { get; set; }
     public DbSet<CohorteEtapeValidation> CohorteEtapeValidations { get; set; }
     public DbSet<InvitationCompte> InvitationsComptes { get; set; }
     public DbSet<Preuve> Preuves { get; set; }
@@ -361,6 +362,28 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(cs => cs.AjouteePar)
             .WithMany()
             .HasForeignKey(cs => cs.AjouteeParId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembreEtapePersonnalisation>()
+            .HasIndex(p => new { p.CohorteMembreId, p.ChallengeEtapeId })
+            .IsUnique();
+
+        builder.Entity<CohorteMembreEtapePersonnalisation>()
+            .HasOne(p => p.CohorteMembre)
+            .WithMany()
+            .HasForeignKey(p => p.CohorteMembreId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CohorteMembreEtapePersonnalisation>()
+            .HasOne(p => p.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(p => p.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembreEtapePersonnalisation>()
+            .HasOne(p => p.ModifiePar)
+            .WithMany()
+            .HasForeignKey(p => p.ModifieParId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<CohorteEtapeValidation>()

@@ -473,17 +473,32 @@ public sealed class CohorteService(
                 continue;
             }
 
-            // Les cartes personnalisees n'existent que sur les parcours Bilan de competences
-            // individuel (cf. CohorteMembreCarteSupplementaire) - inutile d'interroger la
-            // table sur un Challenge Collectif.
-            var cartesPersonnalisees = cohorte.Challenge.Format == FormatChallenge.BilanCompetencesIndividuel
-                ? await dbContext.CohorteMembreCartesSupplementaires
+            // Les cartes et instructions personnalisees n'existent que sur les parcours Bilan
+            // de competences individuel (cf. CohorteMembreCarteSupplementaire,
+            // CohorteMembreEtapePersonnalisation) - inutile d'interroger ces tables sur un
+            // Challenge Collectif.
+            var defiIndividuel = etape.DefiIndividuel;
+            List<CarteCompetence> cartesPersonnalisees = [];
+            if (cohorte.Challenge.Format == FormatChallenge.BilanCompetencesIndividuel)
+            {
+                cartesPersonnalisees = await dbContext.CohorteMembreCartesSupplementaires
                     .Where(cs => cs.CohorteMembreId == membre.Id && cs.ChallengeEtapeId == etape.Id)
                     .Include(cs => cs.CarteCompetence)
                         .ThenInclude(c => c.Badge)
                     .Select(cs => cs.CarteCompetence)
-                    .ToListAsync()
-                : [];
+                    .ToListAsync();
+
+                // Remplacement pour ce membre uniquement (jamais de modification du template
+                // partage ChallengeEtape.DefiIndividuel) - cf. CohorteMembreEtapePersonnalisation.
+                var instructionsPersonnalisees = await dbContext.CohorteMembreEtapePersonnalisations
+                    .Where(p => p.CohorteMembreId == membre.Id && p.ChallengeEtapeId == etape.Id)
+                    .Select(p => p.DefiIndividuelPersonnalise)
+                    .FirstOrDefaultAsync();
+                if (instructionsPersonnalisees is not null)
+                {
+                    defiIndividuel = instructionsPersonnalisees;
+                }
+            }
 
             resultat.Add(new ParcoursEnCoursInfo
             {
@@ -492,7 +507,7 @@ public sealed class CohorteService(
                 ChallengeEtapeId = etape.Id,
                 NumeroEtape = etape.NumeroEtape,
                 TitreEtape = etape.TitreEtape,
-                DefiIndividuel = etape.DefiIndividuel,
+                DefiIndividuel = defiIndividuel,
                 Cartes = etape.Cartes.Select(ec => ec.CarteCompetence).ToList(),
                 CartesPersonnalisees = cartesPersonnalisees,
             });
@@ -530,6 +545,11 @@ public sealed class CohorteService(
             .OrderBy(cs => cs.AjouteeLe)
             .ToListAsync();
 
+        var instructionsPersonnalisees = await dbContext.CohorteMembreEtapePersonnalisations
+            .Where(p => p.CohorteMembreId == cohorteMembreId && p.ChallengeEtapeId == challengeEtapeId)
+            .Select(p => p.DefiIndividuelPersonnalise)
+            .FirstOrDefaultAsync();
+
         return new PersonnalisationCartesContexte
         {
             CohorteId = cohorteId,
@@ -548,6 +568,8 @@ public sealed class CohorteService(
                 AjouteeParNomComplet = NomComplet(cs.AjouteePar),
                 AjouteeLe = cs.AjouteeLe,
             }).ToList(),
+            DefiIndividuelPartage = etape.DefiIndividuel,
+            DefiIndividuelPersonnalise = instructionsPersonnalisees,
         };
     }
 
@@ -607,6 +629,73 @@ public sealed class CohorteService(
                 AjouteeParId = gestionnaireId,
                 AjouteeLe = DateTime.UtcNow,
             });
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    // Remplacement pour ce membre uniquement (jamais de modification du template partage
+    // ChallengeEtape.DefiIndividuel, qui continue de s'afficher tel quel pour tous les autres
+    // membres/Cohortes issus du meme Challenge) - meme garde-fou de Format que
+    // DefinirCartesSupplementairesMembreAsync.
+    public async Task<(bool Success, string? ErrorMessage)> DefinirInstructionsPersonnaliseesMembreAsync(int cohorteMembreId, int challengeEtapeId, string? instructionsPersonnalisees, string gestionnaireId)
+    {
+        var membre = await dbContext.CohorteMembres
+            .Include(m => m.Cohorte)
+                .ThenInclude(c => c.Challenge)
+            .FirstOrDefaultAsync(m => m.Id == cohorteMembreId);
+
+        if (membre is null)
+        {
+            return (false, "Membre introuvable.");
+        }
+
+        if (membre.Cohorte.Challenge.Format != FormatChallenge.BilanCompetencesIndividuel)
+        {
+            return (false, "Cette fonctionnalité est réservée aux parcours de type \"Bilan de compétences individuel\".");
+        }
+
+        var etape = await dbContext.ChallengeEtapes
+            .FirstOrDefaultAsync(e => e.Id == challengeEtapeId && e.ChallengeId == membre.Cohorte.ChallengeId);
+        if (etape is null)
+        {
+            return (false, "Étape introuvable pour ce Challenge.");
+        }
+
+        var existante = await dbContext.CohorteMembreEtapePersonnalisations
+            .FirstOrDefaultAsync(p => p.CohorteMembreId == cohorteMembreId && p.ChallengeEtapeId == challengeEtapeId);
+
+        if (string.IsNullOrWhiteSpace(instructionsPersonnalisees))
+        {
+            // Texte vide = retour au texte partage du template, pas une "instruction vide" a
+            // afficher a l'apprenant.
+            if (existante is not null)
+            {
+                dbContext.CohorteMembreEtapePersonnalisations.Remove(existante);
+                await dbContext.SaveChangesAsync();
+            }
+
+            return (true, null);
+        }
+
+        if (existante is null)
+        {
+            dbContext.CohorteMembreEtapePersonnalisations.Add(new CohorteMembreEtapePersonnalisation
+            {
+                CohorteMembreId = cohorteMembreId,
+                ChallengeEtapeId = challengeEtapeId,
+                DefiIndividuelPersonnalise = instructionsPersonnalisees.Trim(),
+                ModifieParId = gestionnaireId,
+                ModifieLe = DateTime.UtcNow,
+            });
+        }
+        else
+        {
+            existante.DefiIndividuelPersonnalise = instructionsPersonnalisees.Trim();
+            existante.ModifieParId = gestionnaireId;
+            existante.ModifieLe = DateTime.UtcNow;
         }
 
         await dbContext.SaveChangesAsync();

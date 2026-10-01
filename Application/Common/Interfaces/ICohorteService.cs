@@ -95,6 +95,14 @@ public sealed class PersonnalisationCartesContexte
     public bool FormatAutorise { get; set; }
     public List<int> CartesTemplateIds { get; set; } = [];
     public List<CarteSupplementaireInfo> CartesSupplementaires { get; set; } = [];
+
+    // Texte partage du template (ChallengeEtape.DefiIndividuel), affiche en lecture seule pour
+    // contexte - jamais modifie directement par cet ecran (cf. DefinirInstructionsPersonnaliseesMembreAsync).
+    public string? DefiIndividuelPartage { get; set; }
+
+    // Surcharge actuelle pour ce membre, si elle existe (cf. CohorteMembreEtapePersonnalisation) -
+    // null si aucune surcharge n'est encore definie (l'apprenant voit alors DefiIndividuelPartage).
+    public string? DefiIndividuelPersonnalise { get; set; }
 }
 
 // Cote apprenant : une Cohorte a laquelle l'utilisateur appartient, tant qu'elle est
@@ -199,6 +207,15 @@ public interface ICohorteService
     // serveur, jamais seulement masque cote UI - cf. CLAUDE.md, principe Manifeste "l'equipe
     // avant l'individu").
     Task<(bool Success, string? ErrorMessage)> DefinirCartesSupplementairesMembreAsync(int cohorteMembreId, int challengeEtapeId, List<int> carteCompetenceIds, string gestionnaireId);
+
+    // Remplace, pour ce membre uniquement, le Defi individuel affiche (cf.
+    // CohorteMembreEtapePersonnalisation) - le texte partage du template
+    // (ChallengeEtape.DefiIndividuel) n'est jamais modifie, et continue de s'afficher pour tous
+    // les autres membres/Cohortes issus du meme Challenge. instructionsPersonnalisees null ou
+    // vide supprime la surcharge (l'apprenant revoit alors le texte partage). Meme garde-fou
+    // que DefinirCartesSupplementairesMembreAsync : echoue si le Challenge n'est pas
+    // BilanCompetencesIndividuel.
+    Task<(bool Success, string? ErrorMessage)> DefinirInstructionsPersonnaliseesMembreAsync(int cohorteMembreId, int challengeEtapeId, string? instructionsPersonnalisees, string gestionnaireId);
 
     // Uniquement si EnPreparation (jamais Lancee) : tant qu'elle n'a pas ete Lancee, aucune
     // carte n'a ete attribuee ni aucune etape validee via cette Cohorte, donc rien a

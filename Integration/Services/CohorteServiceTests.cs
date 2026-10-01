@@ -594,4 +594,71 @@ public class CohorteServiceTests
         var parcoursAutre = Assert.Single(await cohorteService.GetMesParcoursEnCoursAsync(autreApprenant.Id));
         Assert.Empty(parcoursAutre.CartesPersonnalisees);
     }
+
+    [Fact]
+    public async Task DefinirInstructionsPersonnaliseesMembreAsync_Echoue_SurUnChallengeCollectif()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var cohorteService = CreerCohorteService(dbContext);
+
+        var (challenge, etapes, _) = await PreparerChallengePublieAsync(dbContext, format: FormatChallenge.Collectif);
+
+        var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local" };
+        var coach = new ApplicationUser { UserName = "coach@test.local", Email = "coach@test.local" };
+        dbContext.Users.AddRange(apprenant, coach);
+        await dbContext.SaveChangesAsync();
+
+        var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Cohorte Collective" });
+        await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
+        var membre = await dbContext.CohorteMembres.SingleAsync(m => m.CohorteId == cohorteId.Value && m.UtilisateurId == apprenant.Id);
+
+        var (success, errorMessage) = await cohorteService.DefinirInstructionsPersonnaliseesMembreAsync(membre.Id, etapes[0].Id, "Instructions sur-mesure", coach.Id);
+
+        Assert.False(success);
+        Assert.Contains("Bilan de compétences individuel", errorMessage);
+        Assert.Empty(await dbContext.CohorteMembreEtapePersonnalisations.ToListAsync());
+    }
+
+    [Fact]
+    public async Task DefinirInstructionsPersonnaliseesMembreAsync_RemplaceLeDefiIndividuel_PourCeMembreUniquement_SansToucherAuTemplate()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var cohorteService = CreerCohorteService(dbContext);
+
+        var (challenge, etapes, _) = await PreparerChallengePublieAsync(dbContext, format: FormatChallenge.BilanCompetencesIndividuel);
+        var defiPartageOriginal = etapes[0].DefiIndividuel;
+
+        var gestionnaire = new ApplicationUser { UserName = "coach@test.local", Email = "coach@test.local" };
+        var apprenantCible = new ApplicationUser { UserName = "cible@test.local", Email = "cible@test.local" };
+        var autreApprenant = new ApplicationUser { UserName = "autre@test.local", Email = "autre@test.local" };
+        dbContext.Users.AddRange(gestionnaire, apprenantCible, autreApprenant);
+        await dbContext.SaveChangesAsync();
+
+        var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Bilan individuel" });
+        await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenantCible.Id);
+        await cohorteService.AjouterMembreManuelAsync(cohorteId.Value, autreApprenant.Id);
+        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
+
+        var membreCible = await dbContext.CohorteMembres.SingleAsync(m => m.CohorteId == cohorteId.Value && m.UtilisateurId == apprenantCible.Id);
+
+        var (success, errorMessage) = await cohorteService.DefinirInstructionsPersonnaliseesMembreAsync(membreCible.Id, etapes[0].Id, "Observe ton équipe lors du prochain point hebdo.", gestionnaire.Id);
+        Assert.True(success, errorMessage);
+
+        var parcoursCible = Assert.Single(await cohorteService.GetMesParcoursEnCoursAsync(apprenantCible.Id));
+        Assert.Equal("Observe ton équipe lors du prochain point hebdo.", parcoursCible.DefiIndividuel);
+
+        // Le texte partage du template n'est jamais modifie, et un autre membre de la meme
+        // Cohorte continue de voir le texte partage.
+        var etapeRecue = await dbContext.ChallengeEtapes.SingleAsync(e => e.Id == etapes[0].Id);
+        Assert.Equal(defiPartageOriginal, etapeRecue.DefiIndividuel);
+
+        var parcoursAutre = Assert.Single(await cohorteService.GetMesParcoursEnCoursAsync(autreApprenant.Id));
+        Assert.Equal(defiPartageOriginal, parcoursAutre.DefiIndividuel);
+
+        // Un texte vide retire la surcharge : le membre cible revoit le texte partage.
+        var (successRetour, errorMessageRetour) = await cohorteService.DefinirInstructionsPersonnaliseesMembreAsync(membreCible.Id, etapes[0].Id, "", gestionnaire.Id);
+        Assert.True(successRetour, errorMessageRetour);
+        var parcoursCibleApresRetour = Assert.Single(await cohorteService.GetMesParcoursEnCoursAsync(apprenantCible.Id));
+        Assert.Equal(defiPartageOriginal, parcoursCibleApresRetour.DefiIndividuel);
+    }
 }
