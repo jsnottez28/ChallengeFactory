@@ -11,7 +11,7 @@ namespace Integration.Services;
 public class CohorteServiceTests
 {
     private static async Task<(Challenge Challenge, List<ChallengeEtape> Etapes, List<CarteCompetence> Cartes)> PreparerChallengePublieAsync(
-        ApplicationDbContext dbContext, int nombreEtapes = 2, ModePlateforme mode = ModePlateforme.BtoC, FormatChallenge format = FormatChallenge.Collectif)
+        ApplicationDbContext dbContext, int nombreEtapes = 2, ModePlateforme mode = ModePlateforme.BtoC, FormatChallenge format = FormatChallenge.Collectif, string codePrefix = "CODE")
     {
         var challengeService = new ChallengeService(dbContext);
         var carteService = new CarteCompetenceService(dbContext);
@@ -35,7 +35,7 @@ public class CohorteServiceTests
             });
             var (_, _, carte) = await carteService.CreateAsync(new CarteCompetenceInput
             {
-                Code = $"CODE-{i}",
+                Code = $"{codePrefix}-{i}",
                 Niveau = NiveauCarte.Debutant,
                 TitreTheorie = $"Carte {i}",
             });
@@ -660,5 +660,71 @@ public class CohorteServiceTests
         Assert.True(successRetour, errorMessageRetour);
         var parcoursCibleApresRetour = Assert.Single(await cohorteService.GetMesParcoursEnCoursAsync(apprenantCible.Id));
         Assert.Equal(defiPartageOriginal, parcoursCibleApresRetour.DefiIndividuel);
+    }
+
+    [Fact]
+    public async Task GetEtapesPersonnalisationAsync_ListeToutesLesEtapes_YComprisLesEtapesSuivantesPasEncoreAtteintes()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var cohorteService = CreerCohorteService(dbContext);
+        var carteService = new CarteCompetenceService(dbContext);
+
+        var (challenge, etapes, _) = await PreparerChallengePublieAsync(dbContext, nombreEtapes: 3, format: FormatChallenge.BilanCompetencesIndividuel);
+        var (_, _, cartePersonnalisee) = await carteService.CreateAsync(new CarteCompetenceInput { Code = "SUP-P", Niveau = NiveauCarte.Debutant, TitreTheorie = "Carte perso" });
+
+        var gestionnaire = new ApplicationUser { UserName = "coach@test.local", Email = "coach@test.local" };
+        var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local" };
+        dbContext.Users.AddRange(gestionnaire, apprenant);
+        await dbContext.SaveChangesAsync();
+
+        var (_, _, cohorteId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challenge.Id, Nom = "Bilan individuel" });
+        await cohorteService.AjouterMembreManuelAsync(cohorteId!.Value, apprenant.Id);
+        await cohorteService.LancerAsync(cohorteId.Value, gestionnaire.Id, "https://test.local/parcours", "https://test.local/mi-parcours");
+
+        var membre = await dbContext.CohorteMembres.SingleAsync(m => m.CohorteId == cohorteId.Value && m.UtilisateurId == apprenant.Id);
+
+        // La Cohorte vient d'etre lancee : EtapeCourante = 1. On personnalise pourtant l'etape
+        // 3 (future, pas encore atteinte) en avance.
+        await cohorteService.DefinirCartesSupplementairesMembreAsync(membre.Id, etapes[2].Id, [cartePersonnalisee!.Id], gestionnaire.Id);
+        await cohorteService.DefinirInstructionsPersonnaliseesMembreAsync(membre.Id, etapes[2].Id, "Prépare ton bilan intermédiaire.", gestionnaire.Id);
+
+        var liste = await cohorteService.GetEtapesPersonnalisationAsync(cohorteId.Value, membre.Id);
+
+        Assert.NotNull(liste);
+        Assert.Equal(3, liste!.Count);
+        Assert.Equal([1, 2, 3], liste.Select(e => e.NumeroEtape));
+
+        var etape1 = liste.Single(e => e.NumeroEtape == 1);
+        Assert.True(etape1.EstEtapeCourante);
+        Assert.Equal(0, etape1.NombreCartesPersonnalisees);
+        Assert.False(etape1.AInstructionsPersonnalisees);
+
+        var etape3 = liste.Single(e => e.NumeroEtape == 3);
+        Assert.False(etape3.EstEtapeCourante);
+        Assert.Equal(1, etape3.NombreCartesPersonnalisees);
+        Assert.True(etape3.AInstructionsPersonnalisees);
+    }
+
+    [Fact]
+    public async Task GetEtapesPersonnalisationAsync_RenvoieNull_SiLeMembreNAppartientPasACetteCohorte()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var cohorteService = CreerCohorteService(dbContext);
+
+        var (challengeA, _, _) = await PreparerChallengePublieAsync(dbContext, format: FormatChallenge.BilanCompetencesIndividuel, codePrefix: "CODE-A");
+        var (challengeB, _, _) = await PreparerChallengePublieAsync(dbContext, format: FormatChallenge.BilanCompetencesIndividuel, codePrefix: "CODE-B");
+
+        var apprenant = new ApplicationUser { UserName = "apprenant@test.local", Email = "apprenant@test.local" };
+        dbContext.Users.Add(apprenant);
+        await dbContext.SaveChangesAsync();
+
+        var (_, _, cohorteAId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challengeA.Id, Nom = "Bilan A" });
+        var (_, _, cohorteBId) = await cohorteService.CreateAsync(new CohorteInput { ChallengeId = challengeB.Id, Nom = "Bilan B" });
+        await cohorteService.AjouterMembreManuelAsync(cohorteAId!.Value, apprenant.Id);
+        var membreCohorteA = await dbContext.CohorteMembres.SingleAsync(m => m.CohorteId == cohorteAId.Value && m.UtilisateurId == apprenant.Id);
+
+        var liste = await cohorteService.GetEtapesPersonnalisationAsync(cohorteBId!.Value, membreCohorteA.Id);
+
+        Assert.Null(liste);
     }
 }

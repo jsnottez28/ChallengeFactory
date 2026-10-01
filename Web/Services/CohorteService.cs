@@ -516,6 +516,47 @@ public sealed class CohorteService(
         return resultat;
     }
 
+    // Liste TOUTES les etapes du Challenge (pas seulement l'etape courante de la Cohorte) :
+    // permet au Coach de naviguer vers une etape future pour la preparer en avance, pas
+    // seulement l'etape en cours.
+    public async Task<List<PersonnalisationEtapeInfo>?> GetEtapesPersonnalisationAsync(int cohorteId, int cohorteMembreId)
+    {
+        var membre = await dbContext.CohorteMembres
+            .Include(m => m.Cohorte)
+            .FirstOrDefaultAsync(m => m.Id == cohorteMembreId && m.CohorteId == cohorteId);
+
+        if (membre is null)
+        {
+            return null;
+        }
+
+        var etapes = await dbContext.ChallengeEtapes
+            .Where(e => e.ChallengeId == membre.Cohorte.ChallengeId)
+            .OrderBy(e => e.NumeroEtape)
+            .ToListAsync();
+
+        var nombreCartesParEtape = await dbContext.CohorteMembreCartesSupplementaires
+            .Where(cs => cs.CohorteMembreId == cohorteMembreId)
+            .GroupBy(cs => cs.ChallengeEtapeId)
+            .Select(g => new { ChallengeEtapeId = g.Key, Nombre = g.Count() })
+            .ToListAsync();
+
+        var etapesAvecInstructions = await dbContext.CohorteMembreEtapePersonnalisations
+            .Where(p => p.CohorteMembreId == cohorteMembreId)
+            .Select(p => p.ChallengeEtapeId)
+            .ToListAsync();
+
+        return etapes.Select(e => new PersonnalisationEtapeInfo
+        {
+            ChallengeEtapeId = e.Id,
+            NumeroEtape = e.NumeroEtape,
+            TitreEtape = e.TitreEtape,
+            EstEtapeCourante = e.NumeroEtape == membre.Cohorte.EtapeCourante,
+            NombreCartesPersonnalisees = nombreCartesParEtape.FirstOrDefault(x => x.ChallengeEtapeId == e.Id)?.Nombre ?? 0,
+            AInstructionsPersonnalisees = etapesAvecInstructions.Contains(e.Id),
+        }).ToList();
+    }
+
     public async Task<PersonnalisationCartesContexte?> GetContextePersonnalisationCartesAsync(int cohorteId, int cohorteMembreId, int challengeEtapeId)
     {
         var membre = await dbContext.CohorteMembres

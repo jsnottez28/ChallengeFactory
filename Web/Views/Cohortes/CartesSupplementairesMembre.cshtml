@@ -19,17 +19,18 @@
                 <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
                 <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
                 <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@contexte.CohorteId">Détails</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Personnalisation</li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="PersonnalisationMembre" asp-route-cohorteId="@contexte.CohorteId" asp-route-cohorteMembreId="@contexte.CohorteMembreId">Personnalisation — @contexte.MembreNomComplet</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Étape @contexte.NumeroEtape</li>
             </ol>
         </nav>
 
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
             <div>
                 <p class="text-muted mb-1">Administration — Bilan de compétences individuel</p>
-                <h1 class="h3 mb-0">Personnalisation — @contexte.MembreNomComplet</h1>
-                <p class="text-muted mb-0">Étape @contexte.NumeroEtape — @contexte.EtapeTitre</p>
+                <h1 class="h3 mb-0">@contexte.MembreNomComplet — Étape @contexte.NumeroEtape</h1>
+                <p class="text-muted mb-0">@contexte.EtapeTitre</p>
             </div>
-            <a asp-controller="Cohortes" asp-action="Details" asp-route-id="@contexte.CohorteId" class="btn btn-outline-secondary">Retour à la Cohorte</a>
+            <a asp-controller="Cohortes" asp-action="PersonnalisationMembre" asp-route-cohorteId="@contexte.CohorteId" asp-route-cohorteMembreId="@contexte.CohorteMembreId" class="btn btn-outline-secondary">Retour à la liste des étapes</a>
         </div>
 
         @if (!contexte.FormatAutorise)
@@ -135,7 +136,7 @@
                 </div>
                 <div class="card-footer bg-white border-top p-4">
                     <div class="d-flex flex-wrap justify-content-end gap-2">
-                        <a asp-controller="Cohortes" asp-action="Details" asp-route-id="@contexte.CohorteId" class="btn btn-outline-secondary">Annuler</a>
+                        <a asp-controller="Cohortes" asp-action="PersonnalisationMembre" asp-route-cohorteId="@contexte.CohorteId" asp-route-cohorteMembreId="@contexte.CohorteMembreId" class="btn btn-outline-secondary">Annuler</a>
                         <button type="submit" class="btn btn-primary" disabled="@(!contexte.FormatAutorise)">Enregistrer la personnalisation</button>
                     </div>
                 </div>

@@ -204,9 +204,9 @@
                                                                 </form>
                                                             }
                                                             <a asp-page="/Admin/AbonnementsBtoC" asp-route-utilisateurId="@membre.UtilisateurId" class="btn btn-sm btn-outline-secondary">Gérer l'abonnement</a>
-                                                            @if (Model.Format == FormatChallenge.BilanCompetencesIndividuel && Model.Statut == StatutCohorte.Active && Model.ChallengeEtapeCouranteId.HasValue)
+                                                            @if (Model.Format == FormatChallenge.BilanCompetencesIndividuel && Model.Statut == StatutCohorte.Active)
                                                             {
-                                                                <a asp-controller="Cohortes" asp-action="CartesSupplementairesMembre" asp-route-cohorteId="@Model.Id" asp-route-cohorteMembreId="@membre.Id" asp-route-etapeId="@Model.ChallengeEtapeCouranteId" class="btn btn-sm btn-outline-secondary">Personnaliser le parcours</a>
+                                                                <a asp-controller="Cohortes" asp-action="PersonnalisationMembre" asp-route-cohorteId="@Model.Id" asp-route-cohorteMembreId="@membre.Id" class="btn btn-sm btn-outline-secondary">Personnaliser le parcours</a>
                                                             }
                                                         </droit-visible>
                                                     </div>

@@ -78,6 +78,20 @@ public sealed class CarteSupplementaireInfo
     public DateTime AjouteeLe { get; set; }
 }
 
+// Une ligne de la liste des etapes d'un Challenge, pour le point d'entree de navigation de
+// la personnalisation d'un membre (cf. CohortesController.PersonnalisationMembre) - permet au
+// Coach de voir d'un coup d'oeil quelles etapes ont deja ete personnalisees, y compris les
+// etapes suivantes pas encore atteintes par la Cohorte.
+public sealed class PersonnalisationEtapeInfo
+{
+    public int ChallengeEtapeId { get; set; }
+    public int NumeroEtape { get; set; }
+    public string TitreEtape { get; set; } = string.Empty;
+    public bool EstEtapeCourante { get; set; }
+    public int NombreCartesPersonnalisees { get; set; }
+    public bool AInstructionsPersonnalisees { get; set; }
+}
+
 // Contexte complet pour l'ecran de personnalisation des cartes d'un membre a une etape
 // donnee (cf. CohortesController.CartesSupplementairesMembre). FormatAutorise reste porte
 // par le DTO (et pas seulement verifie cote service a l'enregistrement) pour permettre a la
@@ -190,6 +204,11 @@ public interface ICohorteService
     Task<List<ParcoursEnCoursInfo>> GetMesParcoursEnCoursAsync(string utilisateurId);
 
     // ---- Personnalisation des cartes (parcours Bilan de competences individuel uniquement) ----
+
+    // Renvoie null si le membre n'existe pas / n'appartient pas a cette Cohorte. Liste TOUTES
+    // les etapes du Challenge (pas seulement l'etape courante de la Cohorte) : permet au Coach
+    // de preparer/ajuster les etapes suivantes en avance, pas seulement celle en cours.
+    Task<List<PersonnalisationEtapeInfo>?> GetEtapesPersonnalisationAsync(int cohorteId, int cohorteMembreId);
 
     // Renvoie null si le membre ou l'etape n'existe pas / n'appartient pas a cette Cohorte.
     // FormatAutorise = false si le Challenge de la Cohorte n'est pas
