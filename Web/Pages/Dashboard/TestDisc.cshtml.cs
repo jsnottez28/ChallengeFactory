@@ -43,6 +43,16 @@ public class TestDiscModel(IDiscService discService, UserManager<ApplicationUser
 
     public async Task<IActionResult> OnPostAsync()
     {
+        // Repasser est lue depuis la query string (SupportsGet=true) MEME sur ce POST : le
+        // <form> n'a pas d'action explicite, donc il soumet vers l'URL courante - si
+        // l'utilisateur est arrive ici via "?Repasser=true" (bouton "Repasser le test"),
+        // cette valeur resterait vraie apres la soumission et masquerait le resultat
+        // fraichement obtenu (AfficherQuestionnaire resterait vrai). On la neutralise ici :
+        // une fois une soumission traitee, on affiche toujours soit le resultat frais, soit
+        // (en cas d'echec) le formulaire via echecSoumission - jamais une intention
+        // "repasser" perimee.
+        Repasser = false;
+
         Questions = discService.GetQuestions();
         var utilisateurId = userManager.GetUserId(User)!;
 

@@ -150,6 +150,16 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
 
     private async Task<IActionResult> FinaliserAsync(string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2)
     {
+        // Repasser est lue depuis la query string (SupportsGet=true) MEME sur ces POST : les
+        // <form> n'ont pas d'action explicite, donc ils soumettent vers l'URL courante - si
+        // l'utilisateur est arrive ici via "?Repasser=true" (bouton "Repasser le questionnaire"),
+        // cette valeur resterait vraie apres la finalisation et masquerait le resultat
+        // fraichement obtenu (AfficherQuestionnaire resterait vrai). On la neutralise ici,
+        // au seul point de finalisation commun aux deux chemins (avec ou sans round 2) :
+        // une fois le test traite, on affiche toujours soit le resultat frais, soit (en cas
+        // d'echec) le round 1 via echecSoumission - jamais une intention "repasser" perimee.
+        Repasser = false;
+
         var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateurId, reponsesRound1, reponsesFiabilite, reponsesRound2);
 
         DernierEnvoiReussi = success;
