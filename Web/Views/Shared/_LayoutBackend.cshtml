@@ -17,6 +17,12 @@
 
     var estSuperAdministrateur = User.HasClaim(DroitsClaimsTransformation.ClaimType, DroitsClaimsTransformation.ClaimTous);
 
+    // Verifie un droit directement via la claim "permission" (posee par
+    // DroitsClaimsTransformation) plutot que via le tag helper droit-visible (asynchrone,
+    // pense pour un seul item) : sert ici a decider si un MENU ENTIER (plusieurs items) doit
+    // s'afficher, pas juste un lien isole.
+    bool APermission(string code) => estSuperAdministrateur || User.HasClaim(DroitsClaimsTransformation.ClaimType, code);
+
     var sansScope = false;
     var documentsEnAttente = new List<Domain.Entities.TypeDocumentLegal>();
     if (SignInManager.IsSignedIn(User))
@@ -116,23 +122,25 @@
                     </ul>
                 </li>
 
-                @if (estSuperAdministrateur || nomsRoles.Count > 0)
+                @if (APermission("QUALIOPI.CONSULTER"))
                 {
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fi fi-rr-apps me-1"></i> Admin
+                        <i class="fi fi-rr-dashboard me-1"></i> Pilotage
                     </a>
                     <ul class="dropdown-menu shadow-sm">
-                        <li><a class="dropdown-item" asp-page="/Admin/Index">Administration</a></li>
+                        <li><a class="dropdown-item" asp-page="/Admin/TableauDeBordQualiopi">Tableau de bord Qualiopi</a></li>
+                    </ul>
+                </li>
+                }
 
-                        <droit-visible code="QUALIOPI.CONSULTER">
-                            <li><hr class="dropdown-divider"></li>
-                            <li><h6 class="dropdown-header">Pilotage</h6></li>
-                            <li><a class="dropdown-item" asp-page="/Admin/TableauDeBordQualiopi">Tableau de bord Qualiopi</a></li>
-                        </droit-visible>
-
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Pédagogie</h6></li>
+                @if (APermission("CARTE.CONSULTER") || APermission("TEST.CONSULTER") || APermission("CHALLENGE.CONSULTER") || APermission("COHORTE.CONSULTER") || APermission("COHORTE.MODIFIER"))
+                {
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fi fi-rr-graduation-cap me-1"></i> Pédagogie
+                    </a>
+                    <ul class="dropdown-menu shadow-sm">
                         <droit-visible code="CARTE.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="Cartes" asp-action="Index">Cartes de Compétences</a></li>
                         </droit-visible>
@@ -149,18 +157,35 @@
                         <droit-visible code="COHORTE.MODIFIER">
                             <li><a class="dropdown-item" asp-page="/Admin/AbonnementsBtoC">Abonnements BtoC</a></li>
                         </droit-visible>
+                    </ul>
+                </li>
+                }
 
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Relation &amp; CRM</h6></li>
+                @if (APermission("RECLAMATION.CONSULTER") || APermission("PREBILAN.CONSULTER"))
+                {
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fi fi-rr-headset me-1"></i> Relation &amp; CRM
+                    </a>
+                    <ul class="dropdown-menu shadow-sm">
                         <droit-visible code="RECLAMATION.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="Reclamations" asp-action="Index">Réclamations</a></li>
                         </droit-visible>
                         <droit-visible code="PREBILAN.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="PreDiagnosticsCarbone" asp-action="Index">Pré-diagnostics carbone</a></li>
                         </droit-visible>
+                    </ul>
+                </li>
+                }
 
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Organisation</h6></li>
+                @if (estSuperAdministrateur || nomsRoles.Count > 0)
+                {
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fi fi-rr-building me-1"></i> Organisation
+                    </a>
+                    <ul class="dropdown-menu shadow-sm">
+                        <li><a class="dropdown-item" asp-page="/Admin/Index">Administration</a></li>
                         <li><a class="dropdown-item" asp-page="/Admin/Utilisateurs">Utilisateurs</a></li>
                         <droit-visible code="ORGANISATION.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="Organisations" asp-action="Index">Organisations</a></li>
@@ -172,9 +197,17 @@
                             <li><a class="dropdown-item" asp-controller="DocumentsLegaux" asp-action="Index">Documents légaux (CGU/PPD)</a></li>
                         </droit-visible>
                         <li><a class="dropdown-item" asp-page="/Admin/Parametrage">Parametrage</a></li>
+                    </ul>
+                </li>
+                }
 
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Droits et permissions (RBAC)</h6></li>
+                @if (APermission("RESSOURCE.CONSULTER") || APermission("TYPEACTION.CONSULTER") || APermission("GROUPEDROIT.CONSULTER") || APermission("DROIT.CONSULTER") || APermission("ROLE.CONSULTER") || APermission("PERMISSION.CONSULTER"))
+                {
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fi fi-rr-shield me-1"></i> Droits (RBAC)
+                    </a>
+                    <ul class="dropdown-menu shadow-sm">
                         <droit-visible code="RESSOURCE.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="Ressources" asp-action="Index">Ressources</a></li>
                         </droit-visible>
