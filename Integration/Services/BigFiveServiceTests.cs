@@ -7,6 +7,12 @@ namespace Integration.Services;
 
 public class BigFiveServiceTests
 {
+    // Reponses de fiabilite "par defaut" (toujours OptionA) - utilisees dans les tests qui ne
+    // portent pas specifiquement sur le calcul de coherence, juste pour fournir un round de
+    // fiabilite structurellement valide.
+    private static Dictionary<int, int> ReponsesFiabiliteDefaut(BigFiveService service) =>
+        service.GetPairesFiabilite().ToDictionary(p => p.PaireId, p => p.OptionA.NumeroQuestion);
+
     [Fact]
     public void GetQuestions_Renvoie58QuestionsHorsLaFacetteSensibleO6()
     {
@@ -21,6 +27,25 @@ public class BigFiveServiceTests
     }
 
     [Fact]
+    public void GetPairesFiabilite_Renvoie5PairesUneParDomaine_AvecDesItemsReelsDistincts()
+    {
+        var service = new BigFiveService(InMemoryDbContextFactory.Create(), new FakeEmailService());
+        var questions = service.GetQuestions().ToDictionary(q => q.NumeroQuestion, q => q.Texte);
+
+        var paires = service.GetPairesFiabilite();
+
+        Assert.Equal(5, paires.Count);
+        Assert.All(paires, p =>
+        {
+            // Les deux options d'une paire sont toujours deux items reels et distincts du
+            // questionnaire (jamais de texte invente), jamais la meme question des deux cotes.
+            Assert.NotEqual(p.OptionA.NumeroQuestion, p.OptionB.NumeroQuestion);
+            Assert.Equal(questions[p.OptionA.NumeroQuestion], p.OptionA.Texte);
+            Assert.Equal(questions[p.OptionB.NumeroQuestion], p.OptionB.Texte);
+        });
+    }
+
+    [Fact]
     public async Task RepondreAsync_Echoue_SiUneAffirmationNestPasRepondue()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();
@@ -31,12 +56,67 @@ public class BigFiveServiceTests
         var service = new BigFiveService(dbContext, new FakeEmailService());
         var reponses = Enumerable.Range(1, 57).ToDictionary(n => n, _ => 3); // il manque l'item 58
 
-        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses);
+        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses, ReponsesFiabiliteDefaut(service));
 
         Assert.False(success);
         Assert.NotNull(errorMessage);
         Assert.Null(resultat);
         Assert.False(await dbContext.BigFiveResultats.AnyAsync());
+    }
+
+    [Fact]
+    public async Task RepondreAsync_Echoue_SiLesPairesDeFiabiliteNeSontPasToutesRepondues()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var utilisateur = new ApplicationUser { UserName = "stagiaire@test.local", Email = "stagiaire@test.local" };
+        dbContext.Users.Add(utilisateur);
+        await dbContext.SaveChangesAsync();
+
+        var service = new BigFiveService(dbContext, new FakeEmailService());
+        var reponses = Enumerable.Range(1, 58).ToDictionary(n => n, _ => 3);
+        var reponsesFiabilite = ReponsesFiabiliteDefaut(service);
+        reponsesFiabilite.Remove(reponsesFiabilite.Keys.First()); // il manque une paire
+
+        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses, reponsesFiabilite);
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+        Assert.Null(resultat);
+        Assert.False(await dbContext.BigFiveResultats.AnyAsync());
+    }
+
+    [Fact]
+    public async Task RepondreAsync_CalculeLaCoherenceFiabilite_EnComparantAuxMemesItemsSurLechelleLikert()
+    {
+        // Les 5 paires de fiabilite opposent les items (1,5), (13,21), (25,27), (35,39),
+        // (47,53) - cf. BigFiveService.PairesFiabiliteBase. On fixe des notes Likert
+        // tranchees pour ces 10 items precis (le reste a 3, neutre, sans incidence sur ce
+        // test) puis on verifie que le choix force "attendu" (celui qui a la note la plus
+        // haute, egalite departagee vers OptionA) est bien celui compte comme coherent.
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var utilisateur = new ApplicationUser { UserName = "stagiaire@test.local", Email = "stagiaire@test.local" };
+        dbContext.Users.Add(utilisateur);
+        await dbContext.SaveChangesAsync();
+
+        var service = new BigFiveService(dbContext, new FakeEmailService());
+        var reponses = Enumerable.Range(1, 58).ToDictionary(n => n, _ => 3);
+        reponses[1] = 5; reponses[5] = 2;   // paire 1 : item 1 gagne
+        reponses[13] = 2; reponses[21] = 5; // paire 2 : item 21 gagne
+        reponses[25] = 3; reponses[27] = 3; // paire 3 : egalite -> attendu = OptionA (25)
+        reponses[35] = 4; reponses[39] = 1; // paire 4 : item 35 gagne
+        reponses[47] = 1; reponses[53] = 5; // paire 5 : item 53 gagne
+
+        var reponsesCoherentes = new Dictionary<int, int> { [1] = 1, [2] = 21, [3] = 25, [4] = 35, [5] = 53 };
+        var (success, errorMessage, resultatCoherent) = await service.RepondreAsync(utilisateur.Id, reponses, reponsesCoherentes);
+        Assert.True(success, errorMessage);
+        Assert.Equal(5, resultatCoherent!.NombrePairesCoherentes);
+        Assert.Equal(5, resultatCoherent.NombrePairesControle);
+
+        // Meme reponses Likert, mais choix forces tous opposes a l'attendu : 0 paire coherente.
+        var reponsesIncoherentes = new Dictionary<int, int> { [1] = 5, [2] = 13, [3] = 27, [4] = 39, [5] = 47 };
+        var (success2, errorMessage2, resultatIncoherent) = await service.RepondreAsync(utilisateur.Id, reponses, reponsesIncoherentes);
+        Assert.True(success2, errorMessage2);
+        Assert.Equal(0, resultatIncoherent!.NombrePairesCoherentes);
     }
 
     [Fact]
@@ -55,7 +135,7 @@ public class BigFiveServiceTests
         var service = new BigFiveService(dbContext, new FakeEmailService());
         var reponses = Enumerable.Range(1, 58).ToDictionary(n => n, _ => 3);
 
-        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses);
+        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses, ReponsesFiabiliteDefaut(service));
 
         Assert.True(success, errorMessage);
         Assert.Equal(3m, resultat!.IndiceAcquiescement);
@@ -89,7 +169,7 @@ public class BigFiveServiceTests
         var service = new BigFiveService(dbContext, new FakeEmailService());
         var reponses = Enumerable.Range(1, 58).ToDictionary(n => n, _ => noteUniforme);
 
-        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses);
+        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses, ReponsesFiabiliteDefaut(service));
 
         Assert.True(success, errorMessage);
         Assert.Equal((decimal)noteUniforme, resultat!.IndiceAcquiescement);
@@ -103,7 +183,7 @@ public class BigFiveServiceTests
     }
 
     [Fact]
-    public async Task RepondreAsync_DetecteUnSignalReelMalgreUneTendanceModereeAlacquiescement()
+    public async Task RepondreAsync_DetecteUnSignalReelMalgreUneTendanceModereeAlacquiescence()
     {
         // 34 items (N, O, C) a 4, les 12 items d'Extraversion a 5, les 12 items
         // d'Agreabilite a 3 -> IA = (34x4 + 12x5 + 12x3)/58 = 232/58 = 4.0 exactement.
@@ -138,7 +218,7 @@ public class BigFiveServiceTests
             }
         }
 
-        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses);
+        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses, ReponsesFiabiliteDefaut(service));
 
         Assert.True(success, errorMessage);
         Assert.Equal(4.0m, resultat!.IndiceAcquiescement);
@@ -163,7 +243,7 @@ public class BigFiveServiceTests
         var service = new BigFiveService(dbContext, new FakeEmailService());
         var reponses = Enumerable.Range(1, 58).ToDictionary(n => n, _ => 3);
 
-        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses);
+        var (success, errorMessage, resultat) = await service.RepondreAsync(utilisateur.Id, reponses, ReponsesFiabiliteDefaut(service));
 
         Assert.True(success, errorMessage);
         var domaineN = resultat!.Domaines.Single(d => d.Code == "N");
@@ -186,12 +266,13 @@ public class BigFiveServiceTests
         var service = new BigFiveService(dbContext, emailService);
         var reponses = Enumerable.Range(1, 58).ToDictionary(n => n, _ => 3);
 
-        await service.RepondreAsync(utilisateur.Id, reponses);
+        await service.RepondreAsync(utilisateur.Id, reponses, ReponsesFiabiliteDefaut(service));
 
         var enBase = await dbContext.BigFiveResultats.Include(r => r.Facettes).SingleAsync();
         Assert.Equal(utilisateur.Id, enBase.UtilisateurId);
         Assert.Equal(29, enBase.Facettes.Count); // 30 facettes de l'instrument d'origine, moins O6
         Assert.Equal(3m, enBase.IndiceAcquiescement);
+        Assert.Equal(5, enBase.NombrePairesControle);
 
         var envoi = Assert.Single(emailService.Envois);
         Assert.Equal("stagiaire@test.local", envoi.Destinataire);
@@ -207,12 +288,13 @@ public class BigFiveServiceTests
         await dbContext.SaveChangesAsync();
 
         var service = new BigFiveService(dbContext, new FakeEmailService());
+        var reponsesFiabilite = ReponsesFiabiliteDefaut(service);
         var reponsesA = Enumerable.Range(1, 58).ToDictionary(n => n, _ => 2);
         var reponsesB = Enumerable.Range(1, 58).ToDictionary(n => n, _ => 4);
 
-        await service.RepondreAsync(utilisateur.Id, reponsesA);
+        await service.RepondreAsync(utilisateur.Id, reponsesA, reponsesFiabilite);
         await Task.Delay(10); // garantit un CompleteLe strictement posterieur
-        var (_, _, deuxiemeResultat) = await service.RepondreAsync(utilisateur.Id, reponsesB);
+        var (_, _, deuxiemeResultat) = await service.RepondreAsync(utilisateur.Id, reponsesB, reponsesFiabilite);
 
         var dernier = await service.GetDernierResultatAsync(utilisateur.Id);
 

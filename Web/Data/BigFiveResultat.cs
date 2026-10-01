@@ -44,6 +44,14 @@ public class BigFiveResultat
     // pour tracabilite/transparence, jamais recalculee a l'affichage.
     public decimal IndiceAcquiescement { get; set; }
 
+    // Round de fiabilite a choix force (5 paires, une par domaine, croisant 2 facettes
+    // differentes du meme domaine) : nombre de paires ou le choix force confirme la tendance
+    // deja exprimee sur l'echelle de Likert pour les 2 memes items - signal de qualite de
+    // passation (detecte la desirabilite sociale), jamais utilise pour modifier les scores
+    // de domaine/facette ci-dessus (cf. BigFiveService.CalculerCoherenceFiabilite).
+    public int NombrePairesCoherentes { get; set; }
+    public int NombrePairesControle { get; set; }
+
     public List<BigFiveResultatFacette> Facettes { get; set; } = [];
 
     public DateTime CompleteLe { get; set; } = DateTime.UtcNow;

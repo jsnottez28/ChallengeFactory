@@ -337,7 +337,9 @@ public static class ChallengeEmailTemplates
             {listePointsForts}
             {listePointsVigilance}
             <p>{WebUtility.HtmlEncode(resultat.Synthese.Resume)}</p>
+            <p style="color:#888780; font-size:12px;">Ce test mesure des traits de personnalité dans la population générale, pas une pathologie — un score élevé en Névrosisme ne signifie pas un trouble psychologique. Les scores reflètent une position sur l'échelle théorique de l'instrument, pas un percentile par rapport à un échantillon de référence.</p>
             <p style="color:#888780; font-size:12px;">{WebUtility.HtmlEncode(resultat.IndiceAcquiescementCommentaire)}</p>
+            <p style="color:#888780; font-size:12px;">Cohérence des réponses : {resultat.NombrePairesCoherentes}/{resultat.NombrePairesControle} (indicateur de fiabilité, sans incidence sur votre profil)</p>
             <p style="color:#888780; font-size:12px;">Retrouvez le détail par facette sur votre espace.</p>
             <p style="color:#888780; font-size:12px;">Test basé sur l'IPIP-NEO-60 (Maples-Keller et al., 2017), issu de l'International Personality Item Pool (ipip.ori.org), domaine public.</p>
             """;

@@ -233,6 +233,30 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
     public List<BigFiveQuestionInfo> GetQuestions() =>
         Items.Select((item, i) => new BigFiveQuestionInfo { NumeroQuestion = i + 1, Texte = item.Texte }).ToList();
 
+    // 5 paires de fiabilite fixes (une par domaine), croisant le PREMIER item de 2 facettes
+    // DIFFERENTES du meme domaine, toujours parmi des items positivement gardes (EstInverse
+    // = false) pour eviter la double negation dans le choix force. Detecte la desirabilite
+    // sociale (repondre pour "bien paraitre") : contrairement a l'echelle de Likert ou l'on
+    // peut repondre "5" a tout, un choix force entre 2 affirmations toutes deux positivement
+    // connotees oblige a un arbitrage reel. Jamais utilisee pour modifier les scores de
+    // domaine/facette - uniquement un signal de coherence (cf. CalculerCoherenceFiabilite).
+    private static readonly (int NumeroA, int NumeroB)[] PairesFiabiliteBase =
+    [
+        (1, 5),   // N : Anxiété "Je m'inquiète pour un rien" vs Dépression "Je me sens souvent triste"
+        (13, 21), // E : Convivialité "Je me fais facilement des amis" vs Recherche de sensations "J'adore les sensations fortes"
+        (25, 27), // O : Imagination "J'ai une imagination débordante" vs Sens artistique "Je crois en l'importance de l'art"
+        (35, 39), // A : Confiance "Je fais confiance aux autres" vs Altruisme "J'adore aider les autres"
+        (47, 53), // C : Efficacité personnelle "Je gère les tâches sans difficulté" vs Esprit de réussite "Je travaille dur"
+    ];
+
+    public List<BigFiveFiabilitePaireInfo> GetPairesFiabilite() =>
+        PairesFiabiliteBase.Select((paire, i) => new BigFiveFiabilitePaireInfo
+        {
+            PaireId = i + 1,
+            OptionA = new BigFiveFiabiliteOptionInfo { NumeroQuestion = paire.NumeroA, Texte = Items[paire.NumeroA - 1].Texte },
+            OptionB = new BigFiveFiabiliteOptionInfo { NumeroQuestion = paire.NumeroB, Texte = Items[paire.NumeroB - 1].Texte },
+        }).ToList();
+
     // Score corrige du biais d'acquiescence (Soto, John, Gosling & Potter, 2008, Appendix A) :
     // on recentre la reponse brute sur l'Indice d'Acquiescement (IA, moyenne des 58 reponses
     // de la personne) avant de la recoder, puis on recentre le resultat sur le milieu
@@ -244,7 +268,8 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
     private static decimal CalculerValeurCorrigee(int note, bool estInverse, decimal indiceAcquiescement) =>
         estInverse ? 3 - (note - indiceAcquiescement) : 3 + (note - indiceAcquiescement);
 
-    public async Task<(bool Success, string? ErrorMessage, BigFiveResultatInfo? Resultat)> RepondreAsync(string utilisateurId, Dictionary<int, int> reponses)
+    public async Task<(bool Success, string? ErrorMessage, BigFiveResultatInfo? Resultat)> RepondreAsync(
+        string utilisateurId, Dictionary<int, int> reponses, Dictionary<int, int> reponsesFiabilite)
     {
         var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
         if (utilisateur is null)
@@ -260,7 +285,18 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
             }
         }
 
+        var pairesFiabilite = PairesFiabiliteBase;
+        for (var i = 0; i < pairesFiabilite.Length; i++)
+        {
+            var (numeroA, numeroB) = pairesFiabilite[i];
+            if (!reponsesFiabilite.TryGetValue(i + 1, out var choix) || (choix != numeroA && choix != numeroB))
+            {
+                return (false, "Merci de répondre à toutes les paires de vérification.", null);
+            }
+        }
+
         var indiceAcquiescement = (decimal)Enumerable.Range(1, Items.Length).Average(numero => reponses[numero]);
+        var nombrePairesCoherentes = CalculerCoherenceFiabilite(reponses, reponsesFiabilite);
 
         var scoresFacettes = Facettes.Keys.ToDictionary(code => code, _ => 0m);
         for (var i = 0; i < Items.Length; i++)
@@ -279,6 +315,8 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
             ScoreAgreabilite = FacettesParDomaine["A"].Sum(f => scoresFacettes[f]),
             ScoreConsciencieusite = FacettesParDomaine["C"].Sum(f => scoresFacettes[f]),
             IndiceAcquiescement = indiceAcquiescement,
+            NombrePairesCoherentes = nombrePairesCoherentes,
+            NombrePairesControle = pairesFiabilite.Length,
             Facettes = [.. scoresFacettes.Select(kv => new BigFiveResultatFacette { Code = kv.Key, Score = kv.Value })],
             CompleteLe = DateTime.UtcNow,
         };
@@ -305,6 +343,28 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
             .FirstOrDefaultAsync();
 
         return resultat is null ? null : VersInfo(resultat);
+    }
+
+    // Pour chaque paire de fiabilite, l'"attendu" est l'item que la personne a note le plus
+    // haut sur l'echelle de Likert D'ORIGINE (pas la valeur corrigee de l'acquiescence - le
+    // choix force compare directement ces 2 items precis, pas des totaux de facette) ;
+    // egalite departagee vers l'option A par convention fixe. Coherent si le choix force va
+    // bien vers cet item. Jamais utilise pour modifier un score - uniquement un compteur de
+    // qualite de passation (desirabilite sociale si le choix force contredit systematiquement
+    // la tendance Likert).
+    private static int CalculerCoherenceFiabilite(Dictionary<int, int> reponses, Dictionary<int, int> reponsesFiabilite)
+    {
+        var coherentes = 0;
+        for (var i = 0; i < PairesFiabiliteBase.Length; i++)
+        {
+            var (numeroA, numeroB) = PairesFiabiliteBase[i];
+            var attendu = reponses[numeroA] >= reponses[numeroB] ? numeroA : numeroB;
+            if (reponsesFiabilite[i + 1] == attendu)
+            {
+                coherentes++;
+            }
+        }
+        return coherentes;
     }
 
     // Niveau qualitatif base sur la position du score dans l'intervalle THEORIQUE nominal
@@ -427,6 +487,8 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
             Synthese = ConstruireSynthese(niveauxDomaines),
             IndiceAcquiescement = resultat.IndiceAcquiescement,
             IndiceAcquiescementCommentaire = CommenterIndiceAcquiescement(resultat.IndiceAcquiescement),
+            NombrePairesCoherentes = resultat.NombrePairesCoherentes,
+            NombrePairesControle = resultat.NombrePairesControle,
             CompleteLe = resultat.CompleteLe,
         };
     }
