@@ -20,6 +20,7 @@ public class CohortesController(
     IEmargementService emargementService,
     IQuestionnaireMiParcoursService questionnaireMiParcoursService,
     ITestPositionnementService testPositionnementService,
+    ICarteCompetenceService carteCompetenceService,
     UserManager<ApplicationUser> userManager) : Controller
 {
     [HttpGet("")]
@@ -296,6 +297,57 @@ public class CohortesController(
             Url.Page("/Compte/DefinirMotDePasse", null, new { token }, Request.Scheme) ?? $"/Compte/DefinirMotDePasse?token={token}");
 
         TempData["StatusMessage"] = success ? "Invitation renvoyée." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id = cohorteId });
+    }
+
+    // ---- Personnalisation des cartes (parcours Bilan de competences individuel uniquement) ----
+
+    [HttpGet("{cohorteId:int}/Membres/{cohorteMembreId:int}/Etapes/{etapeId:int}/Cartes")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    public async Task<IActionResult> CartesSupplementairesMembre(int cohorteId, int cohorteMembreId, int etapeId, int? challengeSourceId, string? recherche)
+    {
+        var contexte = await cohorteService.GetContextePersonnalisationCartesAsync(cohorteId, cohorteMembreId, etapeId);
+        if (contexte is null)
+        {
+            return NotFound();
+        }
+
+        List<CarteCompetence> cartesCandidates;
+        if (challengeSourceId.HasValue)
+        {
+            // Navigue dans l'architecture d'un Challenge precis (y compris un autre que celui
+            // de cette Cohorte) : permet de piocher une carte deja pensee pour un autre
+            // parcours plutot que de la rechercher dans tout le catalogue.
+            var challengeSource = await challengeService.GetByIdAsync(challengeSourceId.Value);
+            cartesCandidates = challengeSource?.Etapes
+                .SelectMany(e => e.Cartes.Select(c => c.CarteCompetence))
+                .DistinctBy(c => c.Id)
+                .OrderBy(c => c.Code)
+                .ToList() ?? [];
+        }
+        else
+        {
+            var resultat = await carteCompetenceService.RechercherAsync(new CarteCompetenceFiltre { Recherche = recherche, TaillePage = 500 });
+            cartesCandidates = resultat.Cartes;
+        }
+
+        ViewData["Contexte"] = contexte;
+        ViewData["ChallengeSourceId"] = challengeSourceId;
+        ViewData["Recherche"] = recherche;
+        ViewData["IdsSelectionnes"] = contexte.CartesSupplementaires.Select(c => c.CarteCompetenceId).ToHashSet();
+        ViewData["ChallengesSource"] = await ListeChallengesPublies();
+
+        return View(cartesCandidates);
+    }
+
+    [HttpPost("{cohorteId:int}/Membres/{cohorteMembreId:int}/Etapes/{etapeId:int}/Cartes")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CartesSupplementairesMembre(int cohorteId, int cohorteMembreId, int etapeId, [FromForm] List<int>? carteIds)
+    {
+        var gestionnaireId = userManager.GetUserId(User)!;
+        var (success, errorMessage) = await cohorteService.DefinirCartesSupplementairesMembreAsync(cohorteMembreId, etapeId, carteIds ?? [], gestionnaireId);
+        TempData["StatusMessage"] = success ? "Cartes personnalisées mises à jour." : errorMessage;
         return RedirectToAction(nameof(Details), new { id = cohorteId });
     }
 

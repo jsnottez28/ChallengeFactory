@@ -28,6 +28,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ChallengeEtapeCarte> ChallengeEtapeCartes { get; set; }
     public DbSet<Cohorte> Cohortes { get; set; }
     public DbSet<CohorteMembre> CohorteMembres { get; set; }
+    public DbSet<CohorteMembreCarteSupplementaire> CohorteMembreCartesSupplementaires { get; set; }
     public DbSet<CohorteEtapeValidation> CohorteEtapeValidations { get; set; }
     public DbSet<InvitationCompte> InvitationsComptes { get; set; }
     public DbSet<Preuve> Preuves { get; set; }
@@ -333,6 +334,34 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(m => m.UtilisateurId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasIndex(cs => new { cs.CohorteMembreId, cs.ChallengeEtapeId, cs.CarteCompetenceId })
+            .IsUnique();
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasOne(cs => cs.CohorteMembre)
+            .WithMany()
+            .HasForeignKey(cs => cs.CohorteMembreId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasOne(cs => cs.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(cs => cs.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasOne(cs => cs.CarteCompetence)
+            .WithMany()
+            .HasForeignKey(cs => cs.CarteCompetenceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasOne(cs => cs.AjouteePar)
+            .WithMany()
+            .HasForeignKey(cs => cs.AjouteeParId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<CohorteEtapeValidation>()
             .HasIndex(v => new { v.CohorteId, v.NumeroEtape })

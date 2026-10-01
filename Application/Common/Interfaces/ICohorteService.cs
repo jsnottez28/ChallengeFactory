@@ -28,6 +28,16 @@ public sealed class CohorteResume
     public int NombreMembres { get; set; }
     public int? OrganisationId { get; set; }
     public string? OrganisationNom { get; set; }
+
+    // Collectif (par defaut) vs BilanCompetencesIndividuel - cf. FormatChallenge. Conditionne
+    // l'affichage de l'entree "Personnaliser les cartes" sur la fiche Cohorte (reservee aux
+    // parcours individuels, cf. CohorteMembreCarteSupplementaire).
+    public FormatChallenge Format { get; set; } = FormatChallenge.Collectif;
+
+    // Id du ChallengeEtape correspondant a EtapeCourante (null si la Cohorte n'a pas encore
+    // d'etape courante valide, ex. jamais lancee) - evite d'avoir a refaire la resolution
+    // (ChallengeId, NumeroEtape) -> ChallengeEtapeId cote vue/controleur.
+    public int? ChallengeEtapeCouranteId { get; set; }
 }
 
 public sealed class DemandeEmbarquementInfo
@@ -57,6 +67,36 @@ public sealed class CohorteEtapeValidationInfo
     public DateTime ValideLe { get; set; }
 }
 
+// Une carte personnalisee deja ajoutee pour un membre - affichee dans le picker
+// (CohorteService.GetContextePersonnalisationCartesAsync) pour tracabilite (qui, quand).
+public sealed class CarteSupplementaireInfo
+{
+    public int CarteCompetenceId { get; set; }
+    public string CarteCode { get; set; } = string.Empty;
+    public string CarteTitre { get; set; } = string.Empty;
+    public string AjouteeParNomComplet { get; set; } = string.Empty;
+    public DateTime AjouteeLe { get; set; }
+}
+
+// Contexte complet pour l'ecran de personnalisation des cartes d'un membre a une etape
+// donnee (cf. CohortesController.CartesSupplementairesMembre). FormatAutorise reste porte
+// par le DTO (et pas seulement verifie cote service a l'enregistrement) pour permettre a la
+// vue d'afficher un message bloquant explicite si jamais ce point d'entree est atteint sur
+// un Challenge Collectif (ne doit normalement pas arriver, le lien n'est affiche que si
+// FormatAutorise - mais defense en profondeur).
+public sealed class PersonnalisationCartesContexte
+{
+    public int CohorteId { get; set; }
+    public int CohorteMembreId { get; set; }
+    public string MembreNomComplet { get; set; } = string.Empty;
+    public int ChallengeEtapeId { get; set; }
+    public int NumeroEtape { get; set; }
+    public string EtapeTitre { get; set; } = string.Empty;
+    public bool FormatAutorise { get; set; }
+    public List<int> CartesTemplateIds { get; set; } = [];
+    public List<CarteSupplementaireInfo> CartesSupplementaires { get; set; } = [];
+}
+
 // Cote apprenant : une Cohorte a laquelle l'utilisateur appartient, tant qu'elle est
 // Active. Disparait de "Mon parcours en cours" des qu'elle passe Terminee (les cartes
 // restent visibles dans la bibliotheque, mais plus ici - voir prompt section 7.1).
@@ -69,6 +109,12 @@ public sealed class ParcoursEnCoursInfo
     public string TitreEtape { get; set; } = string.Empty;
     public string? DefiIndividuel { get; set; }
     public List<CarteCompetence> Cartes { get; set; } = [];
+
+    // Cartes ajoutees specifiquement pour ce membre (cf. CohorteMembreCarteSupplementaire) -
+    // toujours vide sur un Challenge Collectif. Affichees separement de Cartes dans la vue
+    // (section distincte "Vos cartes personnalisees"), jamais fusionnees dans la meme liste,
+    // pour que l'apprenant comprenne que ce sont des ajouts specifiques a son parcours.
+    public List<CarteCompetence> CartesPersonnalisees { get; set; } = [];
 }
 
 public sealed class MembreImportInput
@@ -134,6 +180,25 @@ public interface ICohorteService
     // attente de validation, cf. statut_acces_plateforme) - controle serveur, jamais
     // seulement masque cote UI.
     Task<List<ParcoursEnCoursInfo>> GetMesParcoursEnCoursAsync(string utilisateurId);
+
+    // ---- Personnalisation des cartes (parcours Bilan de competences individuel uniquement) ----
+
+    // Renvoie null si le membre ou l'etape n'existe pas / n'appartient pas a cette Cohorte.
+    // FormatAutorise = false si le Challenge de la Cohorte n'est pas
+    // BilanCompetencesIndividuel - a verifier cote vue avant d'afficher le formulaire
+    // d'edition (le formulaire de recherche/ajout reste utilisable en lecture pour inspection,
+    // mais DefinirCartesSupplementairesMembreAsync refusera toute ecriture).
+    Task<PersonnalisationCartesContexte?> GetContextePersonnalisationCartesAsync(int cohorteId, int cohorteMembreId, int challengeEtapeId);
+
+    // Remplace l'ensemble des cartes supplementaires de ce membre pour cette etape (meme
+    // logique "remplacement total" que DefinirCartesEtapeAsync sur le template partage,
+    // volontairement SANS verrou d'architecture : contrairement au template, la
+    // personnalisation individuelle doit rester modifiable meme une fois la Cohorte Active,
+    // puisque le diagnostic d'un bilan de competences peut evoluer en cours de parcours).
+    // Echoue si le Challenge de la Cohorte n'est pas BilanCompetencesIndividuel (verification
+    // serveur, jamais seulement masque cote UI - cf. CLAUDE.md, principe Manifeste "l'equipe
+    // avant l'individu").
+    Task<(bool Success, string? ErrorMessage)> DefinirCartesSupplementairesMembreAsync(int cohorteMembreId, int challengeEtapeId, List<int> carteCompetenceIds, string gestionnaireId);
 
     // Uniquement si EnPreparation (jamais Lancee) : tant qu'elle n'a pas ete Lancee, aucune
     // carte n'a ete attribuee ni aucune etape validee via cette Cohorte, donc rien a

@@ -1,0 +1,120 @@
+@model List<Domain.Entities.CarteCompetence>
+@using Application.Common.Interfaces
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Web.Extensions
+@{
+    var contexte = (PersonnalisationCartesContexte)ViewData["Contexte"]!;
+    var challengeSourceId = ViewData["ChallengeSourceId"] as int?;
+    var recherche = ViewData["Recherche"] as string;
+    var idsSelectionnes = ViewData["IdsSelectionnes"] as HashSet<int> ?? [];
+    var challengesSource = ViewData["ChallengesSource"] as List<SelectListItem> ?? [];
+    ViewData["Title"] = $"Cartes personnalisées — {contexte.MembreNomComplet}";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cohortes" asp-action="Details" asp-route-id="@contexte.CohorteId">Détails</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Cartes personnalisées</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration — Bilan de compétences individuel</p>
+                <h1 class="h3 mb-0">Cartes personnalisées — @contexte.MembreNomComplet</h1>
+                <p class="text-muted mb-0">Étape @contexte.NumeroEtape — @contexte.EtapeTitre</p>
+            </div>
+            <a asp-controller="Cohortes" asp-action="Details" asp-route-id="@contexte.CohorteId" class="btn btn-outline-secondary">Retour à la Cohorte</a>
+        </div>
+
+        @if (!contexte.FormatAutorise)
+        {
+            <div class="alert alert-warning" role="alert">
+                Cette fonctionnalité est réservée aux parcours de type « Bilan de compétences individuel ». Elle n'est pas disponible pour cette Cohorte.
+            </div>
+        }
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h2 class="h6 mb-2">Ressources Directrices de l'étape (partagées, lecture seule)</h2>
+                @if (contexte.CartesTemplateIds.Count == 0)
+                {
+                    <p class="text-muted mb-0">Aucune carte partagée sur cette étape.</p>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">@contexte.CartesTemplateIds.Count carte(s) partagée(s) par toute la Cohorte sur cette étape — gérées depuis l'architecture du Challenge, pas depuis cet écran.</p>
+                }
+            </div>
+        </div>
+
+        <form method="get" asp-controller="Cohortes" asp-action="CartesSupplementairesMembre"
+              asp-route-cohorteId="@contexte.CohorteId" asp-route-cohorteMembreId="@contexte.CohorteMembreId" asp-route-etapeId="@contexte.ChallengeEtapeId"
+              class="row g-2 mb-4 align-items-end">
+            <div class="col-auto">
+                <label class="form-label small mb-1">Piocher dans un Challenge</label>
+                <select name="challengeSourceId" class="form-select" onchange="this.form.submit()">
+                    <option value="">— Rechercher dans tout le catalogue —</option>
+                    @foreach (var item in challengesSource)
+                    {
+                        <option value="@item.Value" selected="@(challengeSourceId.HasValue && item.Value == challengeSourceId.Value.ToString())">@item.Text</option>
+                    }
+                </select>
+            </div>
+            @if (!challengeSourceId.HasValue)
+            {
+                <div class="col-auto">
+                    <label class="form-label small mb-1">Recherche</label>
+                    <div class="input-group" style="max-width: 420px;">
+                        <input type="text" name="recherche" value="@recherche" class="form-control" placeholder="Rechercher par code ou titre...">
+                        <button type="submit" class="btn btn-outline-primary">Rechercher</button>
+                    </div>
+                </div>
+            }
+        </form>
+
+        <form method="post" asp-controller="Cohortes" asp-action="CartesSupplementairesMembre"
+              asp-route-cohorteId="@contexte.CohorteId" asp-route-cohorteMembreId="@contexte.CohorteMembreId" asp-route-etapeId="@contexte.ChallengeEtapeId">
+            @Html.AntiForgeryToken()
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h6 mb-0">Cartes supplémentaires pour ce membre</h2>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.Count == 0)
+                    {
+                        <p class="text-muted mb-0">Aucune carte ne correspond à cette recherche.</p>
+                    }
+                    else
+                    {
+                        <div class="row g-2">
+                            @foreach (var carte in Model)
+                            {
+                                <div class="col-12 col-md-6">
+                                    <div class="form-check border rounded p-2">
+                                        <input class="form-check-input" type="checkbox" name="carteIds" value="@carte.Id" id="carte-@carte.Id" checked="@idsSelectionnes.Contains(carte.Id)" disabled="@(!contexte.FormatAutorise)">
+                                        <label class="form-check-label" for="carte-@carte.Id">
+                                            <code>@carte.Code</code> — @carte.TitreTheorie <span class="text-muted small">(@carte.Niveau.Libelle())</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="Cohortes" asp-action="Details" asp-route-id="@contexte.CohorteId" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary" disabled="@(!contexte.FormatAutorise)">Enregistrer les cartes personnalisées</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
