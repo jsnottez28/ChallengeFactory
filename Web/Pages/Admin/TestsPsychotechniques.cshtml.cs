@@ -33,7 +33,7 @@ public class TestsPsychotechniquesModel : PageModel
             new TestPsychotechniqueItem
             {
                 Nom = "Test Big Five",
-                Description = "116 affirmations notées de 1 à 5, profil de personnalité selon le modèle OCEAN (Névrosisme, Extraversion, Ouverture, Agréabilité, Conscienciosité).",
+                Description = "58 affirmations notées de 1 à 5, profil de personnalité selon le modèle OCEAN (Névrosisme, Extraversion, Ouverture, Agréabilité, Conscienciosité), scores corrigés du biais d'acquiescence.",
                 LienAcces = Url.Page("/Dashboard/TestBigFive", null, null, Request.Scheme) ?? "/Dashboard/TestBigFive",
             },
         ];

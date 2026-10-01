@@ -337,8 +337,9 @@ public static class ChallengeEmailTemplates
             {listePointsForts}
             {listePointsVigilance}
             <p>{WebUtility.HtmlEncode(resultat.Synthese.Resume)}</p>
+            <p style="color:#888780; font-size:12px;">{WebUtility.HtmlEncode(resultat.IndiceAcquiescementCommentaire)}</p>
             <p style="color:#888780; font-size:12px;">Retrouvez le détail par facette sur votre espace.</p>
-            <p style="color:#888780; font-size:12px;">Test basé sur l'IPIP-NEO-120 (Johnson, 2014), issu de l'International Personality Item Pool (ipip.ori.org), domaine public.</p>
+            <p style="color:#888780; font-size:12px;">Test basé sur l'IPIP-NEO-60 (Maples-Keller et al., 2017), issu de l'International Personality Item Pool (ipip.ori.org), domaine public.</p>
             """;
 
         return (sujet, corps);

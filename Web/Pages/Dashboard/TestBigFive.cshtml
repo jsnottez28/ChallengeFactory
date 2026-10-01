@@ -92,6 +92,7 @@ body {
 .result-header { text-align: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e0dfd8; }
 .result-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
 .result-header p { font-size: 14px; color: #5f5e5a; }
+.result-header .text-acquiescement { font-size: 12px; color: #888780; margin-top: 6px; }
 
 .domaine-box { background: #fff; border-radius: 14px; border: 1px solid; padding: 1.25rem 1.5rem; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
 .domaine-box.n { border-color: #C0392B; } .domaine-box.e { border-color: #E67E22; } .domaine-box.o { border-color: #8E44AD; } .domaine-box.a { border-color: #16A085; } .domaine-box.c { border-color: #2980B9; }
@@ -199,6 +200,7 @@ body {
       <div class="result-header">
         <h2>Votre profil Big Five</h2>
         <p>Passé le @r.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+        <p class="text-acquiescement">@r.IndiceAcquiescementCommentaire</p>
       </div>
 
       @foreach (var dom in r.Domaines)
@@ -209,12 +211,12 @@ body {
             <span class="domaine-nom">@dom.Code — @dom.Nom</span>
             <span class="domaine-niveau @css">@dom.Niveau</span>
           </div>
-          <div class="domaine-bar-track"><div class="domaine-bar-fill @css" style="width:@(dom.PourcentagePosition)%;"></div></div>
+          <div class="domaine-bar-track"><div class="domaine-bar-fill @css" style="width:@(Math.Clamp(dom.PourcentagePosition, 0, 100))%;"></div></div>
           <p class="domaine-desc">@dom.Description</p>
           <div class="facette-tags">
             @foreach (var facette in dom.Facettes)
             {
-              <span class="facette-tag">@facette.Nom : @facette.Score/20</span>
+              <span class="facette-tag">@facette.Nom : @facette.Score.ToString("0.0")/10</span>
             }
           </div>
         </div>
@@ -260,7 +262,7 @@ body {
 
   <div class="page-footer">
     Test Big Five · Névrosisme · Extraversion · Ouverture · Agréabilité · Conscienciosité · Challenges Factory<br>
-    Contenu basé sur l'IPIP-NEO-120 (Johnson, 2014), issu de l'International Personality Item Pool (ipip.ori.org), domaine public.
+    Contenu basé sur l'IPIP-NEO-60 (Maples-Keller et al., 2017), issu de l'International Personality Item Pool (ipip.ori.org), domaine public.
   </div>
 </div>
 

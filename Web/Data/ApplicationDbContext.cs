@@ -500,6 +500,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(r => r.UtilisateurId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreNevrosisme).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreExtraversion).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreOuverture).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreAgreabilite).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreConsciencieusite).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.IndiceAcquiescement).HasPrecision(6, 4);
+        builder.Entity<BigFiveResultatFacette>().Property(f => f.Score).HasPrecision(6, 4);
+
         builder.Entity<BigFiveResultatFacette>()
             .HasOne(f => f.BigFiveResultat)
             .WithMany(r => r.Facettes)
