@@ -170,14 +170,14 @@
             <div class="td-footer-4-top pb-20">
                 <div class="container">
                     <div class="cf-footer-row cf-footer-row-top">
-                        <div class="td-footer-logo mb-30">
-                            <a class="cf-logo" asp-controller="Home" asp-action="Index">
-                                <img src="~/brand/mark-dark.png" alt="" class="cf-logo-mark" width="94" height="85" asp-append-version="true">
-                                <span class="cf-logo-text">
-                                    <span class="cf-logo-name cf-logo-invert">CHALLENGES<span class="cf-logo-dash">-</span>FACTORY</span>
-                                </span>
-                            </a>
-                        </div>
+                        @* .td-footer-logo (classe du theme herite) retiree : aucune regle CSS ne la
+                           cible (verifie dans main.css), c'etait une div sans aucun effet visuel. *@
+                        <a class="cf-logo mb-30" asp-controller="Home" asp-action="Index">
+                            <img src="~/brand/mark-dark.png" alt="" class="cf-logo-mark" width="94" height="85" asp-append-version="true">
+                            <span class="cf-logo-text">
+                                <span class="cf-logo-name cf-logo-invert">CHALLENGES<span class="cf-logo-dash">-</span>FACTORY</span>
+                            </span>
+                        </a>
                         <div class="td-footer-bottom-social text-right mb-30">
                             <span><a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a></span>
                         </div>
