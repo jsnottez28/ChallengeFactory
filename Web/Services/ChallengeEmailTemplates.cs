@@ -347,6 +347,30 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // Test des ancres de carriere (Schein, 1990 / Cerdin, 2007) : envoye automatiquement des
+    // que l'utilisateur termine le test (cf. ScheinService.RepondreAsync).
+    public static (string Sujet, string CorpsHtml) ResultatSchein(Application.Common.Interfaces.ScheinResultatInfo resultat)
+    {
+        const string sujet = "Votre profil d'ancres de carrière";
+
+        var listeAncres = string.Join("", resultat.Ancres.Select(a =>
+            $"""
+            <p><strong>{WebUtility.HtmlEncode(a.Nom)}{(a.EstDominante ? " ★" : "")} — {a.Score}/{a.ScoreMax}</strong><br>
+            {WebUtility.HtmlEncode(a.Description)}</p>
+            """));
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété le test des ancres de carrière. Voici votre résultat :</p>
+            <p>{WebUtility.HtmlEncode(resultat.Resume)}</p>
+            {listeAncres}
+            <p style="color:#888780; font-size:12px;">Une ancre de carrière évolue parfois au fil du temps : ce résultat reflète votre situation au moment où vous avez passé le test.</p>
+            <p style="color:#888780; font-size:12px;">Test adapté de Schein, E. H. (1990), Career Anchors: Discovering Your Real Values, et de Cerdin, J.-L. (2007), S'expatrier en toute connaissance de cause, Eyrolles.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
     // Pre-diagnostic carbone : jamais nomme "Bilan Carbone®" (marque deposee de
     // l'Association Bilan Carbone, reservee a la methode complete realisee par un
     // praticien) - cf. IPreBilanCarboneService.

@@ -78,6 +78,7 @@ builder.Services.AddScoped<ITestPositionnementService, TestPositionnementService
 builder.Services.AddScoped<IDiscService, DiscService>();
 builder.Services.AddScoped<IRiasecService, RiasecService>();
 builder.Services.AddScoped<IBigFiveService, BigFiveService>();
+builder.Services.AddScoped<IScheinService, ScheinService>();
 builder.Services.AddScoped<IPreBilanCarboneService, PreBilanCarboneService>();
 builder.Services.AddScoped<IQualiopiDashboardService, QualiopiDashboardService>();
 

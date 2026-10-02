@@ -112,6 +112,36 @@
                 </div>
             </div>
 
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Test des ancres de carrière</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (Model.ResultatSchein is null)
+                        {
+                            <p class="text-muted mb-0">Cet utilisateur n'a pas encore passé le test des ancres de carrière.</p>
+                        }
+                        else
+                        {
+                            var sc = Model.ResultatSchein;
+                            <p class="text-muted small mb-2">Passé le @sc.CompleteLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm")</p>
+                            @foreach (var ancre in sc.Ancres.Where(a => a.EstDominante))
+                            {
+                                <h3 class="h6 mb-2">@ancre.Nom ★</h3>
+                            }
+                            <div class="row g-2 text-center mb-2">
+                                @foreach (var ancre in sc.Ancres)
+                                {
+                                    <div class="col-4"><strong>@ancre.Code</strong><br>@ancre.Score/@ancre.ScoreMax</div>
+                                }
+                            </div>
+                            <p class="text-muted small mb-0">@sc.Resume</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
             @* D'autres tests psychotechniques s'ajouteront ici, chacun dans sa propre carte -
                cf. UtilisateursController.Tests / UserTestsViewModel. *@
         </div>
