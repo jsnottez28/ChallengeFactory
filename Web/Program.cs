@@ -106,7 +106,24 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    // Les assets portant un parametre de version (?v=hash via asp-append-version, cf.
+    // _Layout.cshtml) ou places sous /uploads/ (nommage par GUID genere a l'upload, jamais
+    // reecrits en place - cf. CartesController.EnregistrerImageAsync) sont immuables par
+    // construction : un changement de contenu change toujours l'URL, donc un cache
+    // navigateur tres long ne peut jamais servir une version perimee. Les autres assets
+    // (pas encore versionnes) gardent un cache plus court.
+    OnPrepareResponse = context =>
+    {
+        var estVersionne = context.Context.Request.Query.ContainsKey("v")
+            || context.Context.Request.Path.StartsWithSegments("/uploads");
+
+        context.Context.Response.Headers.CacheControl = estVersionne
+            ? "public, max-age=31536000, immutable"
+            : "public, max-age=604800";
+    },
+});
 app.UseRouting();
 app.UseAuthentication();
 app.UseMiddleware<DocumentsLegauxMiddleware>();

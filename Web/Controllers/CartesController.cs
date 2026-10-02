@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
 using Web.Data;
 
 namespace Web.Controllers;
@@ -17,6 +20,12 @@ public class CartesController(
 {
     private static readonly string[] ExtensionsImageAutorisees = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
     private const long TailleMaxImageOctets = 5 * 1024 * 1024;
+
+    // Les cartes ne s'affichent jamais au-dela de 380x130px (cf. .carte-face-image dans
+    // style-added.css, utilisee uniquement par _CarteFlipCard.cshtml) - 900px de cote le plus
+    // long couvre large les ecrans retina/3x sans jamais justifier de conserver une image
+    // source de plusieurs milliers de pixels.
+    private const int TailleMaxImagePixels = 900;
 
     [HttpGet("")]
     [Authorize(Policy = "Droit:CARTE.CONSULTER")]
@@ -259,11 +268,34 @@ public class CartesController(
         var dossierUploads = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "cartes");
         Directory.CreateDirectory(dossierUploads);
 
-        var nomFichier = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+        // GIF laisse tel quel (passthrough) pour ne jamais casser une eventuelle animation -
+        // tous les autres formats sont redimensionnes et reencodes en WebP (voir
+        // TailleMaxImagePixels ci-dessus) : evite de transferer a chaque affichage une image
+        // source de plusieurs Mo pour un rendu final minuscule.
+        if (extension.Equals(".gif", StringComparison.OrdinalIgnoreCase))
+        {
+            var nomFichierGif = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+            await using var fluxGif = new FileStream(Path.Combine(dossierUploads, nomFichierGif), FileMode.Create);
+            await fichier.CopyToAsync(fluxGif);
+            return (nomFichierGif, null);
+        }
+
+        var nomFichier = $"{Guid.NewGuid():N}.webp";
         var cheminComplet = Path.Combine(dossierUploads, nomFichier);
 
-        await using var flux = new FileStream(cheminComplet, FileMode.Create);
-        await fichier.CopyToAsync(flux);
+        await using var fluxEntree = fichier.OpenReadStream();
+        using var image = await Image.LoadAsync(fluxEntree);
+
+        if (image.Width > TailleMaxImagePixels || image.Height > TailleMaxImagePixels)
+        {
+            image.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Mode = ResizeMode.Max,
+                Size = new Size(TailleMaxImagePixels, TailleMaxImagePixels),
+            }));
+        }
+
+        await image.SaveAsWebpAsync(cheminComplet, new WebpEncoder { Quality = 82 });
 
         return (nomFichier, null);
     }
