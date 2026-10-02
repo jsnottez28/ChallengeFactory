@@ -10,26 +10,26 @@
 <!-- hero -->
 <section class="cf-hero-home">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-xl-8 col-lg-10">
-                <span class="cf-badge">Bilan Carbone® + Challenges d'équipe</span>
-                <h1 class="cf-h1 mb-4">
-                    Mesurez vos émissions.<br>
-                    Vos équipes les <span class="cf-accent">réduisent</span>.
-                </h1>
-                <p class="cf-lead mb-4" style="max-width:620px;">
-                    Pour les PME et ETI : Challenges Factory réalise votre <strong>Bilan Carbone®</strong>, puis
-                    transforme votre plan de transition en <strong>défis terrain</strong>, portés par vos salariés,
-                    sur un rythme adapté à votre objectif — de 9 semaines à 1 an de suivi des actions. De la mesure
-                    à l'action, preuves à l'appui — parce qu'une transition qui n'embarque pas les hommes ne tient
-                    jamais dans la durée.
-                </p>
-                <div class="d-flex flex-wrap gap-3 mb-2">
-                    <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
-                        📅 Réserver mon pré-diagnostic carbone (30 min)
-                    </a>
-                    <a class="cf-btn cf-btn-outline" href="#notre-approche">Découvrir la méthode</a>
-                </div>
+        @* Colonne unique (texte seul, pas de 2e colonne) : max-width directement au lieu
+           du row/col Bootstrap, evite 2 div pour une seule "colonne" (cf. audit EcoIndex). *@
+        <div style="max-width:880px;">
+            <span class="cf-badge">Bilan Carbone® + Challenges d'équipe</span>
+            <h1 class="cf-h1 mb-4">
+                Mesurez vos émissions.<br>
+                Vos équipes les <span class="cf-accent">réduisent</span>.
+            </h1>
+            <p class="cf-lead mb-4" style="max-width:620px;">
+                Pour les PME et ETI : Challenges Factory réalise votre <strong>Bilan Carbone®</strong>, puis
+                transforme votre plan de transition en <strong>défis terrain</strong>, portés par vos salariés,
+                sur un rythme adapté à votre objectif — de 9 semaines à 1 an de suivi des actions. De la mesure
+                à l'action, preuves à l'appui — parce qu'une transition qui n'embarque pas les hommes ne tient
+                jamais dans la durée.
+            </p>
+            <div class="d-flex flex-wrap gap-3 mb-2">
+                <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                    📅 Réserver mon pré-diagnostic carbone (30 min)
+                </a>
+                <a class="cf-btn cf-btn-outline" href="#notre-approche">Découvrir la méthode</a>
             </div>
         </div>
     </div>
@@ -40,18 +40,13 @@
 <section class="cf-stats-band">
     <div class="container">
         <div class="cf-stats-grid">
-            <div class="cf-stat-item">
-                <div class="cf-stat-num">35%</div>
-                <div class="cf-stat-label">des PME et ETI françaises avaient évalué leurs émissions carbone en 2023, contre 16 % en 2020</div>
-            </div>
-            <div class="cf-stat-item">
-                <div class="cf-stat-num">500</div>
-                <div class="cf-stat-label">salariés : seuil à partir duquel le BEGES est obligatoire pour une ETI (tous les 4 ans, plan de transition inclus)</div>
-            </div>
-            <div class="cf-stat-item">
-                <div class="cf-stat-num">40%</div>
-                <div class="cf-stat-label">du Diag Décarbon'Action pris en charge par Bpifrance pour les PME et ETI de moins de 500 salariés</div>
-            </div>
+            @* Le libelle de chaque stat est le texte direct de .cf-stat-item (style par defaut
+               de la classe) plutot qu'une 3e div .cf-stat-label - un element de moins par
+               stat, cf. audit EcoIndex ; .cf-stat-num reste une strong en display:block,
+               visuellement identique a l'ancienne div. *@
+            <div class="cf-stat-item"><strong class="cf-stat-num">35%</strong>des PME et ETI françaises avaient évalué leurs émissions carbone en 2023, contre 16 % en 2020</div>
+            <div class="cf-stat-item"><strong class="cf-stat-num">500</strong>salariés : seuil à partir duquel le BEGES est obligatoire pour une ETI (tous les 4 ans, plan de transition inclus)</div>
+            <div class="cf-stat-item"><strong class="cf-stat-num">40%</strong>du Diag Décarbon'Action pris en charge par Bpifrance pour les PME et ETI de moins de 500 salariés</div>
         </div>
         <p class="text-center mt-4 mb-0" style="color:rgba(255,255,255,.5);font-size:12px;">
             Source : Bpifrance Le Lab, étude « Décarboner les PME &amp; ETI françaises », avril 2023.
@@ -62,32 +57,24 @@
 
 <!-- le constat -->
 <section class="cf-section">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="cf-eyebrow">Le constat</span>
-            <h2 class="cf-h2 mb-3">Un bilan carbone qui dort dans un tiroir<br>ne réduit rien</h2>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">📁</div>
-                    <h5>Des chiffres que personne ne s'approprie</h5>
-                    <p>Le bilan est restitué, puis oublié par les équipes qui font les émissions au quotidien.</p>
-                </div>
+    @* text-center sur .container (au lieu d'une div dediee) : evite un element par bloc
+       d'intro de section - cf-card-grid/.cf-card restent alignees a gauche explicitement
+       (voir brand-challenges-factory.css) malgre l'heritage de text-align. *@
+    <div class="container text-center">
+        <span class="cf-eyebrow">Le constat</span>
+        <h2 class="cf-h2 mb-5">Un bilan carbone qui dort dans un tiroir<br>ne réduit rien</h2>
+        <div class="cf-card-grid cf-card-grid-3">
+            <div class="cf-card h-100" data-icon="📁">
+                <h5>Des chiffres que personne ne s'approprie</h5>
+                <p>Le bilan est restitué, puis oublié par les équipes qui font les émissions au quotidien.</p>
             </div>
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">🧭</div>
-                    <h5>Un plan de transition sans pilote</h5>
-                    <p>Les actions sont listées, rarement lancées, encore plus rarement suivies.</p>
-                </div>
+            <div class="cf-card h-100" data-icon="🧭">
+                <h5>Un plan de transition sans pilote</h5>
+                <p>Les actions sont listées, rarement lancées, encore plus rarement suivies.</p>
             </div>
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">📊</div>
-                    <h5>Des clients qui demandent des preuves</h5>
-                    <p>Donneurs d'ordres, appels d'offres, banques : on vous demande des données et une trajectoire, pas des intentions.</p>
-                </div>
+            <div class="cf-card h-100" data-icon="📊">
+                <h5>Des clients qui demandent des preuves</h5>
+                <p>Donneurs d'ordres, appels d'offres, banques : on vous demande des données et une trajectoire, pas des intentions.</p>
             </div>
         </div>
     </div>
@@ -96,39 +83,31 @@
 
 <!-- notre approche -->
 <section class="cf-section cf-section--grey" id="notre-approche">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="cf-eyebrow">Notre approche</span>
-            <h2 class="cf-h2 mb-3">L'humain au centre de la démarche</h2>
-            <p class="cf-lead mx-auto" style="max-width:660px;">
-                La décarbonation n'est pas qu'une affaire de tableurs : c'est une transition faite pour l'homme —
-                sa santé, son cadre de travail, l'avenir de ses équipes — et qui ne réussit que si elle est portée
-                par lui. Un plan de transition n'avance pas faute de bonne volonté : il avance quand vos salariés
-                sont au centre de la démarche, montent en compétence sur l'écologie et sur le savoir-être qui
-                fluidifie les relations — les deux facteurs qui multiplient les chances de réussite.
-            </p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <span class="cf-code-tag">01</span>
-                    <h5>📏 Mesurer</h5>
-                    <p>Bilan Carbone® selon la méthode V9 (cadrage, périmètres, collecte, comptabilisation), avec les facteurs d'émission de la Base Empreinte de l'ADEME.</p>
-                </div>
+    <div class="container text-center">
+        <span class="cf-eyebrow">Notre approche</span>
+        <h2 class="cf-h2 mb-3">L'humain au centre de la démarche</h2>
+        <p class="cf-lead mx-auto mb-5" style="max-width:660px;">
+            La décarbonation n'est pas qu'une affaire de tableurs : c'est une transition faite pour l'homme —
+            sa santé, son cadre de travail, l'avenir de ses équipes — et qui ne réussit que si elle est portée
+            par lui. Un plan de transition n'avance pas faute de bonne volonté : il avance quand vos salariés
+            sont au centre de la démarche, montent en compétence sur l'écologie et sur le savoir-être qui
+            fluidifie les relations — les deux facteurs qui multiplient les chances de réussite.
+        </p>
+        <div class="cf-card-grid cf-card-grid-3">
+            <div class="cf-card h-100">
+                <span class="cf-code-tag">01</span>
+                <h5>📏 Mesurer</h5>
+                <p>Bilan Carbone® selon la méthode V9 (cadrage, périmètres, collecte, comptabilisation), avec les facteurs d'émission de la Base Empreinte de l'ADEME.</p>
             </div>
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <span class="cf-code-tag">02</span>
-                    <h5>🤝 Mobiliser</h5>
-                    <p>La collecte des données devient un défi d'équipe : vos salariés montent en compétence sur l'écologie et sur la posture qui permet d'embarquer leurs collègues sans les braquer.</p>
-                </div>
+            <div class="cf-card h-100">
+                <span class="cf-code-tag">02</span>
+                <h5>🤝 Mobiliser</h5>
+                <p>La collecte des données devient un défi d'équipe : vos salariés montent en compétence sur l'écologie et sur la posture qui permet d'embarquer leurs collègues sans les braquer.</p>
             </div>
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <span class="cf-code-tag">03</span>
-                    <h5>⚡ Réduire</h5>
-                    <p>Le challenge « Cap Bas Carbone ». Au rythme de votre objectif — de 9 semaines à 1 an de suivi des actions —, des équipes par poste d'émission testent des actions, les chiffrent, les font valider par leurs pairs et les présentent à la direction.</p>
-                </div>
+            <div class="cf-card h-100">
+                <span class="cf-code-tag">03</span>
+                <h5>⚡ Réduire</h5>
+                <p>Le challenge « Cap Bas Carbone ». Au rythme de votre objectif — de 9 semaines à 1 an de suivi des actions —, des équipes par poste d'émission testent des actions, les chiffrent, les font valider par leurs pairs et les présentent à la direction.</p>
             </div>
         </div>
     </div>
@@ -137,32 +116,21 @@
 
 <!-- pour qui -->
 <section class="cf-section">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="cf-eyebrow">Pour qui ?</span>
-            <h2 class="cf-h2 mb-3">Pensé pour les PME et les ETI</h2>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">🏢</div>
-                    <h5>PME</h5>
-                    <p>Un premier bilan carbone à votre mesure, finançable via le Diag Décarbon'Action.</p>
-                </div>
+    <div class="container text-center">
+        <span class="cf-eyebrow">Pour qui ?</span>
+        <h2 class="cf-h2 mb-5">Pensé pour les PME et les ETI</h2>
+        <div class="cf-card-grid cf-card-grid-3">
+            <div class="cf-card h-100" data-icon="🏢">
+                <h5>PME</h5>
+                <p>Un premier bilan carbone à votre mesure, finançable via le Diag Décarbon'Action.</p>
             </div>
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">🏭</div>
-                    <h5>ETI</h5>
-                    <p>Dès 500 salariés, un BEGES réglementaire et un plan de transition qui avance réellement. En dessous de 500 salariés, le Diag Décarbon'Action reste accessible.</p>
-                </div>
+            <div class="cf-card h-100" data-icon="🏭">
+                <h5>ETI</h5>
+                <p>Dès 500 salariés, un BEGES réglementaire et un plan de transition qui avance réellement. En dessous de 500 salariés, le Diag Décarbon'Action reste accessible.</p>
             </div>
-            <div class="col-md-4">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">🔗</div>
-                    <h5>PME et ETI sous-traitantes</h5>
-                    <p>Répondre aux demandes de données carbone de vos donneurs d'ordres et aux critères des appels d'offres.</p>
-                </div>
+            <div class="cf-card h-100" data-icon="🔗">
+                <h5>PME et ETI sous-traitantes</h5>
+                <p>Répondre aux demandes de données carbone de vos donneurs d'ordres et aux critères des appels d'offres.</p>
             </div>
         </div>
     </div>
@@ -172,34 +140,22 @@
 <!-- piliers -->
 <section class="cf-section cf-section--grey">
     <div class="container">
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">✅</div>
-                    <h5>Conformité</h5>
-                    <p>BEGES, exigences clients et appels d'offres.</p>
-                </div>
+        @* Les piliers "Conformite" et "Donnees fiabilisees" ont ete regroupes en une seule
+           carte (4 -> 3 piliers) pour alleger le DOM de la page d'accueil - cf. audit
+           EcoIndex, confirme avec Jean-Sebastien Nottez. Aucune information perdue : les
+           deux phrases restent presentes, dans la meme carte. *@
+        <div class="cf-card-grid cf-card-grid-3">
+            <div class="cf-card h-100" data-icon="✅">
+                <h5>Conformité &amp; données fiabilisées</h5>
+                <p>BEGES, exigences clients et appels d'offres, avec une collecte documentée, source par source.</p>
             </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">📐</div>
-                    <h5>Données fiabilisées</h5>
-                    <p>Une collecte documentée, source par source.</p>
-                </div>
+            <div class="cf-card h-100" data-icon="🌱">
+                <h5>tCO2e évitées</h5>
+                <p>Estimées pendant le challenge, vérifiées à la mise à jour annuelle du bilan.</p>
             </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">🌱</div>
-                    <h5>tCO2e évitées</h5>
-                    <p>Estimées pendant le challenge, vérifiées à la mise à jour annuelle du bilan.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">🤝</div>
-                    <h5>Équipes embarquées</h5>
-                    <p>Chaque service agit sur les émissions qu'il maîtrise.</p>
-                </div>
+            <div class="cf-card h-100" data-icon="🤝">
+                <h5>Équipes embarquées</h5>
+                <p>Chaque service agit sur les émissions qu'il maîtrise.</p>
             </div>
         </div>
     </div>
@@ -229,28 +185,20 @@
 
 <!-- parcours mis en avant -->
 <section class="cf-section">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="cf-eyebrow">Le parcours</span>
-            <h2 class="cf-h2 mb-3">Cap Bas Carbone</h2>
-            <p class="cf-lead mx-auto" style="max-width:600px;">De 9 semaines à 1 an, au rythme de votre objectif, pour passer du bilan carbone à l'action, en équipe.</p>
+    <div class="container text-center">
+        <span class="cf-eyebrow">Le parcours</span>
+        <h2 class="cf-h2 mb-3">Cap Bas Carbone</h2>
+        <p class="cf-lead mx-auto mb-5" style="max-width:600px;">De 9 semaines à 1 an, au rythme de votre objectif, pour passer du bilan carbone à l'action, en équipe.</p>
+        <div class="cf-card h-100 text-center cf-narrow">
+            <span class="cf-code-tag">8 thématiques · 9 semaines à 1 an de suivi</span>
+            <h5 class="mt-2">Des équipes par poste d'émission testent, chiffrent et présentent leurs actions de réduction à la direction.</h5>
+            @* [À CONFIRMER] Ce parcours est decrit en detail dans content/a-saisir/parcours-cap-bas-carbone.md,
+               a saisir dans le back-office (Admin > Challenges). Le lien ci-dessous vers /formations reste
+               generique tant que la fiche n'est pas publiee avec un ChallengeId reel - a remplacer par un
+               lien direct vers /formations/{challengeId} une fois la fiche saisie. *@
+            <a class="cf-btn cf-btn-primary mt-3" asp-controller="Home" asp-action="Formations">Découvrir le parcours →</a>
         </div>
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="cf-card h-100 text-center">
-                    <span class="cf-code-tag">8 thématiques · 9 semaines à 1 an de suivi</span>
-                    <h5 class="mt-2">Des équipes par poste d'émission testent, chiffrent et présentent leurs actions de réduction à la direction.</h5>
-                    @* [À CONFIRMER] Ce parcours est decrit en detail dans content/a-saisir/parcours-cap-bas-carbone.md,
-                       a saisir dans le back-office (Admin > Challenges). Le lien ci-dessous vers /formations reste
-                       generique tant que la fiche n'est pas publiee avec un ChallengeId reel - a remplacer par un
-                       lien direct vers /formations/{challengeId} une fois la fiche saisie. *@
-                    <a class="cf-btn cf-btn-primary mt-3" asp-controller="Home" asp-action="Formations">Découvrir le parcours →</a>
-                </div>
-            </div>
-        </div>
-        <p class="text-center mt-4 mb-0">
-            <a class="cf-btn cf-btn-outline" asp-controller="Home" asp-action="Formations" asp-fragment="humain-organisation">Voir aussi nos parcours Compétences &amp; IA</a>
-        </p>
+        <a class="cf-btn cf-btn-outline mt-4" asp-controller="Home" asp-action="Formations" asp-fragment="humain-organisation">Voir aussi nos parcours Compétences &amp; IA</a>
     </div>
 </section>
 <!-- /parcours mis en avant -->
@@ -262,12 +210,10 @@
 <!-- temoignage client carbone -->
 <section class="cf-section cf-section--grey">
     <div class="container text-center">
-        <blockquote class="mb-3">
-            <p class="cf-h2" style="max-width:760px;margin:0 auto;">
-                « Avant même d'avoir lancé la moindre action, le simple fait de mesurer nous a
-                fait avancer. Le travail rendu par Challenges Factory a été à la hauteur de nos
-                attentes. »
-            </p>
+        <blockquote class="cf-h2 mb-3" style="max-width:760px;margin:0 auto;">
+            « Avant même d'avoir lancé la moindre action, le simple fait de mesurer nous a
+            fait avancer. Le travail rendu par Challenges Factory a été à la hauteur de nos
+            attentes. »
         </blockquote>
         <p class="text-muted mb-0">Dirigeant — PME du secteur informatique, à propos de son Bilan Carbone®</p>
     </div>
@@ -276,96 +222,53 @@
 
 <!-- offres -->
 <section class="cf-section">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="cf-eyebrow">Nos offres</span>
-            <h2 class="cf-h2 mb-3">Bilan Carbone® &amp; décarbonation</h2>
-            <p class="cf-lead mx-auto" style="max-width:600px;">Tarifs à partir de, hors taxes.</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
-                <div class="cf-card h-100">
-                    <span class="cf-code-tag">PME</span>
-                    <h5>Bilan Carbone® PME</h5>
-                    <p class="text-muted small mb-2">Scopes 1, 2, 3 + plan de transition · 3 à 4 mois</p>
-                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">À partir de 8 500 € HT</strong></p>
-                    <p class="text-muted small mb-3">Moins de 50 salariés : à partir de 5 500 € HT.</p>
-                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
-                </div>
+    <div class="container text-center">
+        <span class="cf-eyebrow">Nos offres</span>
+        <h2 class="cf-h2 mb-3">Bilan Carbone® &amp; décarbonation</h2>
+        <p class="cf-lead mx-auto mb-5" style="max-width:600px;">Tarifs à partir de, hors taxes.</p>
+        <div class="cf-card-grid cf-card-grid-offers">
+            <div class="cf-card h-100">
+                <span class="cf-code-tag">PME</span>
+                <h5>Bilan Carbone® PME</h5>
+                <p class="text-muted small mb-2">Scopes 1, 2, 3 + plan de transition · 3 à 4 mois. Moins de 50 salariés : à partir de 5 500 € HT.</p>
+                <p class="cf-price">À partir de 8 500 € HT</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="cf-card h-100">
-                    <span class="cf-code-tag">ETI</span>
-                    <h5>Bilan Carbone® ETI</h5>
-                    <p class="text-muted small mb-2">BEGES réglementaire + plan de transition</p>
-                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">À partir de 18 000 € HT</strong></p>
-                    <p class="text-muted small mb-3">Sur devis selon le nombre de sites.</p>
-                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
-                </div>
+            <div class="cf-card h-100">
+                <span class="cf-code-tag">ETI</span>
+                <h5>Bilan Carbone® ETI</h5>
+                <p class="text-muted small mb-2">BEGES réglementaire + plan de transition. Sur devis selon le nombre de sites.</p>
+                <p class="cf-price">À partir de 18 000 € HT</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="cf-card h-100" style="border-color:var(--cf-orange);">
-                    <span class="cf-code-tag">Recommandé</span>
-                    <h5>Pack Bilan + Challenge Cap Bas Carbone</h5>
-                    <p class="text-muted small mb-2">PME · Bilan Carbone® + challenge d'équipe</p>
-                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">À partir de 11 900 € HT</strong></p>
-                    <p class="text-muted small mb-3">Au lieu de 12 400 € achetés séparément.</p>
-                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
-                </div>
+            <div class="cf-card h-100" style="border-color:var(--cf-orange);">
+                <span class="cf-code-tag">Recommandé</span>
+                <h5>Pack Bilan + Challenge Cap Bas Carbone</h5>
+                <p class="text-muted small mb-2">PME · Bilan Carbone® + challenge d'équipe. Au lieu de 12 400 € achetés séparément.</p>
+                <p class="cf-price">À partir de 11 900 € HT</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="cf-card h-100">
-                    <span class="cf-code-tag">Starter</span>
-                    <h5>Challenge Cap Bas Carbone seul</h5>
-                    <p class="text-muted small mb-2">1 cycle · 10 participants max</p>
-                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">3 900 € HT</strong></p>
-                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
-                </div>
+            <div class="cf-card h-100">
+                <span class="cf-code-tag">Starter</span>
+                <h5>Challenge Cap Bas Carbone seul</h5>
+                <p class="text-muted small mb-2">1 cycle · 10 participants max</p>
+                <p class="cf-price">3 900 € HT</p>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="cf-card h-100">
-                    <span class="cf-code-tag">Suivi</span>
-                    <h5>Suivi annuel</h5>
-                    <p class="text-muted small mb-2">Mise à jour du bilan</p>
-                    <p class="mb-1"><strong style="font-size:22px;color:var(--cf-orange);">À partir de 4 500 € HT/an</strong></p>
-                    <p class="text-muted small mb-3">Mise à jour + nouveau challenge : à partir de 7 900 € HT/an.</p>
-                    <p class="text-muted small mb-0"><em>Tarif indicatif, devis après pré-diagnostic gratuit de 30 minutes.</em></p>
-                </div>
+            <div class="cf-card h-100">
+                <span class="cf-code-tag">Suivi</span>
+                <h5>Suivi annuel</h5>
+                <p class="text-muted small mb-2">Mise à jour du bilan. Mise à jour + nouveau challenge : à partir de 7 900 € HT/an.</p>
+                <p class="cf-price">À partir de 4 500 € HT/an</p>
             </div>
         </div>
+        @* Mention tarifaire commune aux 5 cartes au lieu de repetee dans chacune (meme
+           information, un seul element au lieu de cinq - cf. audit EcoIndex). *@
+        <p class="text-muted small text-center mt-4 mb-0 fst-italic">Tarifs indicatifs, devis après pré-diagnostic gratuit de 30 minutes.</p>
 
-        @* "Programme PME 1 490 EUR HT/mois" et "Licence interne" (sur devis) : chiffres
-           absents de toute page du site avant cette evolution, retrouves dans CLAUDE.md
-           (plan produit) - confirmes exacts par Jean-Sebastien Nottez en session le
-           2026-09-10, marqueur [A CONFIRMER] leve a sa demande. *@
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-10">
-                <div class="text-center mb-4">
-                    <span class="cf-eyebrow cf-eyebrow-indigo">Activité secondaire</span>
-                    <h3 class="cf-h3">Compétences &amp; IA</h3>
-                    <p class="text-muted small mx-auto" style="max-width:600px;">
-                        La décarbonation transforme aussi l'organisation du travail. Nos parcours historiques —
-                        gestion du temps, management, gestion du stress, IA — aident vos équipes à mieux vivre
-                        ces transitions, parce que ce sont elles qui font réussir une décarbonation, pas un plan
-                        écrit seul dans un bureau.
-                    </p>
-                </div>
-                <div class="row g-4 justify-content-center">
-                    <div class="col-md-6 col-lg-4">
-                        <div class="cf-card h-100">
-                            <h5>Programme PME</h5>
-                            <p class="mb-1"><strong style="font-size:20px;">1 490 € HT/mois</strong></p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="cf-card h-100">
-                            <h5>Licence interne</h5>
-                            <p class="mb-1"><strong style="font-size:20px;">Sur devis</strong></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @* Le teaser "Competences & IA" (Programme PME 1 490 EUR HT/mois / Licence interne sur
+           devis) a ete retire de la page d'accueil pour alleger son DOM - cf. audit EcoIndex,
+           confirme avec Jean-Sebastien Nottez (page d'accueil desormais centree sur l'offre
+           Bilan Carbone, activite principale). Les parcours "Humain & Organisation" restent
+           listes sur /formations#humain-organisation ; ces deux chiffres de prix specifiques
+           ne sont plus affiches ailleurs que dans CLAUDE.md (plan produit) - a reprendre la si
+           besoin de les remontrer quelque part. *@
     </div>
 </section>
 <!-- /offres -->

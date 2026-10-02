@@ -218,9 +218,19 @@
   padding: 32px;
   height: 100%;
   transition: all .3s ease;
+  /* Contre l'heritage de text-align:center pose sur .container par les sections qui
+     n'ont plus de div d'intro dediee (cf. audit EcoIndex) - .text-center explicite sur
+     une carte precise (ex. "parcours mis en avant") reste prioritaire par cascade. */
+  text-align: left;
 }
 .cf-card:hover { border-color: var(--cf-orange); box-shadow: var(--cf-shadow-md); transform: translateY(-4px); }
-.cf-card-icon {
+/* Icone emoji en pseudo-element plutot qu'en div separee : un pseudo-element (::before)
+   n'existe pas dans le DOM (document.querySelectorAll('*') ne le voit pas), donc le
+   meme rendu visuel (carre 48x48 orange pale) coute un element en moins par carte -
+   cf. audit EcoIndex. L'emoji vient de l'attribut data-icon plutot que d'etre code en
+   dur dans le CSS, pour rester visible/modifiable depuis le balisage Razor. */
+.cf-card[data-icon]::before {
+  content: attr(data-icon);
   width: 48px; height: 48px;
   background: var(--cf-orange-pale);
   border-radius: var(--cf-radius-md);
@@ -230,6 +240,47 @@
 }
 .cf-card h3, .cf-card h5 { margin-bottom: 10px; }
 .cf-card p { color: var(--cf-grey-600); font-size: 15px; margin-bottom: 0; }
+.cf-card p + p { margin-top: 10px; }
+
+/* Grilles de cartes en CSS Grid plutot qu'en row/col Bootstrap : evite une div
+   wrapper .col-* par carte (compte directement dans le DOM, cf. audit EcoIndex) sans
+   rien changer au rendu visuel (mêmes paliers responsive que les classes Bootstrap
+   qu'elles remplacent : col-md-4, col-md-6 col-lg-3, col-md-6 col-lg-4). */
+.cf-card-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+@media (min-width: 768px) {
+  .cf-card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .cf-card-grid-4, .cf-card-grid-offers { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 992px) {
+  .cf-card-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .cf-card-grid-offers { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Remplace un <strong> imbrique dans un <p> pour le prix des cartes tarifs : meme
+   rendu (gras, orange, 22px) avec un element en moins par carte. */
+.cf-price { font-size: 22px; color: var(--cf-orange); font-weight: 700; margin-bottom: 4px; }
+
+/* Colonne unique centree (hero, parcours mis en avant) sans le row/col Bootstrap
+   necessaire seulement pour une grille a plusieurs colonnes. */
+.cf-narrow { max-width: 700px; margin: 0 auto; }
+
+/* Lignes du footer en CSS Grid plutot qu'en row/col Bootstrap (memes paliers que les
+   classes qu'elles remplacent : col-lg-6, puis col-lg-4/col-md-5/col-md-3/col-md-4) -
+   evite 2 puis 3 div .col-* par page, cf. audit EcoIndex. */
+.cf-footer-row { display: grid; grid-template-columns: 1fr; gap: 24px; }
+.cf-footer-row-top { align-items: center; }
+@media (min-width: 992px) {
+  .cf-footer-row-top { grid-template-columns: 1fr 1fr; }
+  .cf-footer-row-main { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Liste de liens du footer directement en <ul> (equivalent de .td-footer-links du theme
+   herite, main.css), sans la div qui ne faisait qu'envelopper le <ul> sans aucun style
+   propre - un element de moins par colonne, cf. audit EcoIndex. */
+.cf-footer-list { list-style: none; margin: 0; padding: 0; }
+.cf-footer-list li { margin-bottom: 8px; }
+.cf-footer-list li a { font-family: var(--td-ff-poppins); color: var(--td-grey-2); }
+.cf-footer-list li a:hover { color: var(--td-common-white); }
 
 .cf-code-tag {
   display: inline-block;
@@ -253,9 +304,20 @@
   border-radius: var(--cf-radius-md);
   overflow: hidden;
 }
-.cf-stat-item { background: var(--cf-black); padding: 36px 28px; text-align: center; }
-.cf-stat-num { font-family: var(--cf-font-display); font-size: 48px; color: var(--cf-orange); line-height: 1; margin-bottom: 8px; }
-.cf-stat-label { font-family: var(--cf-font-body); font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.4; }
+/* Le libelle de la stat est le texte direct de .cf-stat-item (ex-.cf-stat-label, cf.
+   plus bas) : la police/couleur/taille qui s'appliquaient a cette 3e div s'appliquent
+   maintenant par defaut a .cf-stat-item lui-meme (la strong .cf-stat-num definit son
+   propre style par-dessus, donc le rendu des deux textes reste identique). */
+.cf-stat-item {
+  background: var(--cf-black);
+  padding: 36px 28px;
+  text-align: center;
+  font-family: var(--cf-font-body);
+  font-size: 13px;
+  color: rgba(255,255,255,.55);
+  line-height: 1.4;
+}
+.cf-stat-num { display: block; font-family: var(--cf-font-display); font-size: 48px; color: var(--cf-orange); line-height: 1; margin-bottom: 8px; }
 
 @media (max-width: 767px) {
   .cf-stats-grid { grid-template-columns: 1fr; }
