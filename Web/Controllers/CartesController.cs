@@ -5,9 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
 using Web.Data;
 
 namespace Web.Controllers;
@@ -18,12 +15,16 @@ public class CartesController(
     UserManager<ApplicationUser> userManager,
     IWebHostEnvironment webHostEnvironment) : Controller
 {
+    // Pas de conversion/redimensionnement cote serveur (cf. CLAUDE.md - aucune dependance
+    // d'optimisation d'image payante ou a risque de stabilite) : l'image doit deja etre
+    // optimisee avant l'upload, le serveur se contente de verifier qu'elle respecte le
+    // standard et refuse tout fichier hors clous avec un message explicite.
     private static readonly string[] ExtensionsImageAutorisees = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
-    private const long TailleMaxImageOctets = 5 * 1024 * 1024;
+    private const long TailleMaxImageOctets = 1024 * 1024;
 
     // Les cartes ne s'affichent jamais au-dela de 380x130px (cf. .carte-face-image dans
     // style-added.css, utilisee uniquement par _CarteFlipCard.cshtml) - 900px de cote le plus
-    // long couvre large les ecrans retina/3x sans jamais justifier de conserver une image
+    // long couvre large les ecrans retina/3x sans jamais justifier de deposer une image
     // source de plusieurs milliers de pixels.
     private const int TailleMaxImagePixels = 900;
 
@@ -262,42 +263,168 @@ public class CartesController(
 
         if (fichier.Length > TailleMaxImageOctets)
         {
-            return (null, "L'image ne doit pas dépasser 5 Mo.");
+            return (null, $"L'image ne doit pas dépasser {TailleMaxImageOctets / 1024} Ko une fois optimisée. Redimensionnez-la et compressez-la avant de l'importer (ex. squoosh.app, gratuit).");
+        }
+
+        await using var fluxMemoire = new MemoryStream();
+        await fichier.CopyToAsync(fluxMemoire);
+        var octets = fluxMemoire.ToArray();
+
+        var dimensions = LireDimensionsImage(octets);
+        if (dimensions is null)
+        {
+            return (null, "Impossible de lire les dimensions de cette image : le fichier est peut-être corrompu ou dans un format non standard.");
+        }
+
+        if (dimensions.Value.Largeur > TailleMaxImagePixels || dimensions.Value.Hauteur > TailleMaxImagePixels)
+        {
+            return (null, $"Cette image fait {dimensions.Value.Largeur}x{dimensions.Value.Hauteur}px : redimensionnez-la à {TailleMaxImagePixels}px de côté maximum avant de l'importer (ex. squoosh.app, gratuit). Les cartes ne s'affichent jamais plus grand que 380x130px, inutile de déposer une image plus grande.");
         }
 
         var dossierUploads = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "cartes");
         Directory.CreateDirectory(dossierUploads);
 
-        // GIF laisse tel quel (passthrough) pour ne jamais casser une eventuelle animation -
-        // tous les autres formats sont redimensionnes et reencodes en WebP (voir
-        // TailleMaxImagePixels ci-dessus) : evite de transferer a chaque affichage une image
-        // source de plusieurs Mo pour un rendu final minuscule.
-        if (extension.Equals(".gif", StringComparison.OrdinalIgnoreCase))
-        {
-            var nomFichierGif = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
-            await using var fluxGif = new FileStream(Path.Combine(dossierUploads, nomFichierGif), FileMode.Create);
-            await fichier.CopyToAsync(fluxGif);
-            return (nomFichierGif, null);
-        }
-
-        var nomFichier = $"{Guid.NewGuid():N}.webp";
-        var cheminComplet = Path.Combine(dossierUploads, nomFichier);
-
-        await using var fluxEntree = fichier.OpenReadStream();
-        using var image = await Image.LoadAsync(fluxEntree);
-
-        if (image.Width > TailleMaxImagePixels || image.Height > TailleMaxImagePixels)
-        {
-            image.Mutate(x => x.Resize(new ResizeOptions
-            {
-                Mode = ResizeMode.Max,
-                Size = new Size(TailleMaxImagePixels, TailleMaxImagePixels),
-            }));
-        }
-
-        await image.SaveAsWebpAsync(cheminComplet, new WebpEncoder { Quality = 82 });
+        var nomFichier = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+        await System.IO.File.WriteAllBytesAsync(Path.Combine(dossierUploads, nomFichier), octets);
 
         return (nomFichier, null);
+    }
+
+    // Lit les dimensions d'une image PNG/JPEG/WebP/GIF directement depuis les octets d'en-tete,
+    // sans decoder l'image entiere - aucune dependance (native ou commerciale) necessaire,
+    // l'optimisation elle-meme reste a la charge de la personne qui depose l'image (cf.
+    // TailleMaxImageOctets/TailleMaxImagePixels ci-dessus). Renvoie null si le format n'est pas
+    // reconnu ou si l'en-tete est trop court/corrompu.
+    private static (int Largeur, int Hauteur)? LireDimensionsImage(byte[] octets)
+    {
+        if (octets.Length >= 24 && octets[0] == 0x89 && octets[1] == 0x50 && octets[2] == 0x4E && octets[3] == 0x47)
+        {
+            // PNG : signature (8 octets) puis chunk IHDR (largeur/hauteur en big-endian, 4 octets chacun).
+            var largeur = (octets[16] << 24) | (octets[17] << 16) | (octets[18] << 8) | octets[19];
+            var hauteur = (octets[20] << 24) | (octets[21] << 16) | (octets[22] << 8) | octets[23];
+            return (largeur, hauteur);
+        }
+
+        if (octets.Length >= 10 && octets[0] == 0x47 && octets[1] == 0x49 && octets[2] == 0x46)
+        {
+            // GIF : signature "GIF87a"/"GIF89a" (6 octets) puis largeur/hauteur en little-endian, 2 octets chacun.
+            var largeur = octets[6] | (octets[7] << 8);
+            var hauteur = octets[8] | (octets[9] << 8);
+            return (largeur, hauteur);
+        }
+
+        if (octets.Length >= 21 && octets[0] == 0x52 && octets[1] == 0x49 && octets[2] == 0x46 && octets[3] == 0x46
+            && octets[8] == 0x57 && octets[9] == 0x45 && octets[10] == 0x42 && octets[11] == 0x50)
+        {
+            return LireDimensionsWebp(octets);
+        }
+
+        if (octets.Length >= 2 && octets[0] == 0xFF && octets[1] == 0xD8)
+        {
+            return LireDimensionsJpeg(octets);
+        }
+
+        return null;
+    }
+
+    private static (int Largeur, int Hauteur)? LireDimensionsWebp(byte[] octets)
+    {
+        var fourCc = System.Text.Encoding.ASCII.GetString(octets, 12, 4);
+        switch (fourCc)
+        {
+            case "VP8X":
+                // Chunk VP8X : flags (1 octet) + reserve (3 octets), puis largeur-1/hauteur-1 sur
+                // 3 octets little-endian chacun.
+                if (octets.Length < 30)
+                {
+                    return null;
+                }
+                var largeurX = (octets[24] | (octets[25] << 8) | (octets[26] << 16)) + 1;
+                var hauteurX = (octets[27] | (octets[28] << 8) | (octets[29] << 16)) + 1;
+                return (largeurX, hauteurX);
+            case "VP8 ":
+                // Bitstream VP8 "lossy" : tag de frame (3 octets) + code de synchronisation
+                // 0x9D 0x01 0x2A, puis largeur/hauteur sur 14 bits chacun (les 2 bits de poids
+                // fort servent a l'echelle et sont ignores).
+                if (octets.Length < 30 || octets[23] != 0x9D || octets[24] != 0x01 || octets[25] != 0x2A)
+                {
+                    return null;
+                }
+                var largeurL = (octets[26] | (octets[27] << 8)) & 0x3FFF;
+                var hauteurL = (octets[28] | (octets[29] << 8)) & 0x3FFF;
+                return (largeurL, hauteurL);
+            case "VP8L":
+                // Lossless : signature 0x2F puis largeur-1/hauteur-1 sur 14 bits chacun, empaquetes
+                // sur 4 octets little-endian.
+                if (octets.Length < 25 || octets[20] != 0x2F)
+                {
+                    return null;
+                }
+                var bits = octets[21] | (octets[22] << 8) | (octets[23] << 16) | (octets[24] << 24);
+                var largeurLL = (bits & 0x3FFF) + 1;
+                var hauteurLL = ((bits >> 14) & 0x3FFF) + 1;
+                return (largeurLL, hauteurLL);
+            default:
+                return null;
+        }
+    }
+
+    private static (int Largeur, int Hauteur)? LireDimensionsJpeg(byte[] octets)
+    {
+        var position = 2; // apres le marqueur SOI (0xFFD8)
+        while (position + 4 <= octets.Length)
+        {
+            if (octets[position] != 0xFF)
+            {
+                position++;
+                continue;
+            }
+
+            // Octets de bourrage 0xFF eventuels avant le vrai marqueur.
+            while (position + 1 < octets.Length && octets[position + 1] == 0xFF)
+            {
+                position++;
+            }
+
+            var marqueur = octets[position + 1];
+            position += 2;
+
+            // Marqueurs sans segment de longueur (TEM, RST0-RST7, SOI, EOI).
+            if (marqueur == 0x01 || (marqueur >= 0xD0 && marqueur <= 0xD7) || marqueur == 0xD8 || marqueur == 0xD9)
+            {
+                continue;
+            }
+
+            if (position + 2 > octets.Length)
+            {
+                return null;
+            }
+
+            var longueurSegment = (octets[position] << 8) | octets[position + 1];
+
+            // Marqueurs SOFn (debut de frame) : 0xC0-0xCF sauf 0xC4 (DHT), 0xC8 (reserve), 0xCC (DAC).
+            var estSof = marqueur >= 0xC0 && marqueur <= 0xCF && marqueur != 0xC4 && marqueur != 0xC8 && marqueur != 0xCC;
+            if (estSof)
+            {
+                if (position + 7 > octets.Length)
+                {
+                    return null;
+                }
+                var hauteur = (octets[position + 3] << 8) | octets[position + 4];
+                var largeur = (octets[position + 5] << 8) | octets[position + 6];
+                return (largeur, hauteur);
+            }
+
+            if (marqueur == 0xDA)
+            {
+                // Debut du flux de donnees scanne : aucun marqueur SOF trouve avant.
+                return null;
+            }
+
+            position += longueurSegment;
+        }
+
+        return null;
     }
 
     private static CarteCompetenceInput VersInput(CarteCompetenceFormModel model, string? nomFichierImage) => new()
