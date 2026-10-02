@@ -1,11 +1,18 @@
 /*!
  * Reduit a partir de Font Awesome Pro 6.0.0 (@fontawesome, licence commerciale) : ce fichier
- * ne declare plus QUE les 3 icones reellement utilisees sur le site public (verifie par
- * recherche dans tout le code : fa-lock, fa-xmark, fa-linkedin - cf. Web/Views/Shared/
- * _Layout.cshtml et Web/Areas/Identity/Pages/Account/AccessDenied.cshtml), au lieu des ~4300
- * icones du jeu complet. Les polices fa-solid-900.woff2/fa-brands-400.woff2 ont ete
- * sous-ensemblees (fonttools/pyftsubset) aux memes 3 glyphes. Regenerer ce fichier et les
- * polices si une nouvelle icone FontAwesome est utilisee ailleurs dans le code.
+ * ne declare plus QUE les icones reellement utilisees sur le site public, au lieu des ~4300
+ * icones du jeu complet - verifie par recherche dans tout le code :
+ *   - classes .fa-* : fa-lock (AccessDenied.cshtml), fa-xmark (menu mobile), fa-linkedin
+ *     (footer) - cf. Web/Views/Shared/_Layout.cshtml et Web/Areas/Identity/Pages/Account/
+ *     AccessDenied.cshtml ;
+ *   - glyphe f078 (chevron-down) utilise directement via `content:"\f078"` dans main.css
+ *     (.tdmenu__main-menu li.menu-item-has-children > a::after) pour la fleche du sous-menu
+ *     desktop "Nos bilans" - PAS une classe .fa-*, facile a rater lors d'un futur sous-
+ *     ensemblage (deja arrive une fois, cf. historique git) : toujours verifier aussi
+ *     `grep -rn 'content: *"\\f' *.css` avant de regenerer.
+ * Les polices fa-solid-900.woff2/fa-brands-400.woff2 ont ete sous-ensemblees (fonttools/
+ * pyftsubset) a ces memes glyphes. Regenerer ce fichier et les polices si une nouvelle icone
+ * FontAwesome est utilisee ailleurs dans le code (classe .fa-* OU content:"\fXXX" direct).
  */
 .fa,.fa-brands,.fa-solid{-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;display:inline-block;font-style:normal;font-variant:normal;line-height:1;text-rendering:auto}
 .fa-brands{font-family:"Font Awesome 6 Brands";font-weight:400}
