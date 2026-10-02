@@ -36,6 +36,12 @@ public class TestsPsychotechniquesModel : PageModel
                 Description = "58 affirmations notées de 1 à 5 + 5 paires à choix forcé, profil de personnalité selon le modèle OCEAN (Névrosisme, Extraversion, Ouverture, Agréabilité, Conscienciosité), scores corrigés du biais d'acquiescence.",
                 LienAcces = Url.Page("/Dashboard/TestBigFive", null, null, Request.Scheme) ?? "/Dashboard/TestBigFive",
             },
+            new TestPsychotechniqueItem
+            {
+                Nom = "Test des ancres de carrière",
+                Description = "45 affirmations notées de 1 à 5 + choix de 3 affirmations prioritaires, profil d'orientation de carrière selon le modèle de Schein (technique, managériale, autonomie, sécurité, créativité, dévouement à une cause, défi pur, qualité de vie, internationale).",
+                LienAcces = Url.Page("/Dashboard/TestSchein", null, null, Request.Scheme) ?? "/Dashboard/TestSchein",
+            },
         ];
     }
 
