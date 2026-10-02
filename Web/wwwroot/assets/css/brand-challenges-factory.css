@@ -272,19 +272,12 @@
 /* Bande copyright du footer herite : reste sur le noir de marque */
 .td-footer-4-copyright { background: var(--cf-black) !important; }
 
-/* Override des couleurs "active/hover" du theme herite (rose) par l'orange de marque */
-.tdmenu__navbar-wrap > ul > li.active > a,
-.tdmenu__navbar-wrap > ul > li:hover > a,
-.tdmenu__navbar-wrap > ul > li .sub-menu li:hover > a,
-.tdmenu__navbar-wrap > ul > li .sub-menu li.active > a {
-  color: var(--cf-orange) !important;
-}
-
 /* Degagement sous le header transparent (position: absolute, donc hors du flux -
    toute premiere section de page doit reserver assez d'espace en haut pour ne pas se
-   faire recouvrir). Le menu principal et le bouton Pre-diagnostic ne s'affichent qu'a
-   partir du palier xl (voir .header-auth et .tdmenu__wrap dans _Layout.cshtml, xl =
-   1200px, breakpoint Bootstrap). Historique (session du 2026-09-11) : la barre
+   faire recouvrir). Le menu principal et les boutons d'action ne s'affichent en barre
+   horizontale qu'a partir du palier xl (voir la navigation unifiee .tdmobile__menu plus
+   bas dans ce fichier et dans _Layout.cshtml, xl = 1200px, breakpoint Bootstrap).
+   Historique (session du 2026-09-11) : la barre
    horizontale exigeait a l'origine >=1400px pour afficher le menu, ce qui le masquait
    sur une grande partie des largeurs PC reelles (ex. 1366px, ou 1920px avec mise a
    l'echelle systeme) - signale par capture d'ecran utilisateur. Un premier correctif
@@ -305,12 +298,10 @@
 }
 
 /* Mode compact du header, tout le palier desktop (>= 1200px, pas de plafond) : resserre
-   nav et bouton pour que logo + menu + bouton tiennent sur une seule ligne avec de la
-   marge. Charge apres main.css (voir _Layout.cshtml) : memes selecteurs, l'emporte par
-   ordre de cascade sans besoin de !important - SAUF pour la regle de marge des liens de
-   nav, ou main.css utilise un selecteur plus specifique (.tdmenu-2 .tdmenu__navbar-wrap
-   ul li a, 2 classes) qu'il faut reprendre a l'identique pour l'emporter (la cascade
-   seule ne suffit pas en cas de specificite inferieure).
+   le logo pour laisser de la place a la navigation unifiee (voir plus bas dans ce fichier,
+   et son propre @media (min-width: 1200px) pour le resserrement cote nav/boutons). Charge
+   apres main.css (voir _Layout.cshtml), l'emporte par ordre de cascade sans besoin de
+   !important.
 
    Historique : ce mode compact n'etait applique qu'entre 1200 et 1399.98px, avec un
    palier ">= 1400px" plus "confortable" (marges plus larges) au-dela, sur l'hypothese
@@ -330,19 +321,6 @@
   #header-sticky .container > .d-flex { gap: 8px; }
   .cf-logo-name { font-size: 17px; letter-spacing: 1.5px; }
   .cf-logo-tagline { display: none; }
-  .tdmenu-2 .tdmenu__navbar-wrap ul li a {
-    font-size: 12px;
-    padding: 42px 0;
-    margin: 0 5px;
-  }
-  .header-auth { gap: 10px !important; }
-  .header-auth .cf-btn {
-    font-size: 11px;
-    padding: 9px 12px;
-    letter-spacing: .3px;
-    gap: 5px;
-  }
-  .cf-header-login-link { font-size: 12px; }
 }
 
 /* Hero (fond clair, degrade orange decoratif) */
@@ -427,3 +405,154 @@
 .cf-article-card { display: block; height: 100%; text-decoration: none; color: inherit; }
 .cf-article-card:hover .cf-article-card-title { color: var(--cf-orange); }
 .cf-article-card-title { color: var(--cf-black); transition: color .2s ease; }
+
+/* ===== Navigation unifiee (desktop + mobile) =====
+   Un seul jeu d'elements (.tdmobile__menu, deja cable au JS/CSS du panneau glissant
+   existant) sert maintenant les deux presentations au lieu d'un <nav> desktop entierement
+   duplique - supprime la duplication DOM (cf. audit EcoIndex). Le sous-menu "Nos bilans"
+   est toujours deplie sur mobile (pas de bouton dropdown-btn/JS supplementaire), et redevient
+   un menu au survol sur desktop (>=1200px), comme avant la fusion. */
+.tdmobile__menu .navigation li.menu-item-has-children > ul.sub-menu {
+    display: block;
+}
+
+/* Remplace la couleur "active/hover" rose du theme herite par l'orange de marque, sur
+   mobile comme sur desktop (reprend le role de l'ancien override cible sur
+   .tdmenu__navbar-wrap, devenu obsolete avec le <nav> desktop separe qu'il visait). */
+.tdmobile__menu .navigation li.active > a,
+.tdmobile__menu .navigation li > a:hover,
+.tdmobile__menu .navigation .sub-menu li:hover > a,
+.tdmobile__menu .navigation .sub-menu li.active > a {
+    color: var(--cf-orange);
+}
+
+.tdmenu__action-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 0 25px 20px;
+    list-style: none;
+    margin: 0;
+}
+.tdmenu__action-list .cf-btn,
+.tdmenu__action-list .btn {
+    width: 100%;
+    justify-content: center;
+}
+
+@media (min-width: 1200px) {
+    .tdmobile__menu-backdrop {
+        display: none;
+    }
+
+    .tdmobile__menu {
+        position: static;
+        width: auto;
+        height: auto;
+        padding-right: 0;
+        max-width: none;
+        z-index: auto;
+        transform: none;
+        transition: none;
+    }
+    .tdmobile__menu .close-btn,
+    .tdmobile__menu .nav-logo {
+        display: none;
+    }
+    .tdmobile__menu-box {
+        position: static;
+        height: auto;
+        overflow: visible;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .tdmobile__menu .navigation {
+        display: flex;
+        align-items: center;
+    }
+    .tdmobile__menu .navigation li {
+        border-top: none;
+        margin: 0 12px;
+    }
+    .tdmobile__menu .navigation li > a {
+        padding: 10px 0;
+        font-size: 15px;
+        text-transform: none;
+        white-space: nowrap;
+    }
+    .tdmobile__menu .navigation li > a::before {
+        display: none;
+    }
+    .tdmobile__menu .navigation li.menu-item-has-children > a::after {
+        content: "\f078";
+        font-family: "Font Awesome 6 Pro";
+        font-weight: 900;
+        font-size: 12px;
+        margin-left: 6px;
+    }
+    .tdmobile__menu .navigation li.menu-item-has-children > ul.sub-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 260px;
+        padding: 14px 0;
+        background: #fff;
+        box-shadow: 0 30px 70px 0 rgba(137, 139, 142, .15);
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(1, 0);
+        transform-origin: 0 0;
+        transition: all .3s ease-out;
+    }
+    .tdmobile__menu .navigation li.menu-item-has-children:hover > ul.sub-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+    }
+    .tdmobile__menu .navigation .sub-menu li {
+        margin: 0;
+        border-top: none;
+    }
+    .tdmobile__menu .navigation .sub-menu li > a {
+        padding: 6px 20px;
+        font-size: 14px;
+        text-transform: none;
+        white-space: nowrap;
+    }
+
+    .tdmobile__menu .tdmenu__action {
+        padding: 0;
+    }
+    .tdmenu__action-list {
+        flex-direction: row;
+        align-items: center;
+        padding: 0;
+    }
+    .tdmenu__action-list .cf-btn,
+    .tdmenu__action-list .btn {
+        width: auto;
+    }
+
+    /* "Se connecter" redevient le lien sobre d'origine (desktop), au lieu du bouton
+       plein utilise sur mobile - meme element, juste restyle au-dessus de 1200px. */
+    .tdmenu__action-list a.cf-header-login-link {
+        background: transparent;
+        border: none;
+        padding: 0;
+        letter-spacing: normal;
+        text-transform: none;
+        font-size: 13px;
+    }
+    .tdmenu__action-list a.cf-header-login-link:hover {
+        color: var(--cf-orange);
+        background: transparent;
+        border: none;
+        transform: none;
+        box-shadow: none;
+    }
+}

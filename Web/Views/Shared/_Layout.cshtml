@@ -76,114 +76,83 @@
                             </span>
                         </a>
                     </div>
-                    <nav class="tdmenu__nav tdmenu__wrap tdmenu-2 tdmenu-4 d-none d-xl-flex flex-shrink-1">
-                        <div class="tdmenu__navbar-wrap tdmenu__main-menu">
-                            <ul class="navigation">
-                                <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
-                                @* Sous-menu CSS pur (survole = affiche, cf. main.css .sub-menu / li:hover) : le
-                                   theme le supporte nativement, pas de JS a charger. Regroupe Bilan Carbone et
-                                   Bilan de competences pour eviter d'ajouter un 8e lien de premier niveau - le
-                                   palier xl (1200px) reste calibre pour 7 items, avec repli sur 2 lignes (logo
-                                   puis nav+bouton) entre 1200 et 1399px plutot qu'une seule ligne stricte -
-                                   cf. commentaire de --cf-header-clearance dans brand-challenges-factory.css. *@
-                                <li class="menu-item-has-children">
-                                    <a href="#">Nos bilans</a>
-                                    <ul class="sub-menu">
-                                        <li><a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a></li>
-                                        <li><a asp-controller="PreDiagnosticCarbone" asp-action="Index">Pré-diagnostic carbone (gratuit)</a></li>
-                                        <li><a asp-controller="Home" asp-action="BilanDeCompetences">Se reconvertir</a></li>
+
+                    @* Navigation unifiee desktop + mobile : un seul jeu d'elements DOM (plus de <nav>
+                       desktop duplique separement, cf. audit EcoIndex - reduit sensiblement le nombre
+                       d'elements de la page). Le panneau glissant mobile existant (.tdmobile__menu,
+                       ouvert/ferme par le hamburger .mobile-nav-toggler, JS inchange en bas de page)
+                       sert aussi de barre horizontale desktop a partir de 1200px grace aux regles
+                       @media (min-width: 1200px) dans brand-challenges-factory.css. Le sous-menu "Nos
+                       bilans" reste toujours deplie sur mobile (pas de JS dropdown supplementaire) et
+                       redevient un menu au survol sur desktop. Le palier xl (1200px) reste calibre pour
+                       7 items, avec repli sur 2 lignes (logo puis nav+boutons) entre 1200 et 1399px
+                       plutot qu'une seule ligne stricte - cf. commentaire de --cf-header-clearance dans
+                       brand-challenges-factory.css. *@
+                    <div class="tdmobile__menu">
+                        <div class="tdmobile__menu-box">
+                            <div class="close-btn mobile-nav-toggler"><i class="fa-solid fa-xmark"></i></div>
+                            <div class="nav-logo">
+                                <a class="cf-logo" asp-controller="Home" asp-action="Index">
+                                    <img src="~/brand/mark.png" alt="" class="cf-logo-mark" width="94" height="85" asp-append-version="true">
+                                    <span class="cf-logo-text">
+                                        <span class="cf-logo-name">CHALLENGES<span class="cf-logo-dash">-</span>FACTORY</span>
+                                    </span>
+                                </a>
+                            </div>
+                            <div class="tdmobile__menu-outer">
+                                <ul class="navigation">
+                                    <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
+                                    <li class="menu-item-has-children">
+                                        <a href="#">Nos bilans</a>
+                                        <ul class="sub-menu">
+                                            <li><a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a></li>
+                                            <li><a asp-controller="PreDiagnosticCarbone" asp-action="Index">Pré-diagnostic carbone (gratuit)</a></li>
+                                            <li><a asp-controller="Home" asp-action="BilanDeCompetences">Se reconvertir</a></li>
+                                        </ul>
+                                    </li>
+                                    <li><a asp-controller="Home" asp-action="Formations">Nos parcours</a></li>
+                                    <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
+                                    <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
+                                    <li><a asp-controller="Home" asp-action="LeLab">Le Lab</a></li>
+                                    <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+                                </ul>
+                            </div>
+                            <div class="tdmenu__action">
+                                @if (!SignInManager.IsSignedIn(User))
+                                {
+                                    <ul class="tdmenu__action-list">
+                                        <li><a class="cf-btn cf-btn-primary cf-btn-wrap" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Pré-diagnostic<span class="d-xl-none"> carbone</span></a></li>
+                                        <li><a asp-area="Identity" asp-page="/Account/Login" class="cf-btn cf-btn-outline cf-header-login-link">Se connecter</a></li>
+                                        <li class="d-xl-none"><a asp-area="Identity" asp-page="/Account/Register" class="cf-btn cf-btn-outline">S'inscrire</a></li>
                                     </ul>
-                                </li>
-                                <li><a asp-controller="Home" asp-action="Formations">Nos parcours</a></li>
-                                <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
-                                <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
-                                <li><a asp-controller="Home" asp-action="LeLab">Le Lab</a></li>
-                                <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
-                            </ul>
+                                }
+                                else
+                                {
+                                    <ul class="tdmenu__action-list">
+                                        <li><a asp-area="" asp-page="/Dashboard/Index" class="cf-btn cf-btn-outline">Dashboard</a></li>
+                                        <li>
+                                            <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                }
+                            </div>
                         </div>
-                    </nav>
-                    <div class="td-menu-right-action td-menu-right-action-2 d-flex align-items-center flex-shrink-0">
-                        @* En dessous du palier xl (1200px), ce bouton rejoint le menu mobile offcanvas
-                           ci-dessous, ouvert par le bouton hamburger - la aussi, au-dessus de 992px environ,
-                           le hamburger reste la seule chose visible en une ligne (logo + bouton). *@
-                        <div class="header-auth d-none d-xl-flex align-items-center gap-3">
-                            @if (!SignInManager.IsSignedIn(User))
-                            {
-                                <a asp-area="Identity" asp-page="/Account/Login" class="cf-header-login-link">Se connecter</a>
-                                <a class="cf-btn cf-btn-primary" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Pré-diagnostic</a>
-                            }
-                            else
-                            {
-                                <a asp-area="" asp-page="/Dashboard/Index" class="cf-btn cf-btn-outline">Dashboard</a>
-                                <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline-flex align-items-center">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
-                                </form>
-                            }
-                        </div>
-                        <div class="td-header-menu-bar lh-1 p-relative ms-3 d-block d-xl-none">
-                            <button class="tdmenu-offcanvas-open-btn mobile-nav-toggler">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </button>
-                        </div>
+                    </div>
+
+                    <div class="td-header-menu-bar lh-1 p-relative ms-3 d-block d-xl-none">
+                        <button class="tdmenu-offcanvas-open-btn mobile-nav-toggler">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
                     </div>
                 </div>
             </div>
+            <div class="tdmobile__menu-backdrop"></div>
         </div>
     </header>
-
-    <div class="tdmobile__menu-wrapper d-xl-none">
-        <div class="tdmobile__menu-backdrop"></div>
-        <div class="tdmobile__menu">
-            <div class="tdmobile__menu-box">
-                <div class="close-btn mobile-nav-toggler"><i class="fa-solid fa-xmark"></i></div>
-                <div class="nav-logo">
-                    <a class="cf-logo" asp-controller="Home" asp-action="Index">
-                        <img src="~/brand/mark.png" alt="" class="cf-logo-mark" width="94" height="85" asp-append-version="true">
-                        <span class="cf-logo-text">
-                            <span class="cf-logo-name">CHALLENGES<span class="cf-logo-dash">-</span>FACTORY</span>
-                        </span>
-                    </a>
-                </div>
-                <div class="tdmobile__menu-outer">
-                    <nav class="tdmenu__main-menu">
-                        <ul class="navigation">
-                            <li class="active"><a asp-controller="Home" asp-action="Index">Accueil</a></li>
-                            <li><a asp-controller="Home" asp-action="BilanCarbone">Bilan Carbone</a></li>
-                            <li><a asp-controller="Home" asp-action="BilanDeCompetences">Se reconvertir</a></li>
-                            <li><a asp-controller="Home" asp-action="Formations">Nos parcours</a></li>
-                            <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
-                            <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
-                            <li><a asp-controller="Home" asp-action="LeLab">Le Lab</a></li>
-                            <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="tdmenu__action">
-                    @if (!SignInManager.IsSignedIn(User))
-                    {
-                        <ul class="list-wrap flex-column align-items-stretch gap-2 px-4 pb-4">
-                            <li><a class="cf-btn cf-btn-primary cf-btn-wrap w-100 justify-content-center" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Pré-diagnostic carbone</a></li>
-                            <li><a asp-area="Identity" asp-page="/Account/Login" class="cf-btn cf-btn-outline w-100 justify-content-center">Se connecter</a></li>
-                            <li><a asp-area="Identity" asp-page="/Account/Register" class="cf-btn cf-btn-outline w-100 justify-content-center">S'inscrire</a></li>
-                        </ul>
-                    }
-                    else
-                    {
-                        <ul class="list-wrap flex-column align-items-stretch gap-2 px-4 pb-4">
-                            <li><a asp-area="" asp-page="/Dashboard/Index" class="cf-btn cf-btn-outline w-100 justify-content-center">Dashboard</a></li>
-                            <li>
-                                <form asp-area="Identity" asp-page="/Account/Logout" method="post">
-                                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
-                                </form>
-                            </li>
-                        </ul>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
 
     <main>
         @RenderBody()
