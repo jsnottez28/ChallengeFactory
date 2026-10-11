@@ -48,6 +48,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
             NombreEtapes = input.NombreEtapes,
             Mode = input.Mode,
             Thematique = input.Thematique,
+            Format = input.Format,
         };
 
         dbContext.Challenges.Add(challenge);
@@ -85,6 +86,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
         challenge.NombreEtapes = input.NombreEtapes;
         challenge.Mode = input.Mode;
         challenge.Thematique = input.Thematique;
+        challenge.Format = input.Format;
 
         await dbContext.SaveChangesAsync();
 
@@ -284,7 +286,10 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
     // ---- Import / synchronisation Excel ----
 
     // Fichier .xlsx a 2 feuilles :
-    // - "challenge" : challenge_code, titre, slogan, nombre_etapes, mode, statut
+    // - "challenge" : challenge_code, titre, slogan, nombre_etapes, mode, statut, et les 2
+    //   colonnes facultatives thematique (Decarbonation/HumainEtOrganisation, repli sur
+    //   HumainEtOrganisation) et format (Collectif/BilanCompetencesIndividuel, repli sur
+    //   Collectif) - cf. TryParserThematique/TryParserFormat
     //   (upsert par challenge_code ; statut="Publie" ne publie qu'en fin d'import,
     //   apres import des etapes, et seulement si le Challenge en a au moins une).
     // - "etapes" : challenge_code, numero_etape, titre_etape, objectif_pedagogique,
@@ -368,6 +373,13 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
                     ? thematiqueParsee
                     : ThematiqueChallenge.HumainEtOrganisation;
 
+                // Meme convention que "thematique" : colonne facultative, repli silencieux
+                // sur Collectif (le format historique) si absente ou non reconnue.
+                var formatTexte = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "format"));
+                var format = formatTexte is not null && TryParserFormat(formatTexte, out var formatParse)
+                    ? formatParse
+                    : FormatChallenge.Collectif;
+
                 var nombreEtapesTexte = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "nombre_etapes"));
                 var nombreEtapes = 8;
                 if (nombreEtapesTexte is not null && (!int.TryParse(nombreEtapesTexte, out nombreEtapes) || nombreEtapes < 1))
@@ -401,6 +413,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
                 challenge.NombreEtapes = nombreEtapes;
                 challenge.Mode = mode;
                 challenge.Thematique = thematique;
+                challenge.Format = format;
 
                 if (estNouveau)
                 {
@@ -632,6 +645,27 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
         }
 
         thematique = default;
+        return false;
+    }
+
+    private static bool TryParserFormat(string valeur, out FormatChallenge format)
+    {
+        if (string.Equals(valeur, "BilanCompetencesIndividuel", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(valeur, "Bilan de competences", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(valeur, "Bilan de compétences", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(valeur, "Individuel", StringComparison.OrdinalIgnoreCase))
+        {
+            format = FormatChallenge.BilanCompetencesIndividuel;
+            return true;
+        }
+
+        if (string.Equals(valeur, "Collectif", StringComparison.OrdinalIgnoreCase))
+        {
+            format = FormatChallenge.Collectif;
+            return true;
+        }
+
+        format = default;
         return false;
     }
 

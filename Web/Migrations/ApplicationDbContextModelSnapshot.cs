@@ -158,6 +158,46 @@ namespace Web.Migrations
                     b.ToTable("CartesCompetences");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CarteRessource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CarteCompetenceId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreeLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NomFichier")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Ordre")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceTexte")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Titre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarteCompetenceId");
+
+                    b.ToTable("CarteRessources");
+                });
+
             modelBuilder.Entity("Domain.Entities.Challenge", b =>
                 {
                     b.Property<int>("Id")
@@ -174,6 +214,9 @@ namespace Web.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("int");
 
                     b.Property<int>("Mode")
                         .HasColumnType("int");
@@ -765,6 +808,84 @@ namespace Web.Migrations
                     b.ToTable("BadgeSocialAttributions");
                 });
 
+            modelBuilder.Entity("Web.Data.BigFiveResultat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CompleteLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("IndiceAcquiescement")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("decimal(6,4)");
+
+                    b.Property<int>("NombrePairesCoherentes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombrePairesControle")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ScoreAgreabilite")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<decimal>("ScoreConsciencieusite")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<decimal>("ScoreExtraversion")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<decimal>("ScoreNevrosisme")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<decimal>("ScoreOuverture")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UtilisateurId");
+
+                    b.ToTable("BigFiveResultats");
+                });
+
+            modelBuilder.Entity("Web.Data.BigFiveResultatFacette", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BigFiveResultatId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Score")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("decimal(6,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BigFiveResultatId");
+
+                    b.ToTable("BigFiveResultatFacettes");
+                });
+
             modelBuilder.Entity("Web.Data.CarteAttribution", b =>
                 {
                     b.Property<int>("Id")
@@ -977,6 +1098,81 @@ namespace Web.Migrations
                     b.ToTable("CohorteMembres");
                 });
 
+            modelBuilder.Entity("Web.Data.CohorteMembreCarteSupplementaire", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AjouteeLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AjouteeParId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("CarteCompetenceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChallengeEtapeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CohorteMembreId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AjouteeParId");
+
+                    b.HasIndex("CarteCompetenceId");
+
+                    b.HasIndex("ChallengeEtapeId");
+
+                    b.HasIndex("CohorteMembreId", "ChallengeEtapeId", "CarteCompetenceId")
+                        .IsUnique();
+
+                    b.ToTable("CohorteMembreCartesSupplementaires");
+                });
+
+            modelBuilder.Entity("Web.Data.CohorteMembreEtapePersonnalisation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChallengeEtapeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CohorteMembreId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DefiIndividuelPersonnalise")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ModifieLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifieParId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChallengeEtapeId");
+
+                    b.HasIndex("ModifieParId");
+
+                    b.HasIndex("CohorteMembreId", "ChallengeEtapeId")
+                        .IsUnique();
+
+                    b.ToTable("CohorteMembreEtapePersonnalisations");
+                });
+
             modelBuilder.Entity("Web.Data.DiscResultat", b =>
                 {
                     b.Property<int>("Id")
@@ -1186,6 +1382,54 @@ namespace Web.Migrations
                     b.ToTable("EtapesVisio");
                 });
 
+            modelBuilder.Entity("Web.Data.FacteurEmission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Ordre")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Poste")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TypeDonnee")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unite")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("ValeurKgCO2eParUnite")
+                        .HasPrecision(14, 8)
+                        .HasColumnType("decimal(14,8)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("FacteursEmission");
+                });
+
             modelBuilder.Entity("Web.Data.ForumMessage", b =>
                 {
                     b.Property<int>("Id")
@@ -1375,6 +1619,86 @@ namespace Web.Migrations
                     b.HasIndex("UtilisateurId");
 
                     b.ToTable("PointsEvenements");
+                });
+
+            modelBuilder.Entity("Web.Data.PreBilanCarbone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("ChiffreAffairesKEuros")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("decimal(14,2)");
+
+                    b.Property<DateTime>("DeposeLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EffectifEtp")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Nom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Prenom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SecteurActivite")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Societe")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StatutCrm")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Telephone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TotalEmissionsKgCO2e")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("decimal(14,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PreBilansCarbone");
+                });
+
+            modelBuilder.Entity("Web.Data.PreBilanLigne", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("EmissionsKgCO2e")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("decimal(14,2)");
+
+                    b.Property<int>("FacteurEmissionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreBilanCarboneId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ValeurSaisie")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("decimal(14,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FacteurEmissionId");
+
+                    b.HasIndex("PreBilanCarboneId");
+
+                    b.ToTable("PreBilanLignes");
                 });
 
             modelBuilder.Entity("Web.Data.Preuve", b =>
@@ -1772,6 +2096,55 @@ namespace Web.Migrations
                     b.ToTable("SatisfactionReponses");
                 });
 
+            modelBuilder.Entity("Web.Data.ScheinResultat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CompleteLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ScoreAutonomie")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreCause")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreCreativite")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreDefiPur")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreInternationale")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreManageriale")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreQualiteDeVie")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreSecurite")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreTechnique")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UtilisateurId");
+
+                    b.ToTable("ScheinResultats");
+                });
+
             modelBuilder.Entity("Web.Data.TestPositionnement", b =>
                 {
                     b.Property<int>("Id")
@@ -1847,6 +2220,17 @@ namespace Web.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Badge");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CarteRessource", b =>
+                {
+                    b.HasOne("Domain.Entities.CarteCompetence", "CarteCompetence")
+                        .WithMany("Ressources")
+                        .HasForeignKey("CarteCompetenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CarteCompetence");
                 });
 
             modelBuilder.Entity("Domain.Entities.ChallengeEtape", b =>
@@ -2011,6 +2395,28 @@ namespace Web.Migrations
                     b.Navigation("Utilisateur");
                 });
 
+            modelBuilder.Entity("Web.Data.BigFiveResultat", b =>
+                {
+                    b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Web.Data.BigFiveResultatFacette", b =>
+                {
+                    b.HasOne("Web.Data.BigFiveResultat", "BigFiveResultat")
+                        .WithMany("Facettes")
+                        .HasForeignKey("BigFiveResultatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BigFiveResultat");
+                });
+
             modelBuilder.Entity("Web.Data.CarteAttribution", b =>
                 {
                     b.HasOne("Web.Data.ApplicationUser", "AttribuePar")
@@ -2106,6 +2512,68 @@ namespace Web.Migrations
                     b.Navigation("Cohorte");
 
                     b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Web.Data.CohorteMembreCarteSupplementaire", b =>
+                {
+                    b.HasOne("Web.Data.ApplicationUser", "AjouteePar")
+                        .WithMany()
+                        .HasForeignKey("AjouteeParId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.CarteCompetence", "CarteCompetence")
+                        .WithMany()
+                        .HasForeignKey("CarteCompetenceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.ChallengeEtape", "ChallengeEtape")
+                        .WithMany()
+                        .HasForeignKey("ChallengeEtapeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.CohorteMembre", "CohorteMembre")
+                        .WithMany()
+                        .HasForeignKey("CohorteMembreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AjouteePar");
+
+                    b.Navigation("CarteCompetence");
+
+                    b.Navigation("ChallengeEtape");
+
+                    b.Navigation("CohorteMembre");
+                });
+
+            modelBuilder.Entity("Web.Data.CohorteMembreEtapePersonnalisation", b =>
+                {
+                    b.HasOne("Domain.Entities.ChallengeEtape", "ChallengeEtape")
+                        .WithMany()
+                        .HasForeignKey("ChallengeEtapeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.CohorteMembre", "CohorteMembre")
+                        .WithMany()
+                        .HasForeignKey("CohorteMembreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.ApplicationUser", "ModifiePar")
+                        .WithMany()
+                        .HasForeignKey("ModifieParId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ChallengeEtape");
+
+                    b.Navigation("CohorteMembre");
+
+                    b.Navigation("ModifiePar");
                 });
 
             modelBuilder.Entity("Web.Data.DiscResultat", b =>
@@ -2258,6 +2726,25 @@ namespace Web.Migrations
                     b.Navigation("Cohorte");
 
                     b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Web.Data.PreBilanLigne", b =>
+                {
+                    b.HasOne("Web.Data.FacteurEmission", "FacteurEmission")
+                        .WithMany()
+                        .HasForeignKey("FacteurEmissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.PreBilanCarbone", "PreBilanCarbone")
+                        .WithMany("Lignes")
+                        .HasForeignKey("PreBilanCarboneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FacteurEmission");
+
+                    b.Navigation("PreBilanCarbone");
                 });
 
             modelBuilder.Entity("Web.Data.Preuve", b =>
@@ -2465,6 +2952,17 @@ namespace Web.Migrations
                     b.Navigation("Utilisateur");
                 });
 
+            modelBuilder.Entity("Web.Data.ScheinResultat", b =>
+                {
+                    b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Utilisateur");
+                });
+
             modelBuilder.Entity("Web.Data.TestPositionnement", b =>
                 {
                     b.HasOne("Web.Data.Cohorte", "Cohorte")
@@ -2511,6 +3009,11 @@ namespace Web.Migrations
                     b.Navigation("Utilisateur");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CarteCompetence", b =>
+                {
+                    b.Navigation("Ressources");
+                });
+
             modelBuilder.Entity("Domain.Entities.Challenge", b =>
                 {
                     b.Navigation("Etapes");
@@ -2541,6 +3044,11 @@ namespace Web.Migrations
                     b.Navigation("Rattachements");
                 });
 
+            modelBuilder.Entity("Web.Data.BigFiveResultat", b =>
+                {
+                    b.Navigation("Facettes");
+                });
+
             modelBuilder.Entity("Web.Data.Cohorte", b =>
                 {
                     b.Navigation("Membres");
@@ -2556,6 +3064,11 @@ namespace Web.Migrations
                     b.Navigation("MarquagesUtile");
 
                     b.Navigation("Reponses");
+                });
+
+            modelBuilder.Entity("Web.Data.PreBilanCarbone", b =>
+                {
+                    b.Navigation("Lignes");
                 });
 
             modelBuilder.Entity("Web.Data.Preuve", b =>

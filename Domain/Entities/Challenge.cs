@@ -31,6 +31,10 @@ public class Challenge
     // quoi que ce soit du Titre/Code (fragile). Cf. ThematiqueChallenge.
     public ThematiqueChallenge Thematique { get; set; } = ThematiqueChallenge.HumainEtOrganisation;
 
+    // Collectif (par defaut) vs BilanCompetencesIndividuel - cf. FormatChallenge. Distinct
+    // de Thematique (qui porte sur le contenu, pas la structure du parcours).
+    public FormatChallenge Format { get; set; } = FormatChallenge.Collectif;
+
     public DateTime CreeLe { get; set; } = DateTime.UtcNow;
 
     public List<ChallengeEtape> Etapes { get; set; } = [];

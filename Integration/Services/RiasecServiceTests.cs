@@ -35,15 +35,24 @@ public class RiasecServiceTests
         return reponses;
     }
 
+    // Construit les reponses du round de fiabilite avec la meme strategie deterministe
+    // "preferer R" que RepondreEnPreferant, a partir des paires reellement proposees par
+    // PreparerFiabilite pour ces reponses de round 1.
+    private static Dictionary<int, int> RepondreFiabiliteEnPreferant(RiasecService riasecService, Dictionary<int, int> reponsesRound1, params string[] dimensionsPreferees)
+    {
+        var pairesFiabilite = riasecService.PreparerFiabilite(reponsesRound1)!;
+        return RepondreEnPreferant(pairesFiabilite, dimensionsPreferees);
+    }
+
     [Fact]
-    public void GetPairesRound1_Renvoie36PairesValides()
+    public void GetPairesRound1_Renvoie30PairesValides()
     {
         var riasecService = new RiasecService(InMemoryDbContextFactory.Create(), new FakeEmailService());
 
         var paires = riasecService.GetPairesRound1();
 
-        Assert.Equal(36, paires.Count);
-        Assert.Equal(36, paires.Select(p => p.PaireId).Distinct().Count());
+        Assert.Equal(30, paires.Count);
+        Assert.Equal(30, paires.Select(p => p.PaireId).Distinct().Count());
         Assert.All(paires, p =>
         {
             Assert.NotEqual(p.OptionA.NumeroQuestion, p.OptionB.NumeroQuestion);
@@ -53,21 +62,44 @@ public class RiasecServiceTests
     }
 
     [Fact]
-    public void GetPairesRound1_LesPairesDeControleDupliquentLesPairesDeBaseALIdentique()
+    public void PreparerFiabilite_ConfronteChaqueGagnantAUnGagnantDifferentJamaisSonAdversaireDOrigine()
     {
-        // Les paires de controle (PaireId 31-36) reprennent exactement les memes options
-        // que certaines paires de base (jamais de reformulation), pour l'echelle de
-        // fiabilite - cf. RiasecService.IndicesPairesControle = [0,5,10,15,20,25], donc
-        // PaireId 31 duplique PaireId 1, 32 duplique PaireId 6, etc.
+        // Round de fiabilite : jamais la meme paire reposee a l'identique - chaque paire
+        // confronte le gagnant reel d'une paire de base a un AUTRE gagnant, toujours d'une
+        // dimension differente (comme partout ailleurs dans le test).
         var riasecService = new RiasecService(InMemoryDbContextFactory.Create(), new FakeEmailService());
-        var paires = riasecService.GetPairesRound1().ToDictionary(p => p.PaireId);
+        var pairesRound1 = riasecService.GetPairesRound1();
+        var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
 
-        var correspondances = new (int Base, int Doublon)[] { (1, 31), (6, 32), (11, 33), (16, 34), (21, 35), (26, 36) };
-        foreach (var (baseId, doublonId) in correspondances)
+        var fiabilite = riasecService.PreparerFiabilite(reponsesRound1);
+
+        Assert.NotNull(fiabilite);
+        Assert.Equal(6, fiabilite!.Count);
+        Assert.Equal(6, fiabilite.Select(p => p.PaireId).Distinct().Count());
+        Assert.All(fiabilite, p =>
         {
-            Assert.Equal(paires[baseId].OptionA.NumeroQuestion, paires[doublonId].OptionA.NumeroQuestion);
-            Assert.Equal(paires[baseId].OptionB.NumeroQuestion, paires[doublonId].OptionB.NumeroQuestion);
-        }
+            Assert.NotEqual(p.OptionA.NumeroQuestion, p.OptionB.NumeroQuestion);
+            Assert.NotEqual(DimensionDe(p.OptionA.NumeroQuestion), DimensionDe(p.OptionB.NumeroQuestion));
+        });
+
+        // Aucune paire de fiabilite ne doit reproduire exactement une paire deja posee au
+        // round 1 (memes deux items, dans un ordre ou l'autre).
+        var pairesRound1Set = pairesRound1
+            .Select(p => (Math.Min(p.OptionA.NumeroQuestion, p.OptionB.NumeroQuestion), Math.Max(p.OptionA.NumeroQuestion, p.OptionB.NumeroQuestion)))
+            .ToHashSet();
+        Assert.All(fiabilite, p =>
+        {
+            var cle = (Math.Min(p.OptionA.NumeroQuestion, p.OptionB.NumeroQuestion), Math.Max(p.OptionA.NumeroQuestion, p.OptionB.NumeroQuestion));
+            Assert.DoesNotContain(cle, pairesRound1Set);
+        });
+    }
+
+    [Fact]
+    public void PreparerFiabilite_RenvoieNull_SiRound1Incomplet()
+    {
+        var riasecService = new RiasecService(InMemoryDbContextFactory.Create(), new FakeEmailService());
+
+        Assert.Null(riasecService.PreparerFiabilite([]));
     }
 
     [Fact]
@@ -88,7 +120,7 @@ public class RiasecServiceTests
 
         var riasecService = new RiasecService(dbContext, new FakeEmailService());
 
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, [], []);
+        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, [], [], []);
 
         Assert.False(success);
         Assert.NotNull(errorMessage);
@@ -126,8 +158,9 @@ public class RiasecServiceTests
         // Choisit systematiquement l'option Artistique (OptionA) au round 2 : Artistique
         // gagne le departage 4-0 malgre un score de round 1 inferieur a Social (4 < 5).
         var reponsesRound2 = round2.Paires.ToDictionary(p => p.PaireId, p => p.OptionA.NumeroQuestion);
+        var reponsesFiabilite = RepondreFiabiliteEnPreferant(riasecService, reponsesRound1, "R");
 
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesRound2);
+        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesFiabilite, reponsesRound2);
 
         Assert.True(success, errorMessage);
         Assert.NotNull(resultat);
@@ -141,10 +174,13 @@ public class RiasecServiceTests
         Assert.Equal("A", resultat.DepartageDimensionA);
         Assert.Equal("S", resultat.DepartageDimensionB);
         Assert.Equal("A", resultat.DepartageGagnant);
-        // Strategie deterministe (le choix ne depend que des options proposees) : les 6
-        // paires de controle sont necessairement repondues de la meme facon que leur paire
-        // de base -> coherence parfaite.
-        Assert.Equal(6, resultat.NombrePairesCoherentes);
+        // Coherence du round de fiabilite (valeur reelle verifiee via diagnostic) : la
+        // strategie de test ne "prefere" que R, elle ne sait pas arbitrer entre les autres
+        // dimensions - sur une paire de fiabilite ne mettant pas en jeu R, elle retombe sur
+        // OptionA par defaut, qui ne correspond pas toujours a la dimension la mieux notee.
+        // 5/6 reste un taux de coherence eleve, sans qu'aucune paire ne soit jamais reposee
+        // a l'identique (cf. PreparerFiabilite_...JamaisSonAdversaireDOrigine ci-dessus).
+        Assert.Equal(5, resultat.NombrePairesCoherentes);
         Assert.Equal(6, resultat.NombrePairesControle);
 
         var enBase = await dbContext.RiasecResultats.SingleAsync();
@@ -180,8 +216,9 @@ public class RiasecServiceTests
         var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
         var round2 = riasecService.PreparerRound2(reponsesRound1)!;
         var reponsesRound2 = round2.Paires.ToDictionary(p => p.PaireId, p => p.OptionA.NumeroQuestion);
+        var reponsesFiabilite = RepondreFiabiliteEnPreferant(riasecService, reponsesRound1, "R");
 
-        await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesRound2);
+        await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesFiabilite, reponsesRound2);
 
         var envoi = Assert.Single(emailService.Envois);
         Assert.Equal("stagiaire@test.local", envoi.Destinataire);
@@ -199,8 +236,9 @@ public class RiasecServiceTests
         var riasecService = new RiasecService(dbContext, new FakeEmailService());
         var pairesRound1 = riasecService.GetPairesRound1();
         var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
+        var reponsesFiabilite = RepondreFiabiliteEnPreferant(riasecService, reponsesRound1, "R");
 
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, []);
+        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesFiabilite, []);
 
         Assert.False(success);
         Assert.NotNull(errorMessage);
@@ -221,10 +259,11 @@ public class RiasecServiceTests
         var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
         var round2 = riasecService.PreparerRound2(reponsesRound1)!;
         var reponsesRound2 = round2.Paires.ToDictionary(p => p.PaireId, p => p.OptionA.NumeroQuestion);
+        var reponsesFiabilite = RepondreFiabiliteEnPreferant(riasecService, reponsesRound1, "R");
 
-        await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesRound2);
+        await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesFiabilite, reponsesRound2);
         await Task.Delay(10);
-        var (_, _, deuxiemeResultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesRound2);
+        var (_, _, deuxiemeResultat) = await riasecService.RepondreAsync(utilisateur.Id, reponsesRound1, reponsesFiabilite, reponsesRound2);
 
         var dernier = await riasecService.GetDernierResultatAsync(utilisateur.Id);
 

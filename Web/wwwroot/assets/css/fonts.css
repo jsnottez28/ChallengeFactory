@@ -1,0 +1,75 @@
+/* Polices auto-hebergees (Bebas Neue, DM Sans, Playfair Display) - remplace le chargement
+   depuis fonts.googleapis.com/fonts.gstatic.com : supprime 2 origines tierces (donc les
+   requetes DNS/TLS associees et l'envoi de l'IP du visiteur a Google des la 1ere visite),
+   et permet un Cache-Control long gere par notre propre serveur (cf. Program.cs). Ne garde
+   que le sous-ensemble "latin" (suffisant pour du contenu en francais) - les sous-ensembles
+   latin-ext/cyrillic/vietnamese servis par Google ont ete ecartes. */
+
+@font-face {
+    font-family: 'Bebas Neue';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/bebasneue-400.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'DM Sans';
+    font-style: normal;
+    font-weight: 300 600;
+    font-display: swap;
+    src: url('../fonts/dmsans.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Playfair Display';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('../fonts/playfair-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Playfair Display';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/playfair-italic-400.woff2') format('woff2');
+}
+
+/* Polices du theme HTML sous-jacent (main.css, "Evente") - auto-hebergees ici plutot que de
+   laisser son @import vers Google Fonts (cf. ligne 61 de main.css, desormais supprimee).
+   Unbounded (police du <body>, variable 200-900) : un seul fichier couvre toute la plage.
+   Poppins : seuls les poids reellement utilises par le theme sont hebergeant (400/500/600,
+   jamais italique - verifie par recherche dans main.css), pas les 18 variantes disponibles. */
+@font-face {
+    font-family: 'Unbounded';
+    font-style: normal;
+    font-weight: 200 900;
+    font-display: swap;
+    src: url('../fonts/unbounded.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/poppins-400.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/poppins-500.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/poppins-600.woff2') format('woff2');
+}

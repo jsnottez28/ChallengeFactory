@@ -95,6 +95,20 @@ public sealed class CarteAttributionInfo
     public bool EstActif { get; set; }
 }
 
+// Ajout d'une ressource ("pour aller plus loin") a une carte - cf. CarteRessource. Selon
+// Type, un seul des trois champs Url/NomFichier/ReferenceTexte doit etre renseigne : le
+// service rejette toute combinaison incoherente (cf. CarteCompetenceService.AjouterRessourceAsync).
+// NomFichier est deja enregistre sur disque avant appel (l'upload est gere par le
+// controleur, meme principe que CarteCompetenceInput.ImageCarteA).
+public sealed class CarteRessourceInput
+{
+    public TypeRessourceCarte Type { get; set; }
+    public string Titre { get; set; } = string.Empty;
+    public string? Url { get; set; }
+    public string? NomFichier { get; set; }
+    public string? ReferenceTexte { get; set; }
+}
+
 public interface ICarteCompetenceService
 {
     Task<CarteCompetenceResultatRecherche> RechercherAsync(CarteCompetenceFiltre filtre);
@@ -127,4 +141,10 @@ public interface ICarteCompetenceService
         string? contexte);
 
     Task<(bool Success, string? ErrorMessage)> DesattribuerAsync(int attributionId);
+
+    // ---- Ressources ("pour aller plus loin") ----
+
+    Task<(bool Success, string? ErrorMessage)> AjouterRessourceAsync(int carteId, CarteRessourceInput input);
+
+    Task<(bool Success, string? ErrorMessage)> SupprimerRessourceAsync(int ressourceId);
 }

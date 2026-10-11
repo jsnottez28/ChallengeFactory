@@ -49,6 +49,11 @@ public class CarteCompetence
     public string? CitationHumour { get; set; }
     public string? LienVideo { get; set; }
 
+    // Ressources "pour aller plus loin" ajoutees librement par un gestionnaire (lien web,
+    // PDF, reference bibliographique) - cf. CarteRessource. Toujours charge explicitement
+    // (.Include) par le service, jamais via lazy loading.
+    public List<CarteRessource> Ressources { get; set; } = [];
+
     public DateTime CreeLe { get; set; } = DateTime.UtcNow;
     public DateTime? ModifieLe { get; set; }
 }

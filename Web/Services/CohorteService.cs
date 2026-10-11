@@ -27,7 +27,9 @@ public sealed class CohorteService(
             .OrderByDescending(c => c.CreeLe)
             .ToListAsync();
 
-        return cohortes.Select(VersResume).ToList();
+        var resumes = cohortes.Select(VersResume).ToList();
+        await RemplirChallengeEtapeCouranteIdAsync(cohortes, resumes);
+        return resumes;
     }
 
     public async Task<CohorteResume?> GetResumeAsync(int id)
@@ -38,7 +40,39 @@ public sealed class CohorteService(
             .Include(c => c.Membres)
             .FirstOrDefaultAsync(c => c.Id == id);
 
-        return cohorte is null ? null : VersResume(cohorte);
+        if (cohorte is null)
+        {
+            return null;
+        }
+
+        var resume = VersResume(cohorte);
+        await RemplirChallengeEtapeCouranteIdAsync([cohorte], [resume]);
+        return resume;
+    }
+
+    // ChallengeEtapeCouranteId n'est pas une simple projection de champs deja charges (il
+    // faut resoudre (ChallengeId, EtapeCourante) -> ChallengeEtapeId) : traite en lot apres
+    // VersResume plutot que dans VersResume lui-meme pour eviter une requete par Cohorte
+    // (VersResume reste une simple projection synchrone, reutilisable partout sans dbContext).
+    private async Task RemplirChallengeEtapeCouranteIdAsync(List<Cohorte> cohortes, List<CohorteResume> resumes)
+    {
+        var challengeIds = cohortes.Select(c => c.ChallengeId).Distinct().ToList();
+        if (challengeIds.Count == 0)
+        {
+            return;
+        }
+
+        var etapes = await dbContext.ChallengeEtapes
+            .Where(e => challengeIds.Contains(e.ChallengeId))
+            .Select(e => new { e.Id, e.ChallengeId, e.NumeroEtape })
+            .ToListAsync();
+
+        for (var i = 0; i < cohortes.Count; i++)
+        {
+            var cohorte = cohortes[i];
+            resumes[i].ChallengeEtapeCouranteId = etapes
+                .FirstOrDefault(e => e.ChallengeId == cohorte.ChallengeId && e.NumeroEtape == cohorte.EtapeCourante)?.Id;
+        }
     }
 
     public async Task<List<CohorteMembreInfo>> GetMembresAsync(int id)
@@ -417,16 +451,17 @@ public sealed class CohorteService(
             return [];
         }
 
-        var cohortes = await dbContext.CohorteMembres
+        var membres = await dbContext.CohorteMembres
             .Where(m => m.UtilisateurId == utilisateurId && m.Cohorte.Statut == StatutCohorte.Active)
             .Include(m => m.Cohorte)
                 .ThenInclude(c => c.Challenge)
-            .Select(m => m.Cohorte)
             .ToListAsync();
 
         var resultat = new List<ParcoursEnCoursInfo>();
-        foreach (var cohorte in cohortes)
+        foreach (var membre in membres)
         {
+            var cohorte = membre.Cohorte;
+
             var etape = await dbContext.ChallengeEtapes
                 .Include(e => e.Cartes)
                     .ThenInclude(ec => ec.CarteCompetence)
@@ -438,6 +473,33 @@ public sealed class CohorteService(
                 continue;
             }
 
+            // Les cartes et instructions personnalisees n'existent que sur les parcours Bilan
+            // de competences individuel (cf. CohorteMembreCarteSupplementaire,
+            // CohorteMembreEtapePersonnalisation) - inutile d'interroger ces tables sur un
+            // Challenge Collectif.
+            var defiIndividuel = etape.DefiIndividuel;
+            List<CarteCompetence> cartesPersonnalisees = [];
+            if (cohorte.Challenge.Format == FormatChallenge.BilanCompetencesIndividuel)
+            {
+                cartesPersonnalisees = await dbContext.CohorteMembreCartesSupplementaires
+                    .Where(cs => cs.CohorteMembreId == membre.Id && cs.ChallengeEtapeId == etape.Id)
+                    .Include(cs => cs.CarteCompetence)
+                        .ThenInclude(c => c.Badge)
+                    .Select(cs => cs.CarteCompetence)
+                    .ToListAsync();
+
+                // Remplacement pour ce membre uniquement (jamais de modification du template
+                // partage ChallengeEtape.DefiIndividuel) - cf. CohorteMembreEtapePersonnalisation.
+                var instructionsPersonnalisees = await dbContext.CohorteMembreEtapePersonnalisations
+                    .Where(p => p.CohorteMembreId == membre.Id && p.ChallengeEtapeId == etape.Id)
+                    .Select(p => p.DefiIndividuelPersonnalise)
+                    .FirstOrDefaultAsync();
+                if (instructionsPersonnalisees is not null)
+                {
+                    defiIndividuel = instructionsPersonnalisees;
+                }
+            }
+
             resultat.Add(new ParcoursEnCoursInfo
             {
                 CohorteId = cohorte.Id,
@@ -445,12 +507,241 @@ public sealed class CohorteService(
                 ChallengeEtapeId = etape.Id,
                 NumeroEtape = etape.NumeroEtape,
                 TitreEtape = etape.TitreEtape,
-                DefiIndividuel = etape.DefiIndividuel,
+                DefiIndividuel = defiIndividuel,
                 Cartes = etape.Cartes.Select(ec => ec.CarteCompetence).ToList(),
+                CartesPersonnalisees = cartesPersonnalisees,
             });
         }
 
         return resultat;
+    }
+
+    // Liste TOUTES les etapes du Challenge (pas seulement l'etape courante de la Cohorte) :
+    // permet au Coach de naviguer vers une etape future pour la preparer en avance, pas
+    // seulement l'etape en cours.
+    public async Task<List<PersonnalisationEtapeInfo>?> GetEtapesPersonnalisationAsync(int cohorteId, int cohorteMembreId)
+    {
+        var membre = await dbContext.CohorteMembres
+            .Include(m => m.Cohorte)
+            .FirstOrDefaultAsync(m => m.Id == cohorteMembreId && m.CohorteId == cohorteId);
+
+        if (membre is null)
+        {
+            return null;
+        }
+
+        var etapes = await dbContext.ChallengeEtapes
+            .Where(e => e.ChallengeId == membre.Cohorte.ChallengeId)
+            .OrderBy(e => e.NumeroEtape)
+            .ToListAsync();
+
+        var nombreCartesParEtape = await dbContext.CohorteMembreCartesSupplementaires
+            .Where(cs => cs.CohorteMembreId == cohorteMembreId)
+            .GroupBy(cs => cs.ChallengeEtapeId)
+            .Select(g => new { ChallengeEtapeId = g.Key, Nombre = g.Count() })
+            .ToListAsync();
+
+        var etapesAvecInstructions = await dbContext.CohorteMembreEtapePersonnalisations
+            .Where(p => p.CohorteMembreId == cohorteMembreId)
+            .Select(p => p.ChallengeEtapeId)
+            .ToListAsync();
+
+        return etapes.Select(e => new PersonnalisationEtapeInfo
+        {
+            ChallengeEtapeId = e.Id,
+            NumeroEtape = e.NumeroEtape,
+            TitreEtape = e.TitreEtape,
+            EstEtapeCourante = e.NumeroEtape == membre.Cohorte.EtapeCourante,
+            NombreCartesPersonnalisees = nombreCartesParEtape.FirstOrDefault(x => x.ChallengeEtapeId == e.Id)?.Nombre ?? 0,
+            AInstructionsPersonnalisees = etapesAvecInstructions.Contains(e.Id),
+        }).ToList();
+    }
+
+    public async Task<PersonnalisationCartesContexte?> GetContextePersonnalisationCartesAsync(int cohorteId, int cohorteMembreId, int challengeEtapeId)
+    {
+        var membre = await dbContext.CohorteMembres
+            .Include(m => m.Utilisateur)
+            .Include(m => m.Cohorte)
+                .ThenInclude(c => c.Challenge)
+            .FirstOrDefaultAsync(m => m.Id == cohorteMembreId && m.CohorteId == cohorteId);
+
+        if (membre is null)
+        {
+            return null;
+        }
+
+        var etape = await dbContext.ChallengeEtapes
+            .Include(e => e.Cartes)
+            .FirstOrDefaultAsync(e => e.Id == challengeEtapeId && e.ChallengeId == membre.Cohorte.ChallengeId);
+
+        if (etape is null)
+        {
+            return null;
+        }
+
+        var supplementaires = await dbContext.CohorteMembreCartesSupplementaires
+            .Include(cs => cs.CarteCompetence)
+            .Include(cs => cs.AjouteePar)
+            .Where(cs => cs.CohorteMembreId == cohorteMembreId && cs.ChallengeEtapeId == challengeEtapeId)
+            .OrderBy(cs => cs.AjouteeLe)
+            .ToListAsync();
+
+        var instructionsPersonnalisees = await dbContext.CohorteMembreEtapePersonnalisations
+            .Where(p => p.CohorteMembreId == cohorteMembreId && p.ChallengeEtapeId == challengeEtapeId)
+            .Select(p => p.DefiIndividuelPersonnalise)
+            .FirstOrDefaultAsync();
+
+        return new PersonnalisationCartesContexte
+        {
+            CohorteId = cohorteId,
+            CohorteMembreId = cohorteMembreId,
+            MembreNomComplet = NomComplet(membre.Utilisateur),
+            ChallengeEtapeId = etape.Id,
+            NumeroEtape = etape.NumeroEtape,
+            EtapeTitre = etape.TitreEtape,
+            FormatAutorise = membre.Cohorte.Challenge.Format == FormatChallenge.BilanCompetencesIndividuel,
+            CartesTemplateIds = etape.Cartes.Select(c => c.CarteCompetenceId).ToList(),
+            CartesSupplementaires = supplementaires.Select(cs => new CarteSupplementaireInfo
+            {
+                CarteCompetenceId = cs.CarteCompetenceId,
+                CarteCode = cs.CarteCompetence.Code,
+                CarteTitre = cs.CarteCompetence.TitreTheorie,
+                AjouteeParNomComplet = NomComplet(cs.AjouteePar),
+                AjouteeLe = cs.AjouteeLe,
+            }).ToList(),
+            DefiIndividuelPartage = etape.DefiIndividuel,
+            DefiIndividuelPersonnalise = instructionsPersonnalisees,
+        };
+    }
+
+    // Remplacement total (comme ChallengeService.DefinirCartesEtapeAsync sur le template
+    // partage), volontairement SANS verrou d'architecture : la personnalisation individuelle
+    // doit rester modifiable meme une fois la Cohorte Active, le diagnostic d'un bilan de
+    // competences pouvant evoluer en cours de parcours.
+    public async Task<(bool Success, string? ErrorMessage)> DefinirCartesSupplementairesMembreAsync(int cohorteMembreId, int challengeEtapeId, List<int> carteCompetenceIds, string gestionnaireId)
+    {
+        var membre = await dbContext.CohorteMembres
+            .Include(m => m.Cohorte)
+                .ThenInclude(c => c.Challenge)
+            .FirstOrDefaultAsync(m => m.Id == cohorteMembreId);
+
+        if (membre is null)
+        {
+            return (false, "Membre introuvable.");
+        }
+
+        // Verification serveur, jamais seulement masquee cote UI (cf. CLAUDE.md, principe
+        // Manifeste "l'equipe avant l'individu") : un Challenge Collectif ne doit jamais
+        // recevoir de carte personnalisee par membre, la cohesion du groupe repose sur des
+        // cartes partagees par toute la Cohorte.
+        if (membre.Cohorte.Challenge.Format != FormatChallenge.BilanCompetencesIndividuel)
+        {
+            return (false, "Cette fonctionnalité est réservée aux parcours de type \"Bilan de compétences individuel\".");
+        }
+
+        var etape = await dbContext.ChallengeEtapes
+            .FirstOrDefaultAsync(e => e.Id == challengeEtapeId && e.ChallengeId == membre.Cohorte.ChallengeId);
+        if (etape is null)
+        {
+            return (false, "Étape introuvable pour ce Challenge.");
+        }
+
+        var existantes = await dbContext.CohorteMembreCartesSupplementaires
+            .Where(cs => cs.CohorteMembreId == cohorteMembreId && cs.ChallengeEtapeId == challengeEtapeId)
+            .ToListAsync();
+
+        var idsSouhaites = carteCompetenceIds.Distinct().ToList();
+        var idsActuels = existantes.Select(cs => cs.CarteCompetenceId).ToList();
+
+        var aRetirer = existantes.Where(cs => !idsSouhaites.Contains(cs.CarteCompetenceId)).ToList();
+        foreach (var carte in aRetirer)
+        {
+            dbContext.CohorteMembreCartesSupplementaires.Remove(carte);
+        }
+
+        var aAjouter = idsSouhaites.Except(idsActuels);
+        foreach (var carteId in aAjouter)
+        {
+            dbContext.CohorteMembreCartesSupplementaires.Add(new CohorteMembreCarteSupplementaire
+            {
+                CohorteMembreId = cohorteMembreId,
+                ChallengeEtapeId = challengeEtapeId,
+                CarteCompetenceId = carteId,
+                AjouteeParId = gestionnaireId,
+                AjouteeLe = DateTime.UtcNow,
+            });
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    // Remplacement pour ce membre uniquement (jamais de modification du template partage
+    // ChallengeEtape.DefiIndividuel, qui continue de s'afficher tel quel pour tous les autres
+    // membres/Cohortes issus du meme Challenge) - meme garde-fou de Format que
+    // DefinirCartesSupplementairesMembreAsync.
+    public async Task<(bool Success, string? ErrorMessage)> DefinirInstructionsPersonnaliseesMembreAsync(int cohorteMembreId, int challengeEtapeId, string? instructionsPersonnalisees, string gestionnaireId)
+    {
+        var membre = await dbContext.CohorteMembres
+            .Include(m => m.Cohorte)
+                .ThenInclude(c => c.Challenge)
+            .FirstOrDefaultAsync(m => m.Id == cohorteMembreId);
+
+        if (membre is null)
+        {
+            return (false, "Membre introuvable.");
+        }
+
+        if (membre.Cohorte.Challenge.Format != FormatChallenge.BilanCompetencesIndividuel)
+        {
+            return (false, "Cette fonctionnalité est réservée aux parcours de type \"Bilan de compétences individuel\".");
+        }
+
+        var etape = await dbContext.ChallengeEtapes
+            .FirstOrDefaultAsync(e => e.Id == challengeEtapeId && e.ChallengeId == membre.Cohorte.ChallengeId);
+        if (etape is null)
+        {
+            return (false, "Étape introuvable pour ce Challenge.");
+        }
+
+        var existante = await dbContext.CohorteMembreEtapePersonnalisations
+            .FirstOrDefaultAsync(p => p.CohorteMembreId == cohorteMembreId && p.ChallengeEtapeId == challengeEtapeId);
+
+        if (string.IsNullOrWhiteSpace(instructionsPersonnalisees))
+        {
+            // Texte vide = retour au texte partage du template, pas une "instruction vide" a
+            // afficher a l'apprenant.
+            if (existante is not null)
+            {
+                dbContext.CohorteMembreEtapePersonnalisations.Remove(existante);
+                await dbContext.SaveChangesAsync();
+            }
+
+            return (true, null);
+        }
+
+        if (existante is null)
+        {
+            dbContext.CohorteMembreEtapePersonnalisations.Add(new CohorteMembreEtapePersonnalisation
+            {
+                CohorteMembreId = cohorteMembreId,
+                ChallengeEtapeId = challengeEtapeId,
+                DefiIndividuelPersonnalise = instructionsPersonnalisees.Trim(),
+                ModifieParId = gestionnaireId,
+                ModifieLe = DateTime.UtcNow,
+            });
+        }
+        else
+        {
+            existante.DefiIndividuelPersonnalise = instructionsPersonnalisees.Trim();
+            existante.ModifieParId = gestionnaireId;
+            existante.ModifieLe = DateTime.UtcNow;
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
     }
 
     public async Task<(bool Success, string? ErrorMessage)> SupprimerAsync(int id)
@@ -918,6 +1209,7 @@ public sealed class CohorteService(
         NombreMembres = c.Membres.Count,
         OrganisationId = c.OrganisationId,
         OrganisationNom = c.Organisation?.RaisonSociale,
+        Format = c.Challenge.Format,
     };
 
     private static string NomComplet(ApplicationUser utilisateur)

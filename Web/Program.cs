@@ -77,6 +77,10 @@ builder.Services.AddScoped<IReclamationService, ReclamationService>();
 builder.Services.AddScoped<ITestPositionnementService, TestPositionnementService>();
 builder.Services.AddScoped<IDiscService, DiscService>();
 builder.Services.AddScoped<IRiasecService, RiasecService>();
+builder.Services.AddScoped<IBigFiveService, BigFiveService>();
+builder.Services.AddScoped<IScheinService, ScheinService>();
+builder.Services.AddScoped<IPreBilanCarboneService, PreBilanCarboneService>();
+builder.Services.AddScoped<IQualiopiDashboardService, QualiopiDashboardService>();
 
 builder.Services.Configure<PreuveFichierStockageSettings>(
     builder.Configuration.GetSection("PreuveFichierStockage"));
@@ -103,7 +107,24 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    // Les assets portant un parametre de version (?v=hash via asp-append-version, cf.
+    // _Layout.cshtml) ou places sous /uploads/ (nommage par GUID genere a l'upload, jamais
+    // reecrits en place - cf. CartesController.EnregistrerImageAsync) sont immuables par
+    // construction : un changement de contenu change toujours l'URL, donc un cache
+    // navigateur tres long ne peut jamais servir une version perimee. Les autres assets
+    // (pas encore versionnes) gardent un cache plus court.
+    OnPrepareResponse = context =>
+    {
+        var estVersionne = context.Context.Request.Query.ContainsKey("v")
+            || context.Context.Request.Path.StartsWithSegments("/uploads");
+
+        context.Context.Response.Headers.CacheControl = estVersionne
+            ? "public, max-age=31536000, immutable"
+            : "public, max-age=604800";
+    },
+});
 app.UseRouting();
 app.UseAuthentication();
 app.UseMiddleware<DocumentsLegauxMiddleware>();

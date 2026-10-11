@@ -13,6 +13,7 @@ public sealed class ChallengeInput
     public int NombreEtapes { get; set; } = 8;
     public ModePlateforme Mode { get; set; }
     public ThematiqueChallenge Thematique { get; set; } = ThematiqueChallenge.HumainEtOrganisation;
+    public FormatChallenge Format { get; set; } = FormatChallenge.Collectif;
 }
 
 public sealed class ChallengeEtapeInput

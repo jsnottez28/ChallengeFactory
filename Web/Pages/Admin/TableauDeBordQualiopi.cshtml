@@ -1,0 +1,233 @@
+@page
+@model Web.Pages.Admin.TableauDeBordQualiopiModel
+@{
+    ViewData["Title"] = "Tableau de bord Qualiopi";
+    var t = Model.TableauDeBord;
+
+    string Pourcent(double? valeur) => valeur.HasValue ? valeur.Value.ToString("0.#") + " %" : "—";
+    string Note(double? valeur) => valeur.HasValue ? valeur.Value.ToString("0.0") : "—";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Tableau de bord Qualiopi</li>
+            </ol>
+        </nav>
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Administration</p>
+            <h1 class="h3 mb-0">Tableau de bord Qualiopi</h1>
+            <p class="text-muted mb-0">
+                Indicateurs agrégés sur toutes les Cohortes, utiles pour préparer ou passer un audit Qualiopi.
+                Pour le détail nominatif d'une Cohorte (émargements, attestations), voir sa fiche dans
+                <a asp-controller="Cohortes" asp-action="Index">Administration &gt; Cohortes</a>.
+                Généré le @t.GenereLe.ToLocalTime().ToString("dd/MM/yyyy à HH:mm").
+            </p>
+        </div>
+
+        <div class="row g-4 mb-1">
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-1">Cohortes actives</p>
+                        <strong class="fs-3">@t.Cohortes.NombreCohortesActives</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-1">Cohortes terminées</p>
+                        <strong class="fs-3">@t.Cohortes.NombreCohortesTerminees</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-1">Cohortes en préparation</p>
+                        <strong class="fs-3">@t.Cohortes.NombreCohortesEnPreparation</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-1">Apprenants (total)</p>
+                        <strong class="fs-3">@t.Cohortes.NombreApprenantsTotal</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Taux de complétion</h2>
+                        <p class="text-muted small mb-0">Niveau 3 Kirkpatrick — changement de pratique</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="mb-2">
+                            <strong class="fs-4">@Pourcent(t.Completion.TauxCohortesMeneesATermePourcent)</strong>
+                            <span class="text-muted small ms-2">des Cohortes démarrées menées à terme (@t.Completion.NombreCohortesTerminees / @t.Completion.NombreCohortesDemarrees)</span>
+                        </p>
+                        <p class="mb-0">
+                            <strong class="fs-4">@Pourcent(t.Completion.TauxCompletionApprenantPourcent)</strong>
+                            <span class="text-muted small ms-2">des apprenants de Cohortes terminées ont validé la dernière étape (@t.Completion.NombreApprenantsAyantValideDerniereEtape / @t.Completion.NombreApprenantsCohortesTerminees)</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Taux de participation aux défis</h2>
+                        <p class="text-muted small mb-0">Niveau 2 Kirkpatrick — acquisition</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="mb-0">
+                            <strong class="fs-4">@Pourcent(t.Participation.TauxParticipationPourcent)</strong>
+                            <span class="text-muted small ms-2">de Preuves déposées sur les défis déjà ouverts (@t.Participation.NombrePreuvesDeposees / @t.Participation.NombrePreuvesAttendues attendues)</span>
+                        </p>
+                        <p class="text-muted small mb-0 mt-2">Approximation : un défi est « attendu » dès que son étape est ouverte dans la Cohorte, pas au jour précis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Assiduité (émargement)</h2>
+                        <p class="text-muted small mb-0">Suivi de l'exécution</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="mb-2">
+                            <strong class="fs-4">@Pourcent(t.Assiduite.TauxPresencePourcent)</strong>
+                            <span class="text-muted small ms-2">de séances signées (@t.Assiduite.NombreSeancesSignees / @t.Assiduite.NombreSeancesProposees envoyées)</span>
+                        </p>
+                        <p class="text-muted small mb-0">Total heures de présence enregistrées : <strong>@(t.Assiduite.TotalHeuresPresence?.ToString("0.#") ?? "0")</strong> h</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Réclamations</h2>
+                        <p class="text-muted small mb-0">Indicateur 32 du Référentiel National Qualité</p>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (t.Reclamations.NombreTotal == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune réclamation déposée.</p>
+                        }
+                        else
+                        {
+                            <p class="mb-2">
+                                <strong class="fs-4">@Pourcent(t.Reclamations.TauxTraitementPourcent)</strong>
+                                <span class="text-muted small ms-2">traitées (@t.Reclamations.NombreTraitees / @t.Reclamations.NombreTotal)</span>
+                            </p>
+                            <p class="text-muted small mb-2">Reçues : @t.Reclamations.NombreRecues · En cours : @t.Reclamations.NombreEnCours · Traitées : @t.Reclamations.NombreTraitees</p>
+                            <p class="text-muted small mb-0">
+                                Délai moyen de traitement :
+                                <strong>@(t.Reclamations.DelaiMoyenTraitementJours.HasValue ? t.Reclamations.DelaiMoyenTraitementJours.Value.ToString("0.#") + " j" : "—")</strong>
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Satisfaction (critère 7 Qualiopi)</h2>
+                        <p class="text-muted small mb-0">Niveau 1 Kirkpatrick</p>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (t.Satisfaction.NombreReponses == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune réponse pour le moment.</p>
+                        }
+                        else
+                        {
+                            <p class="mb-2">
+                                <strong class="fs-4">@Note(t.Satisfaction.ScoreMoyenSur10)</strong><span class="text-muted">/10</span>
+                                <span class="text-muted small ms-2">recommandation (NPS @(t.Satisfaction.NpsPourcent.HasValue ? t.Satisfaction.NpsPourcent.Value.ToString("0.#") : "—"), @t.Satisfaction.NombreReponses réponse@(t.Satisfaction.NombreReponses > 1 ? "s" : ""))</span>
+                            </p>
+                            <ul class="list-unstyled small text-muted mb-0">
+                                <li>Contenus : <strong>@Note(t.Satisfaction.NoteMoyenneContenus)</strong>/10</li>
+                                <li>Accompagnement : <strong>@Note(t.Satisfaction.NoteMoyenneAccompagnement)</strong>/10</li>
+                                <li>Adéquation aux attentes : <strong>@Note(t.Satisfaction.NoteMoyenneAdequationAttentes)</strong>/10</li>
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Point d'étape mi-parcours</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (t.MiParcours.NombreReponses == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune réponse pour le moment.</p>
+                        }
+                        else
+                        {
+                            <p class="mb-2">
+                                <strong class="fs-4">@Note(t.MiParcours.NoteMoyenneAccompagnement)</strong><span class="text-muted">/10</span>
+                                <span class="text-muted small ms-2">accompagnement (@t.MiParcours.NombreReponses réponse@(t.MiParcours.NombreReponses > 1 ? "s" : ""))</span>
+                            </p>
+                            <p class="text-muted small mb-0">
+                                Projet toujours pertinent : @t.MiParcours.ProjetPertinentOui oui · @t.MiParcours.ProjetPertinentPartiellement partiellement · @t.MiParcours.ProjetPertinentNon non
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Progression des connaissances — Méthode Miroir</h2>
+                        <p class="text-muted small mb-0">Niveau 2 Kirkpatrick — comparaison amont/aval, uniquement sur les Cohortes mesurées aux deux bouts</p>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (t.ProgressionConnaissances.NombreCohortesAvecAmontEtAval == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune Cohorte ne dispose encore d'un test de positionnement Amont ET Aval complétés.</p>
+                        }
+                        else
+                        {
+                            <div class="row g-3 align-items-center">
+                                <div class="col-auto">
+                                    <p class="text-muted small mb-1">Amont</p>
+                                    <strong class="fs-4">@Note(t.ProgressionConnaissances.NiveauMoyenAmontSur10)</strong><span class="text-muted">/10</span>
+                                </div>
+                                <div class="col-auto text-muted fs-4">→</div>
+                                <div class="col-auto">
+                                    <p class="text-muted small mb-1">Aval</p>
+                                    <strong class="fs-4">@Note(t.ProgressionConnaissances.NiveauMoyenAvalSur10)</strong><span class="text-muted">/10</span>
+                                </div>
+                                <div class="col-auto text-muted fs-4">=</div>
+                                <div class="col-auto">
+                                    <p class="text-muted small mb-1">Progression moyenne</p>
+                                    <strong class="fs-4">@(t.ProgressionConnaissances.ProgressionMoyennePoints.HasValue ? (t.ProgressionConnaissances.ProgressionMoyennePoints.Value >= 0 ? "+" : "") + t.ProgressionConnaissances.ProgressionMoyennePoints.Value.ToString("0.0") : "—")</strong><span class="text-muted">pts</span>
+                                </div>
+                                <div class="col-auto text-muted small">sur @t.ProgressionConnaissances.NombreCohortesAvecAmontEtAval Cohorte@(t.ProgressionConnaissances.NombreCohortesAvecAmontEtAval > 1 ? "s" : "")</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

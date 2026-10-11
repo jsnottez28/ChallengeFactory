@@ -10,13 +10,15 @@ namespace Web.Pages.Dashboard;
 // Consultation seule : le stagiaire ne peut jamais lancer/relancer un test depuis cette
 // page, il l'a deja passe via le lien fourni sur le defi individuel d'une etape (ou envoye
 // manuellement) - cf. DiscResultat / TestDisc.cshtml. Regroupe les resultats de tous les
-// tests psychotechniques passes (aujourd'hui : DISC, RIASEC).
+// tests psychotechniques passes (aujourd'hui : DISC, RIASEC, Big Five).
 [Authorize]
-public class MesTestsModel(IDiscService discService, IRiasecService riasecService, UserManager<ApplicationUser> userManager) : PageModel
+public class MesTestsModel(IDiscService discService, IRiasecService riasecService, IBigFiveService bigFiveService, UserManager<ApplicationUser> userManager) : PageModel
 {
     public DiscResultatInfo? DiscResultat { get; private set; }
 
     public RiasecResultatInfo? RiasecResultat { get; private set; }
+
+    public BigFiveResultatInfo? BigFiveResultat { get; private set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -28,6 +30,7 @@ public class MesTestsModel(IDiscService discService, IRiasecService riasecServic
 
         DiscResultat = await discService.GetDernierResultatAsync(userId);
         RiasecResultat = await riasecService.GetDernierResultatAsync(userId);
+        BigFiveResultat = await bigFiveService.GetDernierResultatAsync(userId);
 
         return Page();
     }

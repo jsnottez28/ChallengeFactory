@@ -45,6 +45,7 @@
                                 <th scope="col">Titre</th>
                                 <th scope="col">Mode</th>
                                 <th scope="col">Thématique</th>
+                                <th scope="col">Format</th>
                                 <th scope="col">Étapes</th>
                                 <th scope="col">Statut</th>
                                 <th scope="col" class="text-end">Actions</th>
@@ -74,6 +75,16 @@
                                             <span class="badge" style="background:@(challenge.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "#e8500a" : "#2b4c6f");">
                                                 @(challenge.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "Décarbonation" : "Humain & Organisation")
                                             </span>
+                                        </td>
+                                        <td>
+                                            @if (challenge.Format == Domain.Entities.FormatChallenge.BilanCompetencesIndividuel)
+                                            {
+                                                <span class="badge text-bg-info">Bilan individuel</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-light">Collectif</span>
+                                            }
                                         </td>
                                         <td>@challenge.NombreEtapes</td>
                                         <td>

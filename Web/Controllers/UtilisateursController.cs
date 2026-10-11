@@ -13,7 +13,9 @@ public class UtilisateursController(
     RoleManager<ApplicationRole> roleManager,
     ICarteCompetenceService carteCompetenceService,
     IDiscService discService,
-    IRiasecService riasecService) : Controller
+    IRiasecService riasecService,
+    IBigFiveService bigFiveService,
+    IScheinService scheinService) : Controller
 {
     [HttpGet("{userId}/Roles")]
     [Authorize(Policy = "Droit:UTILISATEUR.CONSULTER")]
@@ -162,6 +164,8 @@ public class UtilisateursController(
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? (user.Email ?? user.UserName ?? "Utilisateur") : displayName,
             ResultatDisc = await discService.GetDernierResultatAsync(userId),
             ResultatRiasec = await riasecService.GetDernierResultatAsync(userId),
+            ResultatBigFive = await bigFiveService.GetDernierResultatAsync(userId),
+            ResultatSchein = await scheinService.GetDernierResultatAsync(userId),
         };
 
         return View(model);
@@ -173,6 +177,8 @@ public class UtilisateursController(
         public string DisplayName { get; set; } = string.Empty;
         public RiasecResultatInfo? ResultatRiasec { get; set; }
         public DiscResultatInfo? ResultatDisc { get; set; }
+        public BigFiveResultatInfo? ResultatBigFive { get; set; }
+        public ScheinResultatInfo? ResultatSchein { get; set; }
     }
 
     public sealed class UserCartesViewModel

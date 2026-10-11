@@ -48,6 +48,8 @@ public sealed class CarteApprenantService(ApplicationDbContext dbContext, UserMa
             .Where(a => a.UtilisateurId == utilisateurId && a.EstActif && a.CarteCompetenceId == carteId)
             .Include(a => a.CarteCompetence)
                 .ThenInclude(c => c.Badge)
+            .Include(a => a.CarteCompetence)
+                .ThenInclude(c => c.Ressources.OrderBy(r => r.Ordre).ThenBy(r => r.Id))
             .Select(a => a.CarteCompetence)
             .FirstOrDefaultAsync();
     }

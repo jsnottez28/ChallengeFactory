@@ -69,6 +69,14 @@
                             </select>
                             <div class="form-text">Détermine l'accent visuel du parcours sur le catalogue public /formations.</div>
                         </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Format" class="form-label"></label>
+                            <select asp-for="Format" class="form-select">
+                                <option value="@Domain.Entities.FormatChallenge.Collectif">Collectif</option>
+                                <option value="@Domain.Entities.FormatChallenge.BilanCompetencesIndividuel">Bilan de compétences individuel</option>
+                            </select>
+                            <div class="form-text">Collectif : Cohorte à plusieurs apprenants, cartes partagées. Bilan de compétences individuel : parcours solo — seul ce format pourra, à terme, autoriser la personnalisation des cartes selon le diagnostic propre à la personne.</div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer bg-white border-top p-4">

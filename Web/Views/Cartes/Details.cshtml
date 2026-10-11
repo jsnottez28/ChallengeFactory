@@ -1,5 +1,6 @@
 @model Domain.Entities.CarteCompetence
 @using Application.Common.Interfaces
+@using Domain.Entities
 @using Web.Extensions
 @{
     ViewData["Title"] = $"Carte {Model.Code}";
@@ -125,6 +126,104 @@
                                 </table>
                             </div>
                         }
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-1">Ressources (@Model.Ressources.Count)</h2>
+                        <p class="text-muted mb-0">Lien web, fichier PDF ou référence bibliographique "pour aller plus loin", affichés à l'apprenant sur la carte.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (Model.Ressources.Count == 0)
+                        {
+                            <p class="text-muted mb-0">Aucune ressource ajoutée pour le moment.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-unstyled mb-4">
+                                @foreach (var ressource in Model.Ressources)
+                                {
+                                    <li class="d-flex align-items-center justify-content-between gap-3 py-2 border-bottom">
+                                        <div>
+                                            <span class="badge text-bg-light me-2">
+                                                @(ressource.Type switch
+                                                {
+                                                    TypeRessourceCarte.LienWeb => "Lien web",
+                                                    TypeRessourceCarte.FichierPdf => "PDF",
+                                                    TypeRessourceCarte.ReferenceBibliographique => "Référence",
+                                                    _ => ressource.Type.ToString(),
+                                                })
+                                            </span>
+                                            @if (ressource.Type == TypeRessourceCarte.LienWeb)
+                                            {
+                                                <a href="@ressource.Url" target="_blank" rel="noopener">@ressource.Titre</a>
+                                            }
+                                            else if (ressource.Type == TypeRessourceCarte.FichierPdf)
+                                            {
+                                                <a href="~/uploads/cartes-ressources/@ressource.NomFichier" target="_blank" rel="noopener">@ressource.Titre</a>
+                                            }
+                                            else
+                                            {
+                                                <span>@ressource.Titre</span>
+                                                <span class="text-muted small d-block">@ressource.ReferenceTexte</span>
+                                            }
+                                        </div>
+                                        <droit-visible code="CARTE.MODIFIER">
+                                            <form method="post" asp-controller="Cartes" asp-action="SupprimerRessource" asp-route-ressourceId="@ressource.Id" asp-route-carteId="@Model.Id" onsubmit="return confirm('Supprimer cette ressource ?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                            </form>
+                                        </droit-visible>
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                        <droit-visible code="CARTE.MODIFIER">
+                            <form method="post" asp-controller="Cartes" asp-action="AjouterRessource" asp-route-id="@Model.Id" enctype="multipart/form-data" id="form-ajouter-ressource">
+                                @Html.AntiForgeryToken()
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label">Type</label>
+                                        <select name="Type" class="form-select" id="ressource-type">
+                                            <option value="@((int)TypeRessourceCarte.LienWeb)">Lien web</option>
+                                            <option value="@((int)TypeRessourceCarte.FichierPdf)">Fichier PDF</option>
+                                            <option value="@((int)TypeRessourceCarte.ReferenceBibliographique)">Référence bibliographique</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-8">
+                                        <label class="form-label">Titre</label>
+                                        <input type="text" name="Titre" class="form-control" placeholder="Libellé affiché à l'apprenant" required>
+                                    </div>
+                                    <div class="col-12" data-ressource-champ="@((int)TypeRessourceCarte.LienWeb)">
+                                        <label class="form-label">URL</label>
+                                        <input type="url" name="Url" class="form-control" placeholder="https://...">
+                                    </div>
+                                    <div class="col-12" data-ressource-champ="@((int)TypeRessourceCarte.FichierPdf)" style="display:none;">
+                                        <label class="form-label">Fichier PDF</label>
+                                        <input type="file" name="Fichier" class="form-control" accept="application/pdf">
+                                    </div>
+                                    <div class="col-12" data-ressource-champ="@((int)TypeRessourceCarte.ReferenceBibliographique)" style="display:none;">
+                                        <label class="form-label">Référence</label>
+                                        <textarea name="ReferenceTexte" class="form-control" rows="2" placeholder="Auteur, Titre, Année, Éditeur..."></textarea>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary mt-3">Ajouter la ressource</button>
+                            </form>
+                            <script>
+                                (function () {
+                                    var select = document.getElementById('ressource-type');
+                                    var champs = document.querySelectorAll('[data-ressource-champ]');
+                                    function majAffichage() {
+                                        champs.forEach(function (champ) {
+                                            champ.style.display = champ.dataset.ressourceChamp === select.value ? '' : 'none';
+                                        });
+                                    }
+                                    select.addEventListener('change', majAffichage);
+                                    majAffichage();
+                                })();
+                            </script>
+                        </droit-visible>
                     </div>
                 </div>
             </div>

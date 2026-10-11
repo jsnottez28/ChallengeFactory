@@ -96,6 +96,7 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
             NombreEtapes = challenge.NombreEtapes,
             Mode = challenge.Mode,
             Thematique = challenge.Thematique,
+            Format = challenge.Format,
         });
     }
 
@@ -279,6 +280,7 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
         NombreEtapes = model.NombreEtapes,
         Mode = model.Mode,
         Thematique = model.Thematique,
+        Format = model.Format,
     };
 
     private static ChallengeEtapeInput VersEtapeInput(ChallengeEtapeFormModel model) => new()
@@ -315,6 +317,9 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
 
         [Display(Name = "Thématique")]
         public ThematiqueChallenge Thematique { get; set; } = ThematiqueChallenge.HumainEtOrganisation;
+
+        [Display(Name = "Format")]
+        public FormatChallenge Format { get; set; } = FormatChallenge.Collectif;
     }
 
     public sealed class ChallengeEtapeFormModel

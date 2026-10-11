@@ -22,12 +22,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<AcceptationDocumentLegal> AcceptationsDocumentsLegaux { get; set; }
     public DbSet<Badge> Badges { get; set; }
     public DbSet<CarteCompetence> CartesCompetences { get; set; }
+    public DbSet<CarteRessource> CarteRessources { get; set; }
     public DbSet<CarteAttribution> CarteAttributions { get; set; }
     public DbSet<Challenge> Challenges { get; set; }
     public DbSet<ChallengeEtape> ChallengeEtapes { get; set; }
     public DbSet<ChallengeEtapeCarte> ChallengeEtapeCartes { get; set; }
     public DbSet<Cohorte> Cohortes { get; set; }
     public DbSet<CohorteMembre> CohorteMembres { get; set; }
+    public DbSet<CohorteMembreCarteSupplementaire> CohorteMembreCartesSupplementaires { get; set; }
+    public DbSet<CohorteMembreEtapePersonnalisation> CohorteMembreEtapePersonnalisations { get; set; }
     public DbSet<CohorteEtapeValidation> CohorteEtapeValidations { get; set; }
     public DbSet<InvitationCompte> InvitationsComptes { get; set; }
     public DbSet<Preuve> Preuves { get; set; }
@@ -48,6 +51,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<TestPositionnementReponse> TestsPositionnementReponses { get; set; }
     public DbSet<DiscResultat> DiscResultats { get; set; }
     public DbSet<RiasecResultat> RiasecResultats { get; set; }
+    public DbSet<BigFiveResultat> BigFiveResultats { get; set; }
+    public DbSet<BigFiveResultatFacette> BigFiveResultatFacettes { get; set; }
+    public DbSet<ScheinResultat> ScheinResultats { get; set; }
+    public DbSet<FacteurEmission> FacteursEmission { get; set; }
+    public DbSet<PreBilanCarbone> PreBilansCarbone { get; set; }
+    public DbSet<PreBilanLigne> PreBilanLignes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -106,6 +115,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         ConfigureChallenges(builder);
         ConfigurePreuvesPointsEtForum(builder);
         ConfigureNotifications(builder);
+        ConfigurePreBilanCarbone(builder);
     }
 
     private static void ConfigureDroitsEtPermissions(ModelBuilder builder)
@@ -221,6 +231,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(c => c.BadgeId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.Entity<CarteRessource>()
+            .HasOne(r => r.CarteCompetence)
+            .WithMany(c => c.Ressources)
+            .HasForeignKey(r => r.CarteCompetenceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Pas d'unicite globale sur (CarteCompetenceId, UtilisateurId) seuls : une meme
         // carte peut desormais etre attribuee plusieurs fois au meme utilisateur si elle
         // provient d'origines differentes (Libre, ou plusieurs etapes/cohortes distinctes
@@ -327,6 +343,56 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(m => m.UtilisateurId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasIndex(cs => new { cs.CohorteMembreId, cs.ChallengeEtapeId, cs.CarteCompetenceId })
+            .IsUnique();
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasOne(cs => cs.CohorteMembre)
+            .WithMany()
+            .HasForeignKey(cs => cs.CohorteMembreId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasOne(cs => cs.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(cs => cs.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasOne(cs => cs.CarteCompetence)
+            .WithMany()
+            .HasForeignKey(cs => cs.CarteCompetenceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembreCarteSupplementaire>()
+            .HasOne(cs => cs.AjouteePar)
+            .WithMany()
+            .HasForeignKey(cs => cs.AjouteeParId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembreEtapePersonnalisation>()
+            .HasIndex(p => new { p.CohorteMembreId, p.ChallengeEtapeId })
+            .IsUnique();
+
+        builder.Entity<CohorteMembreEtapePersonnalisation>()
+            .HasOne(p => p.CohorteMembre)
+            .WithMany()
+            .HasForeignKey(p => p.CohorteMembreId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CohorteMembreEtapePersonnalisation>()
+            .HasOne(p => p.ChallengeEtape)
+            .WithMany()
+            .HasForeignKey(p => p.ChallengeEtapeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CohorteMembreEtapePersonnalisation>()
+            .HasOne(p => p.ModifiePar)
+            .WithMany()
+            .HasForeignKey(p => p.ModifieParId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<CohorteEtapeValidation>()
             .HasIndex(v => new { v.CohorteId, v.NumeroEtape })
@@ -483,6 +549,32 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<RiasecResultat>()
+            .HasOne(r => r.Utilisateur)
+            .WithMany()
+            .HasForeignKey(r => r.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<BigFiveResultat>()
+            .HasOne(r => r.Utilisateur)
+            .WithMany()
+            .HasForeignKey(r => r.UtilisateurId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreNevrosisme).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreExtraversion).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreOuverture).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreAgreabilite).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.ScoreConsciencieusite).HasPrecision(6, 2);
+        builder.Entity<BigFiveResultat>().Property(r => r.IndiceAcquiescement).HasPrecision(6, 4);
+        builder.Entity<BigFiveResultatFacette>().Property(f => f.Score).HasPrecision(6, 4);
+
+        builder.Entity<BigFiveResultatFacette>()
+            .HasOne(f => f.BigFiveResultat)
+            .WithMany(r => r.Facettes)
+            .HasForeignKey(f => f.BigFiveResultatId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ScheinResultat>()
             .HasOne(r => r.Utilisateur)
             .WithMany()
             .HasForeignKey(r => r.UtilisateurId)
@@ -654,5 +746,33 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(n => n.UtilisateurId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    private static void ConfigurePreBilanCarbone(ModelBuilder builder)
+    {
+        builder.Entity<FacteurEmission>()
+            .HasIndex(f => f.Code)
+            .IsUnique();
+        // 8 decimales : certains facteurs sources (ex. avion moyen courrier) sont donnes
+        // avec cette precision dans le fichier Bilan Carbone(R) - a preserver telle quelle.
+        builder.Entity<FacteurEmission>().Property(f => f.ValeurKgCO2eParUnite).HasPrecision(14, 8);
+
+        builder.Entity<PreBilanCarbone>().Property(p => p.ChiffreAffairesKEuros).HasPrecision(14, 2);
+        builder.Entity<PreBilanCarbone>().Property(p => p.TotalEmissionsKgCO2e).HasPrecision(14, 2);
+
+        builder.Entity<PreBilanLigne>().Property(l => l.ValeurSaisie).HasPrecision(14, 2);
+        builder.Entity<PreBilanLigne>().Property(l => l.EmissionsKgCO2e).HasPrecision(14, 2);
+
+        builder.Entity<PreBilanLigne>()
+            .HasOne(l => l.PreBilanCarbone)
+            .WithMany(p => p.Lignes)
+            .HasForeignKey(l => l.PreBilanCarboneId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PreBilanLigne>()
+            .HasOne(l => l.FacteurEmission)
+            .WithMany()
+            .HasForeignKey(l => l.FacteurEmissionId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

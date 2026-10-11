@@ -1,4 +1,6 @@
 using System.Net;
+using Application.Common.Interfaces;
+using Domain.Entities;
 
 namespace Web.Services;
 
@@ -307,6 +309,111 @@ public static class ChallengeEmailTemplates
 
         return (sujet, corps);
     }
+
+    // Test psychotechnique Big Five (modele OCEAN) : envoye automatiquement des que
+    // l'utilisateur termine le test (cf. BigFiveService.RepondreAsync).
+    public static (string Sujet, string CorpsHtml) ResultatBigFive(Application.Common.Interfaces.BigFiveResultatInfo resultat)
+    {
+        const string sujet = "Votre profil de personnalité (Big Five)";
+
+        var listeDomaines = string.Join("", resultat.Domaines.Select(d =>
+            $"""
+            <p><strong>{WebUtility.HtmlEncode(d.Nom)} — {WebUtility.HtmlEncode(d.Niveau)}</strong><br>
+            {WebUtility.HtmlEncode(d.Description)}</p>
+            """));
+
+        var listePointsForts = resultat.Synthese.PointsForts.Count > 0
+            ? $"<p><strong>Points forts</strong></p><ul>{string.Join("", resultat.Synthese.PointsForts.Select(p => $"<li>{WebUtility.HtmlEncode(p)}</li>"))}</ul>"
+            : "";
+
+        var listePointsVigilance = resultat.Synthese.PointsVigilance.Count > 0
+            ? $"<p><strong>Points de vigilance</strong></p><ul>{string.Join("", resultat.Synthese.PointsVigilance.Select(p => $"<li>{WebUtility.HtmlEncode(p)}</li>"))}</ul>"
+            : "";
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété le test de personnalité Big Five. Voici votre résultat :</p>
+            {listeDomaines}
+            {listePointsForts}
+            {listePointsVigilance}
+            <p>{WebUtility.HtmlEncode(resultat.Synthese.Resume)}</p>
+            <p style="color:#888780; font-size:12px;">Ce test mesure des traits de personnalité dans la population générale, pas une pathologie — un score élevé en Névrosisme ne signifie pas un trouble psychologique. Les scores reflètent une position sur l'échelle théorique de l'instrument, pas un percentile par rapport à un échantillon de référence.</p>
+            <p style="color:#888780; font-size:12px;">{WebUtility.HtmlEncode(resultat.IndiceAcquiescementCommentaire)}</p>
+            <p style="color:#888780; font-size:12px;">Cohérence des réponses : {resultat.NombrePairesCoherentes}/{resultat.NombrePairesControle} (indicateur de fiabilité, sans incidence sur votre profil)</p>
+            <p style="color:#888780; font-size:12px;">Retrouvez le détail par facette sur votre espace.</p>
+            <p style="color:#888780; font-size:12px;">Test basé sur l'IPIP-NEO-60 (Maples-Keller et al., 2017), issu de l'International Personality Item Pool (ipip.ori.org), domaine public.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    // Test des ancres de carriere (Schein, 1990 / Cerdin, 2007) : envoye automatiquement des
+    // que l'utilisateur termine le test (cf. ScheinService.RepondreAsync).
+    public static (string Sujet, string CorpsHtml) ResultatSchein(Application.Common.Interfaces.ScheinResultatInfo resultat)
+    {
+        const string sujet = "Votre profil d'ancres de carrière";
+
+        var listeAncres = string.Join("", resultat.Ancres.Select(a =>
+            $"""
+            <p><strong>{WebUtility.HtmlEncode(a.Nom)}{(a.EstDominante ? " ★" : "")} — {a.Score}/{a.ScoreMax}</strong><br>
+            {WebUtility.HtmlEncode(a.Description)}</p>
+            """));
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété le test des ancres de carrière. Voici votre résultat :</p>
+            <p>{WebUtility.HtmlEncode(resultat.Resume)}</p>
+            {listeAncres}
+            <p style="color:#888780; font-size:12px;">Une ancre de carrière évolue parfois au fil du temps : ce résultat reflète votre situation au moment où vous avez passé le test.</p>
+            <p style="color:#888780; font-size:12px;">Test adapté de Schein, E. H. (1990), Career Anchors: Discovering Your Real Values, et de Cerdin, J.-L. (2007), S'expatrier en toute connaissance de cause, Eyrolles.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    // Pre-diagnostic carbone : jamais nomme "Bilan Carbone®" (marque deposee de
+    // l'Association Bilan Carbone, reservee a la methode complete realisee par un
+    // praticien) - cf. IPreBilanCarboneService.
+    public static (string Sujet, string CorpsHtml) ResultatPreBilanCarbone(PreBilanResultatInfo resultat)
+    {
+        const string sujet = "Votre pré-diagnostic carbone";
+
+        var totalTonnes = resultat.TotalEmissionsKgCO2e / 1000m;
+
+        var listePostes = string.Join("", resultat.ParPoste.Select(p =>
+            $"<li>{WebUtility.HtmlEncode(LibellePoste(p.Poste))} : <strong>{(p.EmissionsTotalesKgCO2e / 1000m):N1} t CO2e</strong></li>"));
+
+        var listeLignes = string.Join("", resultat.Lignes.Take(5).Select(l =>
+            $"<li>{WebUtility.HtmlEncode(l.Nom)} : {(l.EmissionsKgCO2e / 1000m):N2} t CO2e</li>"));
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété votre pré-diagnostic carbone. Voici votre estimation :</p>
+            <p style="font-size:22px;"><strong>{totalTonnes:N1} tonnes CO2e / an</strong></p>
+            <p>Répartition par poste :</p>
+            <ul>
+                {listePostes}
+            </ul>
+            <p>Principaux postes contributeurs :</p>
+            <ul>
+                {listeLignes}
+            </ul>
+            <p style="color:#888780; font-size:12px;">Cette estimation est une approche monétaire simplifiée (ratios d'émission par euro dépensé), utile pour prioriser vos actions. Elle ne remplace pas un Bilan Carbone® complet réalisé par un praticien certifié, qui reste nécessaire pour toute démarche réglementaire ou de certification.</p>
+            <p style="color:#888780; font-size:12px;">Facteurs d'émission : ADEME, Base Carbone, France continentale — données publiques (licence ouverte).</p>
+            <p>Notre équipe peut vous accompagner pour aller plus loin : <a href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo">réserver un échange</a>.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    private static string LibellePoste(PosteEmission poste) => poste switch
+    {
+        PosteEmission.AchatsBiensEtServices => "Achats de biens et services",
+        PosteEmission.Immobilisations => "Immobilisations",
+        PosteEmission.Energie => "Énergie",
+        PosteEmission.Deplacements => "Déplacements",
+        _ => poste.ToString(),
+    };
 
     public static (string Sujet, string CorpsHtml) InvitationDefinirMotDePasse(string lienActivation)
     {

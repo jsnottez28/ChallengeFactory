@@ -278,17 +278,16 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
     // reproductible, jamais un tirage aleatoire par utilisateur.
     private static readonly (int NumeroA, int NumeroB)[] PairesBase = ConstruirePairesBase();
 
-    // 6 des 30 paires de base (une tous les 5) sont reposees a l'identique plus loin dans
-    // le round 1, pour l'echelle de fiabilite - jamais reformulees.
-    private static readonly int[] IndicesPairesControle = [0, 5, 10, 15, 20, 25];
-
-    // PaireId 1-30 = paires de base (dans l'ordre de ConstruirePairesBase), 31-36 = leurs
-    // doublons de controle (31 duplique la paire d'indice 0, etc.).
     private const int NombrePairesBase = 30;
 
-    // Ordre de presentation fixe et "en aveugle" des 36 paires du round 1 - melange une
+    // Ordre de presentation fixe et "en aveugle" des 30 paires du round 1 - melange une
     // bonne fois pour toutes, jamais groupe, jamais de dimension affichee.
-    private static readonly int[] OrdrePresentationRound1 = ConstruireOrdrePresentation(NombrePairesBase + IndicesPairesControle.Length, 20260917 + 1);
+    private static readonly int[] OrdrePresentationRound1 = ConstruireOrdrePresentation(NombrePairesBase, 20260917 + 1);
+
+    // 6 des 30 paires de base (une tous les 5) ancrent le round de fiabilite : leur
+    // gagnant au round 1 est confronte a un gagnant DIFFERENT (jamais son adversaire
+    // d'origine, jamais la meme paire reposee a l'identique) - cf. PreparerFiabilite.
+    private static readonly int[] IndicesFiabilite = [0, 5, 10, 15, 20, 25];
 
     // Le round 2 ne se declenche que si les 2 dimensions les plus proches apres le round 1
     // ont un ecart de score inferieur ou egal a ce seuil - inutile de redemander si le
@@ -345,23 +344,67 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         Texte = Questions[numeroQuestion - 1].Texte,
     };
 
-    // Renvoie la paire de base (NumeroA, NumeroB) pour un PaireId de round 1 (1-30 = paire
-    // de base directe, 31-36 = doublon pointant vers la paire de base correspondante).
-    private static (int NumeroA, int NumeroB) PaireRound1(int paireId) =>
-        paireId <= NombrePairesBase
-            ? PairesBase[paireId - 1]
-            : PairesBase[IndicesPairesControle[paireId - NombrePairesBase - 1]];
-
     public List<RiasecPaireInfo> GetPairesRound1() =>
         OrdrePresentationRound1.Select(paireId =>
         {
-            var (numeroA, numeroB) = PaireRound1(paireId);
+            var (numeroA, numeroB) = PairesBase[paireId - 1];
             return new RiasecPaireInfo { PaireId = paireId, OptionA = VersOption(numeroA), OptionB = VersOption(numeroB) };
         }).ToList();
 
+    // Construit les 6 paires du round de fiabilite : pour chacune des 6 paires de base
+    // ancres (IndicesFiabilite), confronte le gagnant reel choisi par l'utilisateur au
+    // round 1 a un AUTRE gagnant (jamais son adversaire d'origine, jamais deux items de la
+    // meme dimension) - toujours declenche (pas conditionnel comme le round 2), toujours
+    // construit uniquement a partir de choix reellement faits par l'utilisateur.
+    public List<RiasecPaireInfo>? PreparerFiabilite(Dictionary<int, int> reponsesRound1)
+    {
+        var (valide, _) = AnalyserRound1(reponsesRound1);
+        if (!valide)
+        {
+            return null;
+        }
+
+        var gagnants = new int[IndicesFiabilite.Length];
+        for (var i = 0; i < IndicesFiabilite.Length; i++)
+        {
+            gagnants[i] = reponsesRound1[IndicesFiabilite[i] + 1];
+        }
+
+        var paires = new List<RiasecPaireInfo>();
+        for (var i = 0; i < gagnants.Length; i++)
+        {
+            var partenaire = TrouverPartenaireFiabilite(gagnants, i);
+            paires.Add(new RiasecPaireInfo
+            {
+                PaireId = 2000 + i + 1,
+                OptionA = VersOption(gagnants[i]),
+                OptionB = VersOption(gagnants[partenaire]),
+            });
+        }
+        return paires;
+    }
+
+    // Cherche, parmi les 5 autres gagnants ancres, le premier d'une dimension differente de
+    // celle du gagnant a l'index donne - garantit une paire cross-dimension comme partout
+    // ailleurs dans le test, sans jamais reformer la paire d'origine (les 2 items viennent
+    // toujours de 2 paires de base distinctes).
+    private static int TrouverPartenaireFiabilite(int[] gagnants, int index)
+    {
+        var dimension = Questions[gagnants[index] - 1].Dimension;
+        for (var decalage = 1; decalage < gagnants.Length; decalage++)
+        {
+            var candidat = (index + decalage) % gagnants.Length;
+            if (Questions[gagnants[candidat] - 1].Dimension != dimension)
+            {
+                return candidat;
+            }
+        }
+        return (index + 1) % gagnants.Length; // filet de securite - ne devrait jamais servir
+    }
+
     public RiasecRound2Info? PreparerRound2(Dictionary<int, int> reponsesRound1)
     {
-        var (valide, scores, _, _, _) = AnalyserRound1(reponsesRound1);
+        var (valide, scores) = AnalyserRound1(reponsesRound1);
         if (!valide)
         {
             return null;
@@ -402,7 +445,7 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
     }
 
     public async Task<(bool Success, string? ErrorMessage, RiasecResultatInfo? Resultat)> RepondreAsync(
-        string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesRound2)
+        string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2)
     {
         var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
         if (utilisateur is null)
@@ -410,11 +453,20 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
             return (false, "Utilisateur introuvable.", null);
         }
 
-        var (valide, scores, nombrePairesCoherentes, nombrePairesControle, _) = AnalyserRound1(reponsesRound1);
+        var (valide, scores) = AnalyserRound1(reponsesRound1);
         if (!valide)
         {
             return (false, "Merci de répondre à toutes les paires du questionnaire.", null);
         }
+
+        var fiabiliteAttendue = PreparerFiabilite(reponsesRound1)!;
+        if (fiabiliteAttendue.Any(p => !reponsesFiabilite.TryGetValue(p.PaireId, out var choix) ||
+                (choix != p.OptionA.NumeroQuestion && choix != p.OptionB.NumeroQuestion)))
+        {
+            return (false, "Merci de répondre à toutes les paires de vérification.", null);
+        }
+        var nombrePairesCoherentes = CalculerCoherenceFiabilite(scores!, fiabiliteAttendue, reponsesFiabilite);
+        var nombrePairesControle = fiabiliteAttendue.Count;
 
         var round2Attendu = PreparerRound2(reponsesRound1)!;
         string? depDimA = null;
@@ -471,18 +523,16 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         return (true, null, info);
     }
 
-    // Valide et depouille le round 1 : les 36 paires doivent toutes etre repondues avec un
-    // choix valide (l'une des deux options de la paire). Renvoie les scores par dimension
-    // (sur les 30 paires de base uniquement) et la coherence sur les 6 paires de controle.
-    private static (bool Valide, Dictionary<string, int>? Scores, int NombrePairesCoherentes, int NombrePairesControle, Dictionary<int, int>? _)
-        AnalyserRound1(Dictionary<int, int> reponsesRound1)
+    // Valide et depouille le round 1 : les 30 paires doivent toutes etre repondues avec un
+    // choix valide (l'une des deux options de la paire). Renvoie les scores par dimension.
+    private static (bool Valide, Dictionary<string, int>? Scores) AnalyserRound1(Dictionary<int, int> reponsesRound1)
     {
-        for (var paireId = 1; paireId <= NombrePairesBase + IndicesPairesControle.Length; paireId++)
+        for (var paireId = 1; paireId <= NombrePairesBase; paireId++)
         {
-            var (numeroA, numeroB) = PaireRound1(paireId);
+            var (numeroA, numeroB) = PairesBase[paireId - 1];
             if (!reponsesRound1.TryGetValue(paireId, out var choix) || (choix != numeroA && choix != numeroB))
             {
-                return (false, null, 0, 0, null);
+                return (false, null);
             }
         }
 
@@ -493,18 +543,33 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
             scores[Questions[choix - 1].Dimension]++;
         }
 
-        var nombrePairesCoherentes = 0;
-        for (var i = 0; i < IndicesPairesControle.Length; i++)
+        return (true, scores);
+    }
+
+    // Coherence du round de fiabilite : pour chaque paire, la dimension "attendue" est
+    // celle qui a le score le plus eleve sur les 30 paires de base (egalite departagee par
+    // l'ordre fixe des dimensions, comme ailleurs dans le service). Coherent si le choix de
+    // l'utilisateur va bien vers cette dimension - jamais une simple comparaison de texte
+    // identique, puisque les deux items d'une paire de fiabilite ne sont jamais les memes
+    // qu'une paire deja posee.
+    private static int CalculerCoherenceFiabilite(Dictionary<string, int> scores, List<RiasecPaireInfo> paires, Dictionary<int, int> reponsesFiabilite)
+    {
+        var coherentes = 0;
+        foreach (var paire in paires)
         {
-            var paireIdBase = IndicesPairesControle[i] + 1;
-            var paireIdDoublon = NombrePairesBase + i + 1;
-            if (reponsesRound1[paireIdBase] == reponsesRound1[paireIdDoublon])
+            var dimensionA = Questions[paire.OptionA.NumeroQuestion - 1].Dimension;
+            var dimensionB = Questions[paire.OptionB.NumeroQuestion - 1].Dimension;
+            var dimensionAttendue = scores[dimensionA] != scores[dimensionB]
+                ? (scores[dimensionA] > scores[dimensionB] ? dimensionA : dimensionB)
+                : (Array.IndexOf(OrdreDimensions, dimensionA) < Array.IndexOf(OrdreDimensions, dimensionB) ? dimensionA : dimensionB);
+
+            var choix = reponsesFiabilite[paire.PaireId];
+            if (Questions[choix - 1].Dimension == dimensionAttendue)
             {
-                nombrePairesCoherentes++;
+                coherentes++;
             }
         }
-
-        return (true, scores, nombrePairesCoherentes, IndicesPairesControle.Length, null);
+        return coherentes;
     }
 
     private static (string DimensionA, string DimensionB, int Ecart) TrouverDimensionsLesPlusProches(Dictionary<string, int> scores)

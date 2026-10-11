@@ -83,28 +83,40 @@ public sealed class RiasecResultatInfo
 // d'interets, pas une validation de competence). Contenu traduit depuis l'O*NET Interest
 // Profiler Short Form (U.S. Department of Labor), sous licence CC BY 4.0 - cf.
 // RiasecService. Deux mecanismes de qualite de mesure, tous deux construits uniquement a
-// partir du contenu reel deja traduit (jamais de question inventee) :
-//   - presentation "en aveugle" + items de controle repetes a l'identique (fiabilite) ;
-//   - round 2 adaptatif qui refait s'affronter les items gagnants des deux dimensions les
-//     plus proches en score, pour mieux les departager (comparaison par paires).
+// partir du contenu reel deja traduit (jamais de question inventee, jamais la meme paire
+// reposee deux fois a l'identique) :
+//   - presentation "en aveugle" + round de fiabilite (toujours declenche) qui confronte
+//     chaque item "gagnant" d'une paire du round 1 a un item gagnant DIFFERENT (jamais son
+//     adversaire d'origine), pour verifier que la tendance revelee tient face a un nouveau
+//     choix plutot que de simplement repeter la question ;
+//   - round 2 adaptatif (conditionnel) qui refait s'affronter les items gagnants des deux
+//     dimensions les plus proches en score, pour mieux les departager.
 // Le score est toujours recalcule cote serveur a partir des reponses brutes.
 public interface IRiasecService
 {
-    // Round 1 : 36 paires (30 de base + 6 de controle de coherence), en ordre fixe et
-    // melange - jamais de dimension exposee cote client.
+    // Round 1 : 30 paires de base, en ordre fixe et melange - jamais de dimension exposee
+    // cote client.
     List<RiasecPaireInfo> GetPairesRound1();
 
-    // A partir des reponses du round 1 (cle = PaireId 1-36, valeur = NumeroQuestion
-    // choisi), determine si un round 2 de departage est necessaire. Renvoie null si les
-    // reponses sont incompletes/invalides, ou un RiasecRound2Info avec Paires vide si
-    // aucun departage n'est necessaire (round 1 suffisamment tranche).
+    // A partir des reponses du round 1 (cle = PaireId 1-30, valeur = NumeroQuestion
+    // choisi), construit les 6 paires du round de fiabilite (toujours le meme nombre,
+    // jamais conditionnel) : chaque paire confronte le gagnant d'une paire de base a un
+    // gagnant DIFFERENT (jamais l'adversaire d'origine). Renvoie null si les reponses du
+    // round 1 sont incompletes/invalides.
+    List<RiasecPaireInfo>? PreparerFiabilite(Dictionary<int, int> reponsesRound1);
+
+    // A partir des reponses du round 1, determine si un round 2 de departage est
+    // necessaire. Renvoie null si les reponses sont incompletes/invalides, ou un
+    // RiasecRound2Info avec Paires vide si aucun departage n'est necessaire (round 1
+    // suffisamment tranche).
     RiasecRound2Info? PreparerRound2(Dictionary<int, int> reponsesRound1);
 
     // Dernier resultat en date pour cet utilisateur, ou null s'il n'a jamais passe le test.
     Task<RiasecResultatInfo?> GetDernierResultatAsync(string utilisateurId);
 
-    // Soumission finale : reponsesRound1 (36 entrees attendues), et reponsesRound2 (les
-    // paires effectivement proposees par PreparerRound2 - vide si aucun round 2).
+    // Soumission finale : reponsesRound1 (30 entrees attendues), reponsesFiabilite (les 6
+    // paires effectivement proposees par PreparerFiabilite), et reponsesRound2 (les paires
+    // effectivement proposees par PreparerRound2 - vide si aucun round 2).
     Task<(bool Success, string? ErrorMessage, RiasecResultatInfo? Resultat)> RepondreAsync(
-        string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesRound2);
+        string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2);
 }

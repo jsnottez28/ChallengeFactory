@@ -20,6 +20,7 @@ public class CohortesController(
     IEmargementService emargementService,
     IQuestionnaireMiParcoursService questionnaireMiParcoursService,
     ITestPositionnementService testPositionnementService,
+    ICarteCompetenceService carteCompetenceService,
     UserManager<ApplicationUser> userManager) : Controller
 {
     [HttpGet("")]
@@ -297,6 +298,94 @@ public class CohortesController(
 
         TempData["StatusMessage"] = success ? "Invitation renvoyée." : errorMessage;
         return RedirectToAction(nameof(Details), new { id = cohorteId });
+    }
+
+    // ---- Personnalisation (parcours Bilan de competences individuel uniquement) ----
+
+    // Point d'entree principal depuis la fiche Cohorte : liste TOUTES les etapes du Challenge
+    // (pas seulement l'etape courante) pour que le Coach puisse preparer/ajuster les etapes
+    // suivantes en avance, une etape a la fois (cf. GetEtapesPersonnalisationAsync).
+    [HttpGet("{cohorteId:int}/Membres/{cohorteMembreId:int}/Personnalisation")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    public async Task<IActionResult> PersonnalisationMembre(int cohorteId, int cohorteMembreId)
+    {
+        var cohorte = await cohorteService.GetResumeAsync(cohorteId);
+        if (cohorte is null)
+        {
+            return NotFound();
+        }
+
+        var etapes = await cohorteService.GetEtapesPersonnalisationAsync(cohorteId, cohorteMembreId);
+        if (etapes is null)
+        {
+            return NotFound();
+        }
+
+        var membre = (await cohorteService.GetMembresAsync(cohorteId)).FirstOrDefault(m => m.Id == cohorteMembreId);
+        if (membre is null)
+        {
+            return NotFound();
+        }
+
+        ViewData["Cohorte"] = cohorte;
+        ViewData["Membre"] = membre;
+
+        return View(etapes);
+    }
+
+    [HttpGet("{cohorteId:int}/Membres/{cohorteMembreId:int}/Etapes/{etapeId:int}/Cartes")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    public async Task<IActionResult> CartesSupplementairesMembre(int cohorteId, int cohorteMembreId, int etapeId, int? challengeSourceId, string? recherche)
+    {
+        var contexte = await cohorteService.GetContextePersonnalisationCartesAsync(cohorteId, cohorteMembreId, etapeId);
+        if (contexte is null)
+        {
+            return NotFound();
+        }
+
+        List<CarteCompetence> cartesCandidates;
+        if (challengeSourceId.HasValue)
+        {
+            // Navigue dans l'architecture d'un Challenge precis (y compris un autre que celui
+            // de cette Cohorte) : permet de piocher une carte deja pensee pour un autre
+            // parcours plutot que de la rechercher dans tout le catalogue.
+            var challengeSource = await challengeService.GetByIdAsync(challengeSourceId.Value);
+            cartesCandidates = challengeSource?.Etapes
+                .SelectMany(e => e.Cartes.Select(c => c.CarteCompetence))
+                .DistinctBy(c => c.Id)
+                .OrderBy(c => c.Code)
+                .ToList() ?? [];
+        }
+        else
+        {
+            var resultat = await carteCompetenceService.RechercherAsync(new CarteCompetenceFiltre { Recherche = recherche, TaillePage = 500 });
+            cartesCandidates = resultat.Cartes;
+        }
+
+        ViewData["Contexte"] = contexte;
+        ViewData["ChallengeSourceId"] = challengeSourceId;
+        ViewData["Recherche"] = recherche;
+        ViewData["IdsSelectionnes"] = contexte.CartesSupplementaires.Select(c => c.CarteCompetenceId).ToHashSet();
+        ViewData["ChallengesSource"] = await ListeChallengesPublies();
+
+        return View(cartesCandidates);
+    }
+
+    [HttpPost("{cohorteId:int}/Membres/{cohorteMembreId:int}/Etapes/{etapeId:int}/Cartes")]
+    [Authorize(Policy = "Droit:COHORTE.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CartesSupplementairesMembre(int cohorteId, int cohorteMembreId, int etapeId, [FromForm] List<int>? carteIds, string? instructionsPersonnalisees)
+    {
+        var gestionnaireId = userManager.GetUserId(User)!;
+
+        var (successCartes, errorMessageCartes) = await cohorteService.DefinirCartesSupplementairesMembreAsync(cohorteMembreId, etapeId, carteIds ?? [], gestionnaireId);
+        var (successInstructions, errorMessageInstructions) = await cohorteService.DefinirInstructionsPersonnaliseesMembreAsync(cohorteMembreId, etapeId, instructionsPersonnalisees, gestionnaireId);
+
+        TempData["StatusMessage"] = successCartes && successInstructions
+            ? "Personnalisation mise à jour."
+            : errorMessageCartes ?? errorMessageInstructions;
+
+        return RedirectToAction(nameof(PersonnalisationMembre), new { cohorteId, cohorteMembreId });
     }
 
     private async Task<List<SelectListItem>> ListeChallengesPublies()

@@ -21,7 +21,7 @@
 
             @if (!string.IsNullOrWhiteSpace(Model.ImageCarteA))
             {
-                <img src="~/uploads/cartes/@Model.ImageCarteA" alt="Illustration de la carte @Model.Code" class="carte-face-image" onerror="this.remove();">
+                <img src="~/uploads/cartes/@Model.ImageCarteA" alt="Illustration de la carte @Model.Code" class="carte-face-image" width="380" height="130" loading="lazy" decoding="async" onerror="this.remove();">
             }
 
             <div class="carte-face-body">
