@@ -58,6 +58,7 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
     {
         return await dbContext.CartesCompetences
             .Include(carte => carte.Badge)
+            .Include(carte => carte.Ressources.OrderBy(r => r.Ordre).ThenBy(r => r.Id))
             .FirstOrDefaultAsync(carte => carte.Id == id);
     }
 
@@ -482,6 +483,82 @@ public sealed class CarteCompetenceService(ApplicationDbContext dbContext) : ICa
 
         attribution.EstActif = false;
 
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    // ---- Ressources ("pour aller plus loin") ----
+
+    public async Task<(bool Success, string? ErrorMessage)> AjouterRessourceAsync(int carteId, CarteRessourceInput input)
+    {
+        if (string.IsNullOrWhiteSpace(input.Titre))
+        {
+            return (false, "Le titre de la ressource est obligatoire.");
+        }
+
+        var carteExiste = await dbContext.CartesCompetences.AnyAsync(c => c.Id == carteId);
+        if (!carteExiste)
+        {
+            return (false, "Carte introuvable.");
+        }
+
+        // Exactement un des trois champs doit etre renseigne, selon Type - empeche une
+        // ressource "LienWeb" sans Url, ou une incoherence Type/champ rempli (ex. Url
+        // renseignee sur un type ReferenceBibliographique).
+        var (url, nomFichier, referenceTexte) = input.Type switch
+        {
+            TypeRessourceCarte.LienWeb => (input.Url, (string?)null, (string?)null),
+            TypeRessourceCarte.FichierPdf => ((string?)null, input.NomFichier, (string?)null),
+            TypeRessourceCarte.ReferenceBibliographique => ((string?)null, (string?)null, input.ReferenceTexte),
+            _ => ((string?)null, (string?)null, (string?)null),
+        };
+
+        if (string.IsNullOrWhiteSpace(url) && string.IsNullOrWhiteSpace(nomFichier) && string.IsNullOrWhiteSpace(referenceTexte))
+        {
+            return (false, input.Type switch
+            {
+                TypeRessourceCarte.LienWeb => "L'URL du lien web est obligatoire.",
+                TypeRessourceCarte.FichierPdf => "Le fichier PDF est obligatoire.",
+                TypeRessourceCarte.ReferenceBibliographique => "Le texte de la référence est obligatoire.",
+                _ => "Type de ressource inconnu.",
+            });
+        }
+
+        var ordreMax = await dbContext.CarteRessources
+            .Where(r => r.CarteCompetenceId == carteId)
+            .Select(r => (int?)r.Ordre)
+            .MaxAsync() ?? -1;
+
+        dbContext.CarteRessources.Add(new CarteRessource
+        {
+            CarteCompetenceId = carteId,
+            Type = input.Type,
+            Titre = input.Titre.Trim(),
+            Url = url,
+            NomFichier = nomFichier,
+            ReferenceTexte = referenceTexte,
+            Ordre = ordreMax + 1,
+        });
+
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> SupprimerRessourceAsync(int ressourceId)
+    {
+        var ressource = await dbContext.CarteRessources.FirstOrDefaultAsync(r => r.Id == ressourceId);
+        if (ressource is null)
+        {
+            return (false, "Ressource introuvable.");
+        }
+
+        // Le fichier PDF deja ecrit sur disque (uploads/cartes-ressources) n'est pas
+        // supprime ici : meme choix que l'image de carte (ImageCarteA), qui n'est jamais
+        // nettoyee du disque non plus - evite un couplage risque entre transaction base de
+        // donnees et suppression de fichier (cf. CartesController).
+        dbContext.CarteRessources.Remove(ressource);
         await dbContext.SaveChangesAsync();
 
         return (true, null);

@@ -158,6 +158,46 @@ namespace Web.Migrations
                     b.ToTable("CartesCompetences");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CarteRessource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CarteCompetenceId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreeLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NomFichier")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Ordre")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceTexte")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Titre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarteCompetenceId");
+
+                    b.ToTable("CarteRessources");
+                });
+
             modelBuilder.Entity("Domain.Entities.Challenge", b =>
                 {
                     b.Property<int>("Id")
@@ -2182,6 +2222,17 @@ namespace Web.Migrations
                     b.Navigation("Badge");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CarteRessource", b =>
+                {
+                    b.HasOne("Domain.Entities.CarteCompetence", "CarteCompetence")
+                        .WithMany("Ressources")
+                        .HasForeignKey("CarteCompetenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CarteCompetence");
+                });
+
             modelBuilder.Entity("Domain.Entities.ChallengeEtape", b =>
                 {
                     b.HasOne("Domain.Entities.Challenge", "Challenge")
@@ -2956,6 +3007,11 @@ namespace Web.Migrations
                     b.Navigation("TestPositionnement");
 
                     b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CarteCompetence", b =>
+                {
+                    b.Navigation("Ressources");
                 });
 
             modelBuilder.Entity("Domain.Entities.Challenge", b =>

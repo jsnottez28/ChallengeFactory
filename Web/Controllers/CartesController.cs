@@ -22,6 +22,10 @@ public class CartesController(
     private static readonly string[] ExtensionsImageAutorisees = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
     private const long TailleMaxImageOctets = 1024 * 1024;
 
+    // Meme principe que l'image (cf. CLAUDE.md - aucune dependance payante/a risque) : pas
+    // de conversion, juste une verification de format et de taille avant stockage tel quel.
+    private const long TailleMaxPdfOctets = 10 * 1024 * 1024; // 10 Mo
+
     // Les cartes ne s'affichent jamais au-dela de 380x130px (cf. .carte-face-image dans
     // style-added.css, utilisee uniquement par _CarteFlipCard.cshtml) - 900px de cote le plus
     // long couvre large les ecrans retina/3x sans jamais justifier de deposer une image
@@ -223,6 +227,48 @@ public class CartesController(
         return RedirectToAction(nameof(Details), new { id = carteId });
     }
 
+    [HttpPost("Details/{id:int}/Ressources/Ajouter")]
+    [Authorize(Policy = "Droit:CARTE.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AjouterRessource(int id, CarteRessourceFormModel model)
+    {
+        string? nomFichier = null;
+
+        if (model.Type == TypeRessourceCarte.FichierPdf)
+        {
+            var (nom, erreur) = await EnregistrerPdfAsync(model.Fichier);
+            if (erreur is not null)
+            {
+                TempData["StatusMessage"] = erreur;
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            nomFichier = nom;
+        }
+
+        var input = new CarteRessourceInput
+        {
+            Type = model.Type,
+            Titre = model.Titre,
+            Url = model.Url,
+            NomFichier = nomFichier,
+            ReferenceTexte = model.ReferenceTexte,
+        };
+
+        var (success, errorMessage) = await carteCompetenceService.AjouterRessourceAsync(id, input);
+        TempData["StatusMessage"] = success ? "Ressource ajoutée." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("Ressources/{ressourceId:int}/Supprimer")]
+    [Authorize(Policy = "Droit:CARTE.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SupprimerRessource(int ressourceId, int carteId)
+    {
+        var (success, errorMessage) = await carteCompetenceService.SupprimerRessourceAsync(ressourceId);
+        TempData["StatusMessage"] = success ? "Ressource supprimée." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id = carteId });
+    }
+
     private async Task<List<SelectListItem>> ListeBadgesAsync(int? badgeIdSelectionne)
     {
         var badges = await carteCompetenceService.GetBadgesAsync();
@@ -285,6 +331,47 @@ public class CartesController(
         Directory.CreateDirectory(dossierUploads);
 
         var nomFichier = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+        await System.IO.File.WriteAllBytesAsync(Path.Combine(dossierUploads, nomFichier), octets);
+
+        return (nomFichier, null);
+    }
+
+    // Verifie la signature PDF ("%PDF-", les 5 premiers octets de tout fichier PDF valide)
+    // plutot que de se fier a l'extension seule : un fichier renomme en .pdf sans etre un
+    // vrai PDF est rejete avant meme d'etre ecrit sur disque. Pas de verification de
+    // contenu au-dela (pas de scan antivirus ni de parsing complet) - le fichier est servi
+    // tel quel en telechargement, jamais execute ni interprete cote serveur.
+    private async Task<(string? NomFichier, string? Erreur)> EnregistrerPdfAsync(IFormFile? fichier)
+    {
+        if (fichier is null || fichier.Length == 0)
+        {
+            return (null, "Sélectionnez un fichier PDF.");
+        }
+
+        if (!Path.GetExtension(fichier.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            return (null, "Le fichier doit être au format PDF.");
+        }
+
+        if (fichier.Length > TailleMaxPdfOctets)
+        {
+            return (null, $"Le fichier PDF ne doit pas dépasser {TailleMaxPdfOctets / (1024 * 1024)} Mo.");
+        }
+
+        await using var fluxMemoire = new MemoryStream();
+        await fichier.CopyToAsync(fluxMemoire);
+        var octets = fluxMemoire.ToArray();
+
+        var signaturePdf = "%PDF-"u8.ToArray();
+        if (octets.Length < signaturePdf.Length || !octets.AsSpan(0, signaturePdf.Length).SequenceEqual(signaturePdf))
+        {
+            return (null, "Ce fichier n'est pas un PDF valide.");
+        }
+
+        var dossierUploads = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "cartes-ressources");
+        Directory.CreateDirectory(dossierUploads);
+
+        var nomFichier = $"{Guid.NewGuid():N}.pdf";
         await System.IO.File.WriteAllBytesAsync(Path.Combine(dossierUploads, nomFichier), octets);
 
         return (nomFichier, null);
@@ -583,5 +670,26 @@ public class CartesController(
         public string? LienVideo { get; set; }
 
         public List<SelectListItem> Badges { get; set; } = [];
+    }
+
+    public sealed class CarteRessourceFormModel
+    {
+        [Required(ErrorMessage = "Le type de ressource est obligatoire.")]
+        [Display(Name = "Type")]
+        public TypeRessourceCarte Type { get; set; }
+
+        [Required(ErrorMessage = "Le titre est obligatoire.")]
+        [Display(Name = "Titre")]
+        public string Titre { get; set; } = string.Empty;
+
+        [Display(Name = "URL")]
+        [Url(ErrorMessage = "L'URL doit être valide.")]
+        public string? Url { get; set; }
+
+        [Display(Name = "Fichier PDF")]
+        public IFormFile? Fichier { get; set; }
+
+        [Display(Name = "Référence")]
+        public string? ReferenceTexte { get; set; }
     }
 }

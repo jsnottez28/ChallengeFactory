@@ -1,6 +1,7 @@
 using Application.Common.Interfaces;
 using Domain.Entities;
 using Integration.TestSupport;
+using Microsoft.EntityFrameworkCore;
 using Web.Data;
 using Web.Services;
 
@@ -112,5 +113,187 @@ public class CarteCompetenceServiceTests
         Assert.True(success);
         var attributionsActives = (await service.GetAttributionsPourCarteAsync(carte.Id)).Where(a => a.EstActif);
         Assert.Empty(attributionsActives);
+    }
+
+    [Fact]
+    public async Task AjouterRessourceAsync_AjouteUnLienWeb()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+        var (_, _, carte) = await service.CreateAsync(NouvelleCarteInput("MAN-C23"));
+
+        var (success, errorMessage) = await service.AjouterRessourceAsync(carte!.Id, new CarteRessourceInput
+        {
+            Type = TypeRessourceCarte.LienWeb,
+            Titre = "Article sur l'écoute active",
+            Url = "https://example.com/ecoute-active",
+        });
+
+        Assert.True(success, errorMessage);
+        var carteRechargee = await service.GetByIdAsync(carte.Id);
+        var ressource = Assert.Single(carteRechargee!.Ressources);
+        Assert.Equal(TypeRessourceCarte.LienWeb, ressource.Type);
+        Assert.Equal("https://example.com/ecoute-active", ressource.Url);
+        Assert.Null(ressource.NomFichier);
+        Assert.Null(ressource.ReferenceTexte);
+    }
+
+    [Fact]
+    public async Task AjouterRessourceAsync_AjouteUnFichierPdf()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+        var (_, _, carte) = await service.CreateAsync(NouvelleCarteInput("MAN-C23"));
+
+        var (success, errorMessage) = await service.AjouterRessourceAsync(carte!.Id, new CarteRessourceInput
+        {
+            Type = TypeRessourceCarte.FichierPdf,
+            Titre = "Fiche technique OSBD",
+            NomFichier = "abc123.pdf",
+        });
+
+        Assert.True(success, errorMessage);
+        var carteRechargee = await service.GetByIdAsync(carte.Id);
+        var ressource = Assert.Single(carteRechargee!.Ressources);
+        Assert.Equal("abc123.pdf", ressource.NomFichier);
+        Assert.Null(ressource.Url);
+    }
+
+    [Fact]
+    public async Task AjouterRessourceAsync_AjouteUneReferenceBibliographique()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+        var (_, _, carte) = await service.CreateAsync(NouvelleCarteInput("MAN-C23"));
+
+        var (success, errorMessage) = await service.AjouterRessourceAsync(carte!.Id, new CarteRessourceInput
+        {
+            Type = TypeRessourceCarte.ReferenceBibliographique,
+            Titre = "Rosenberg, la CNV",
+            ReferenceTexte = "Rosenberg, M. (1999). Les mots sont des fenêtres (ou bien ce sont des murs). La Découverte.",
+        });
+
+        Assert.True(success, errorMessage);
+        var carteRechargee = await service.GetByIdAsync(carte.Id);
+        var ressource = Assert.Single(carteRechargee!.Ressources);
+        Assert.Contains("Rosenberg", ressource.ReferenceTexte);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task AjouterRessourceAsync_Echoue_SiLeTitreEstVide(string titre)
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+        var (_, _, carte) = await service.CreateAsync(NouvelleCarteInput("MAN-C23"));
+
+        var (success, errorMessage) = await service.AjouterRessourceAsync(carte!.Id, new CarteRessourceInput
+        {
+            Type = TypeRessourceCarte.LienWeb,
+            Titre = titre,
+            Url = "https://example.com",
+        });
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+    }
+
+    [Fact]
+    public async Task AjouterRessourceAsync_Echoue_SiLeChampAttenduPourLeTypeEstVide()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+        var (_, _, carte) = await service.CreateAsync(NouvelleCarteInput("MAN-C23"));
+
+        // Type LienWeb sans Url renseignee.
+        var (success, errorMessage) = await service.AjouterRessourceAsync(carte!.Id, new CarteRessourceInput
+        {
+            Type = TypeRessourceCarte.LienWeb,
+            Titre = "Lien sans URL",
+        });
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+        var carteRechargee = await service.GetByIdAsync(carte.Id);
+        Assert.Empty(carteRechargee!.Ressources);
+    }
+
+    [Fact]
+    public async Task AjouterRessourceAsync_Echoue_SiLaCarteNexistePas()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+
+        var (success, errorMessage) = await service.AjouterRessourceAsync(999, new CarteRessourceInput
+        {
+            Type = TypeRessourceCarte.LienWeb,
+            Titre = "Lien",
+            Url = "https://example.com",
+        });
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+    }
+
+    [Fact]
+    public async Task AjouterRessourceAsync_IncrementeLordreAChaqueAjout()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+        var (_, _, carte) = await service.CreateAsync(NouvelleCarteInput("MAN-C23"));
+
+        await service.AjouterRessourceAsync(carte!.Id, new CarteRessourceInput { Type = TypeRessourceCarte.LienWeb, Titre = "Premier", Url = "https://example.com/1" });
+        await service.AjouterRessourceAsync(carte.Id, new CarteRessourceInput { Type = TypeRessourceCarte.LienWeb, Titre = "Second", Url = "https://example.com/2" });
+
+        var carteRechargee = await service.GetByIdAsync(carte.Id);
+        var ressources = carteRechargee!.Ressources;
+        Assert.Equal(2, ressources.Count);
+        Assert.Equal("Premier", ressources[0].Titre);
+        Assert.Equal("Second", ressources[1].Titre);
+        Assert.Equal(0, ressources[0].Ordre);
+        Assert.Equal(1, ressources[1].Ordre);
+    }
+
+    [Fact]
+    public async Task SupprimerRessourceAsync_RetireLaRessource()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+        var (_, _, carte) = await service.CreateAsync(NouvelleCarteInput("MAN-C23"));
+        await service.AjouterRessourceAsync(carte!.Id, new CarteRessourceInput { Type = TypeRessourceCarte.LienWeb, Titre = "Lien", Url = "https://example.com" });
+        var ressourceId = (await service.GetByIdAsync(carte.Id))!.Ressources.Single().Id;
+
+        var (success, errorMessage) = await service.SupprimerRessourceAsync(ressourceId);
+
+        Assert.True(success, errorMessage);
+        var carteRechargee = await service.GetByIdAsync(carte.Id);
+        Assert.Empty(carteRechargee!.Ressources);
+    }
+
+    [Fact]
+    public async Task SupprimerRessourceAsync_Echoue_SiLaRessourceNexistePas()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+
+        var (success, errorMessage) = await service.SupprimerRessourceAsync(999);
+
+        Assert.False(success);
+        Assert.NotNull(errorMessage);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_SupprimeEgalementLesRessourcesLiees()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var service = new CarteCompetenceService(dbContext);
+        var (_, _, carte) = await service.CreateAsync(NouvelleCarteInput("MAN-C23"));
+        await service.AjouterRessourceAsync(carte!.Id, new CarteRessourceInput { Type = TypeRessourceCarte.LienWeb, Titre = "Lien", Url = "https://example.com" });
+
+        var (success, errorMessage) = await service.DeleteAsync(carte.Id);
+
+        Assert.True(success, errorMessage);
+        Assert.False(await dbContext.CarteRessources.AnyAsync());
     }
 }

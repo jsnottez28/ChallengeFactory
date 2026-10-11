@@ -22,6 +22,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<AcceptationDocumentLegal> AcceptationsDocumentsLegaux { get; set; }
     public DbSet<Badge> Badges { get; set; }
     public DbSet<CarteCompetence> CartesCompetences { get; set; }
+    public DbSet<CarteRessource> CarteRessources { get; set; }
     public DbSet<CarteAttribution> CarteAttributions { get; set; }
     public DbSet<Challenge> Challenges { get; set; }
     public DbSet<ChallengeEtape> ChallengeEtapes { get; set; }
@@ -229,6 +230,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(c => c.BadgeId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<CarteRessource>()
+            .HasOne(r => r.CarteCompetence)
+            .WithMany(c => c.Ressources)
+            .HasForeignKey(r => r.CarteCompetenceId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Pas d'unicite globale sur (CarteCompetenceId, UtilisateurId) seuls : une meme
         // carte peut desormais etre attribuee plusieurs fois au meme utilisateur si elle
