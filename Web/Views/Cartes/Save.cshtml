@@ -197,6 +197,10 @@
                 </div>
                 <div class="card-footer bg-white border-top p-4">
                     <div class="d-flex flex-wrap justify-content-end gap-2">
+                        @if (estModification)
+                        {
+                            <a asp-controller="Cartes" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary me-auto">Gérer les ressources (liens, PDF, références)</a>
+                        }
                         <a asp-controller="Cartes" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
                         <button type="submit" class="btn btn-primary">@(estModification ? "Enregistrer" : "Créer la carte")</button>
                     </div>
