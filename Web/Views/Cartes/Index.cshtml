@@ -127,7 +127,7 @@
                             @for (var p = 1; p <= nombrePages; p++)
                             {
                                 <li class="page-item @(p == page ? "active" : "")">
-                                    <a class="page-link" asp-controller="Cartes" asp-action="Index" asp-route-page="@p" asp-route-recherche="@recherche" asp-route-niveau="@niveauSelectionne">@p</a>
+                                    <a class="page-link" asp-controller="Cartes" asp-action="Index" asp-route-page="@p" asp-route-recherche="@recherche" asp-route-niveau="@niveauSelectionne" asp-route-badgeId="@ViewData["BadgeId"]">@p</a>
                                 </li>
                             }
                         </ul>
