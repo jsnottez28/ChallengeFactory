@@ -76,6 +76,10 @@
                             <textarea asp-for="Message" class="form-control" rows="5" placeholder="Décrivez votre besoin ou votre défi..."></textarea>
                             <span asp-validation-for="Message" class="text-danger small"></span>
                         </div>
+                        @if (!string.IsNullOrWhiteSpace(ViewData["RecaptchaSiteKey"] as string))
+                        {
+                            <div class="g-recaptcha mb-3" data-sitekey="@ViewData["RecaptchaSiteKey"]"></div>
+                        }
                         <button type="submit" class="cf-btn cf-btn-primary">Envoyer mon message</button>
                     </form>
                 </div>
@@ -95,4 +99,8 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @if (!string.IsNullOrWhiteSpace(ViewData["RecaptchaSiteKey"] as string))
+    {
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    }
 }

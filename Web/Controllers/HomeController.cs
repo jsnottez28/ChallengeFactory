@@ -3,8 +3,10 @@ using System.Text.RegularExpressions;
 using Application.Common.Interfaces;
 using Domain.Entities;
 using Infrastructure.ExternalServices.Email;
+using Infrastructure.ExternalServices.Recaptcha;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using Web.Data;
 using Web.Models;
@@ -21,6 +23,8 @@ namespace Web.Controllers
         private readonly IChallengeService _challengeService;
         private readonly IReclamationService _reclamationService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IRecaptchaService _recaptchaService;
+        private readonly RecaptchaSettings _recaptchaSettings;
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -28,7 +32,9 @@ namespace Web.Controllers
             ICohorteService cohorteService,
             IChallengeService challengeService,
             IReclamationService reclamationService,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IRecaptchaService recaptchaService,
+            IOptions<RecaptchaSettings> recaptchaOptions)
         {
             _logger = logger;
             _emailService = emailService;
@@ -36,7 +42,15 @@ namespace Web.Controllers
             _challengeService = challengeService;
             _reclamationService = reclamationService;
             _userManager = userManager;
+            _recaptchaService = recaptchaService;
+            _recaptchaSettings = recaptchaOptions.Value;
         }
+
+        // Expose la cle publique reCAPTCHA aux vues Contact/Accessibilite - tant que
+        // Recaptcha:SiteKey n'est pas configuree (cle non encore creee cote Google), le widget
+        // ne s'affiche pas et la verification serveur est elle-meme desactivee (cf.
+        // GoogleRecaptchaService), pour ne jamais bloquer un environnement sans credentials.
+        private void ExposerCleRecaptcha() => ViewData["RecaptchaSiteKey"] = _recaptchaSettings.SiteKey;
 
         public IActionResult Index()
         {
@@ -114,6 +128,7 @@ namespace Web.Controllers
         [Route("accessibilite")]
         public IActionResult Accessibilite()
         {
+            ExposerCleRecaptcha();
             return View(new ContactFormModel());
         }
 
@@ -122,8 +137,16 @@ namespace Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Accessibilite(ContactFormModel model)
         {
+            ExposerCleRecaptcha();
+
             if (!ModelState.IsValid)
             {
+                return View(model);
+            }
+
+            if (!await _recaptchaService.ValiderAsync(Request.Form["g-recaptcha-response"]))
+            {
+                ModelState.AddModelError(string.Empty, "Merci de confirmer que vous n'êtes pas un robot.");
                 return View(model);
             }
 
@@ -138,6 +161,7 @@ namespace Web.Controllers
         [Route("contact")]
         public IActionResult Contact()
         {
+            ExposerCleRecaptcha();
             return View(new ContactFormModel());
         }
 
@@ -146,8 +170,16 @@ namespace Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Contact(ContactFormModel model)
         {
+            ExposerCleRecaptcha();
+
             if (!ModelState.IsValid)
             {
+                return View(model);
+            }
+
+            if (!await _recaptchaService.ValiderAsync(Request.Form["g-recaptcha-response"]))
+            {
+                ModelState.AddModelError(string.Empty, "Merci de confirmer que vous n'êtes pas un robot.");
                 return View(model);
             }
 

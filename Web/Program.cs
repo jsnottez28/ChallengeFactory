@@ -1,5 +1,6 @@
 using Application.Common.Interfaces;
 using Infrastructure.ExternalServices.Email;
+using Infrastructure.ExternalServices.Recaptcha;
 using Infrastructure.ExternalServices.Stockage;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
@@ -85,6 +86,9 @@ builder.Services.AddScoped<IQualiopiDashboardService, QualiopiDashboardService>(
 builder.Services.Configure<PreuveFichierStockageSettings>(
     builder.Configuration.GetSection("PreuveFichierStockage"));
 builder.Services.AddScoped<IPreuveFichierStockageService, LocalDiskPreuveFichierStockageService>();
+
+builder.Services.Configure<RecaptchaSettings>(builder.Configuration.GetSection("Recaptcha"));
+builder.Services.AddHttpClient<IRecaptchaService, GoogleRecaptchaService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IClaimsTransformation, DroitsClaimsTransformation>();
