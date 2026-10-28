@@ -268,15 +268,8 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
     private static decimal CalculerValeurCorrigee(int note, bool estInverse, decimal indiceAcquiescement) =>
         estInverse ? 3 - (note - indiceAcquiescement) : 3 + (note - indiceAcquiescement);
 
-    public async Task<(bool Success, string? ErrorMessage, BigFiveResultatInfo? Resultat)> RepondreAsync(
-        string utilisateurId, Dictionary<int, int> reponses, Dictionary<int, int> reponsesFiabilite)
+    public (bool Success, string? ErrorMessage, BigFiveResultatInfo? Resultat) Calculer(Dictionary<int, int> reponses, Dictionary<int, int> reponsesFiabilite)
     {
-        var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
-        if (utilisateur is null)
-        {
-            return (false, "Utilisateur introuvable.", null);
-        }
-
         for (var numero = 1; numero <= Items.Length; numero++)
         {
             if (!reponses.TryGetValue(numero, out var note) || note is < 1 or > 5)
@@ -306,9 +299,11 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
             scoresFacettes[item.FacetteCode] += CalculerValeurCorrigee(note, item.EstInverse, indiceAcquiescement);
         }
 
+        // Entite transitoire, jamais ajoutee au DbContext : reutilise VersInfo (pure, ne lit
+        // jamais UtilisateurId) pour eviter de dupliquer la transformation vers
+        // BigFiveResultatInfo entre le parcours connecte (RepondreAsync) et anonyme.
         var resultat = new BigFiveResultat
         {
-            UtilisateurId = utilisateurId,
             ScoreNevrosisme = FacettesParDomaine["N"].Sum(f => scoresFacettes[f]),
             ScoreExtraversion = FacettesParDomaine["E"].Sum(f => scoresFacettes[f]),
             ScoreOuverture = FacettesParDomaine["O"].Sum(f => scoresFacettes[f]),
@@ -318,6 +313,39 @@ public sealed class BigFiveService(ApplicationDbContext dbContext, IEmailService
             NombrePairesCoherentes = nombrePairesCoherentes,
             NombrePairesControle = pairesFiabilite.Length,
             Facettes = [.. scoresFacettes.Select(kv => new BigFiveResultatFacette { Code = kv.Key, Score = kv.Value })],
+            CompleteLe = DateTime.UtcNow,
+        };
+
+        return (true, null, VersInfo(resultat));
+    }
+
+    public async Task<(bool Success, string? ErrorMessage, BigFiveResultatInfo? Resultat)> RepondreAsync(
+        string utilisateurId, Dictionary<int, int> reponses, Dictionary<int, int> reponsesFiabilite)
+    {
+        var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
+        if (utilisateur is null)
+        {
+            return (false, "Utilisateur introuvable.", null);
+        }
+
+        var (success, errorMessage, resultatCalcule) = Calculer(reponses, reponsesFiabilite);
+        if (!success || resultatCalcule is null)
+        {
+            return (false, errorMessage, null);
+        }
+
+        var resultat = new BigFiveResultat
+        {
+            UtilisateurId = utilisateurId,
+            ScoreNevrosisme = resultatCalcule.Domaines.First(d => d.Code == "N").Score,
+            ScoreExtraversion = resultatCalcule.Domaines.First(d => d.Code == "E").Score,
+            ScoreOuverture = resultatCalcule.Domaines.First(d => d.Code == "O").Score,
+            ScoreAgreabilite = resultatCalcule.Domaines.First(d => d.Code == "A").Score,
+            ScoreConsciencieusite = resultatCalcule.Domaines.First(d => d.Code == "C").Score,
+            IndiceAcquiescement = resultatCalcule.IndiceAcquiescement,
+            NombrePairesCoherentes = resultatCalcule.NombrePairesCoherentes,
+            NombrePairesControle = resultatCalcule.NombrePairesControle,
+            Facettes = [.. resultatCalcule.Domaines.SelectMany(d => d.Facettes).Select(f => new BigFiveResultatFacette { Code = f.Code, Score = f.Score })],
             CompleteLe = DateTime.UtcNow,
         };
         dbContext.BigFiveResultats.Add(resultat);

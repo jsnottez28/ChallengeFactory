@@ -130,6 +130,12 @@ public interface IBigFiveService
     // round 2 adaptatif de RIASEC).
     List<BigFiveFiabilitePaireInfo> GetPairesFiabilite();
 
+    // Calcule le resultat a partir des reponses brutes, sans aucun acces base de donnees ni
+    // envoi d'email - utilise en interne par RepondreAsync (utilisateur connecte : persiste
+    // et envoie un email) et directement par le parcours anonyme (resultat affiche a la
+    // volee, jamais enregistre tant qu'aucun compte n'existe).
+    (bool Success, string? ErrorMessage, BigFiveResultatInfo? Resultat) Calculer(Dictionary<int, int> reponses, Dictionary<int, int> reponsesFiabilite);
+
     // Dernier resultat en date pour cet utilisateur, ou null s'il n'a jamais passe le test.
     Task<BigFiveResultatInfo?> GetDernierResultatAsync(string utilisateurId);
 

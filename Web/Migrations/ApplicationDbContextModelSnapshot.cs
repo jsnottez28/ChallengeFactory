@@ -1537,6 +1537,47 @@ namespace Web.Migrations
                     b.ToTable("InvitationsComptes");
                 });
 
+            modelBuilder.Entity("Web.Data.KilmannResultat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CompleteLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ProfilDominant")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ScoreCeder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreCollaborer")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreCompromis")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreEviter")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreRivaliser")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UtilisateurId");
+
+                    b.ToTable("KilmannResultats");
+                });
+
             modelBuilder.Entity("Web.Data.NotificationInApp", b =>
                 {
                     b.Property<int>("Id")
@@ -2689,6 +2730,17 @@ namespace Web.Migrations
                 });
 
             modelBuilder.Entity("Web.Data.InvitationCompte", b =>
+                {
+                    b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Web.Data.KilmannResultat", b =>
                 {
                     b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
                         .WithMany()

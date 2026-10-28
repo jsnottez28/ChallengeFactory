@@ -46,6 +46,25 @@ public class BigFiveServiceTests
     }
 
     [Fact]
+    public void Calculer_NeTouchePasLaBaseDeDonnees()
+    {
+        // Le parcours anonyme (sans compte) appelle Calculer directement, jamais
+        // RepondreAsync - aucune ligne ne doit etre ecrite en base ni d'email envoye.
+        var dbContext = InMemoryDbContextFactory.Create();
+        var emailService = new FakeEmailService();
+        var service = new BigFiveService(dbContext, emailService);
+        var reponses = Enumerable.Range(1, 58).ToDictionary(n => n, _ => 3);
+
+        var (success, errorMessage, resultat) = service.Calculer(reponses, ReponsesFiabiliteDefaut(service));
+
+        Assert.True(success, errorMessage);
+        Assert.NotNull(resultat);
+        Assert.Equal(5, resultat!.Domaines.Count);
+        Assert.False(dbContext.BigFiveResultats.Any());
+        Assert.Empty(emailService.Envois);
+    }
+
+    [Fact]
     public async Task RepondreAsync_Echoue_SiUneAffirmationNestPasRepondue()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();

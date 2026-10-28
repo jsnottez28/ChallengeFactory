@@ -101,15 +101,8 @@ public sealed class ScheinService(ApplicationDbContext dbContext, IEmailService 
     public List<ScheinQuestionInfo> GetQuestions() =>
         Items.Select((item, i) => new ScheinQuestionInfo { NumeroQuestion = i + 1, Texte = item.Texte }).ToList();
 
-    public async Task<(bool Success, string? ErrorMessage, ScheinResultatInfo? Resultat)> RepondreAsync(
-        string utilisateurId, Dictionary<int, int> reponses, List<int> choixPrioritaires)
+    public (bool Success, string? ErrorMessage, ScheinResultatInfo? Resultat) Calculer(Dictionary<int, int> reponses, List<int> choixPrioritaires)
     {
-        var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
-        if (utilisateur is null)
-        {
-            return (false, "Utilisateur introuvable.", null);
-        }
-
         for (var numero = 1; numero <= Items.Length; numero++)
         {
             if (!reponses.TryGetValue(numero, out var note) || note is < 1 or > 5)
@@ -135,9 +128,11 @@ public sealed class ScheinService(ApplicationDbContext dbContext, IEmailService 
             scoresAncres[Items[numero - 1].AncreCode] += PointsChoixPrioritaire;
         }
 
+        // Entite transitoire, jamais ajoutee au DbContext : reutilise VersInfo (pure, ne lit
+        // jamais UtilisateurId) pour eviter de dupliquer la transformation vers
+        // ScheinResultatInfo entre le parcours connecte (RepondreAsync) et anonyme.
         var resultat = new ScheinResultat
         {
-            UtilisateurId = utilisateurId,
             ScoreTechnique = scoresAncres["TECH"],
             ScoreManageriale = scoresAncres["MG"],
             ScoreAutonomie = scoresAncres["AUT"],
@@ -147,6 +142,41 @@ public sealed class ScheinService(ApplicationDbContext dbContext, IEmailService 
             ScoreDefiPur = scoresAncres["DEF"],
             ScoreQualiteDeVie = scoresAncres["VIE"],
             ScoreInternationale = scoresAncres["INTER"],
+            CompleteLe = DateTime.UtcNow,
+        };
+
+        return (true, null, VersInfo(resultat));
+    }
+
+    public async Task<(bool Success, string? ErrorMessage, ScheinResultatInfo? Resultat)> RepondreAsync(
+        string utilisateurId, Dictionary<int, int> reponses, List<int> choixPrioritaires)
+    {
+        var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
+        if (utilisateur is null)
+        {
+            return (false, "Utilisateur introuvable.", null);
+        }
+
+        var (success, errorMessage, resultatCalcule) = Calculer(reponses, choixPrioritaires);
+        if (!success || resultatCalcule is null)
+        {
+            return (false, errorMessage, null);
+        }
+
+        var scoresParCode = resultatCalcule.Ancres.ToDictionary(a => a.Code, a => a.Score);
+
+        var resultat = new ScheinResultat
+        {
+            UtilisateurId = utilisateurId,
+            ScoreTechnique = scoresParCode["TECH"],
+            ScoreManageriale = scoresParCode["MG"],
+            ScoreAutonomie = scoresParCode["AUT"],
+            ScoreSecurite = scoresParCode["SEC"],
+            ScoreCreativite = scoresParCode["CRE"],
+            ScoreCause = scoresParCode["CAU"],
+            ScoreDefiPur = scoresParCode["DEF"],
+            ScoreQualiteDeVie = scoresParCode["VIE"],
+            ScoreInternationale = scoresParCode["INTER"],
             CompleteLe = DateTime.UtcNow,
         };
         dbContext.ScheinResultats.Add(resultat);

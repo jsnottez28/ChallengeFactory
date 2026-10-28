@@ -203,6 +203,29 @@ public class RiasecServiceTests
     }
 
     [Fact]
+    public void Calculer_NeTouchePasLaBaseDeDonnees()
+    {
+        // Le parcours anonyme (sans compte) appelle Calculer directement, jamais
+        // RepondreAsync - aucune ligne ne doit etre ecrite en base ni d'email envoye.
+        var dbContext = InMemoryDbContextFactory.Create();
+        var emailService = new FakeEmailService();
+        var riasecService = new RiasecService(dbContext, emailService);
+        var pairesRound1 = riasecService.GetPairesRound1();
+        var reponsesRound1 = RepondreEnPreferant(pairesRound1, "R");
+        var round2 = riasecService.PreparerRound2(reponsesRound1)!;
+        var reponsesRound2 = round2.Paires.ToDictionary(p => p.PaireId, p => p.OptionA.NumeroQuestion);
+        var reponsesFiabilite = RepondreFiabiliteEnPreferant(riasecService, reponsesRound1, "R");
+
+        var (success, errorMessage, resultat) = riasecService.Calculer(reponsesRound1, reponsesFiabilite, reponsesRound2);
+
+        Assert.True(success, errorMessage);
+        Assert.NotNull(resultat);
+        Assert.Equal("R", resultat!.Dimensions.OrderByDescending(d => d.Score).First().Code);
+        Assert.False(dbContext.RiasecResultats.Any());
+        Assert.Empty(emailService.Envois);
+    }
+
+    [Fact]
     public async Task RepondreAsync_EnvoieUnEmailDeResultat()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();

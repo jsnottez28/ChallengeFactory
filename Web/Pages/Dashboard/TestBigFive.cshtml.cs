@@ -1,5 +1,4 @@
 using Application.Common.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,9 +6,13 @@ using Web.Data;
 
 namespace Web.Pages.Dashboard;
 
-// Test psychotechnique Big Five (modele OCEAN) - accessible a tout utilisateur connecte via
-// un lien fixe (copie-colle manuellement dans le champ "Defi individuel" d'une etape, ou
-// envoye manuellement), pas rattache a une Cohorte/etape particuliere - cf. IBigFiveService.
+// Test psychotechnique Big Five (modele OCEAN) - accessible a tout le monde, y compris sans
+// compte, via un lien fixe (copie-colle manuellement dans le champ "Defi individuel" d'une
+// etape, ou envoye manuellement), pas rattache a une Cohorte/etape particuliere - cf.
+// IBigFiveService. Un visiteur anonyme voit son resultat calcule a la volee
+// (IBigFiveService.Calculer) mais jamais enregistre ni envoye par email ; un utilisateur
+// connecte beneficie du parcours complet (persistance + email), via
+// IBigFiveService.RepondreAsync - meme principe que TestDisc.cshtml.cs.
 //
 // Flux en 2 etapes : OnGetAsync affiche l'etape 1 (58 items, echelle de Likert).
 // OnPostLikertAsync valide les 58 reponses et affiche l'etape 2 (5 paires de fiabilite a
@@ -20,7 +23,6 @@ namespace Web.Pages.Dashboard;
 // plutot que via [BindProperty] sur un Dictionary<int,int> - meme principe que
 // TestRiasec.cshtml.cs : le binder de dictionnaire d'ASP.NET Core s'est avere instable sur un
 // flux a plusieurs formulaires avec report de valeurs en champs caches.
-[Authorize]
 public class TestBigFiveModel(IBigFiveService bigFiveService, UserManager<ApplicationUser> userManager) : PageModel
 {
     [BindProperty(SupportsGet = true)]
@@ -39,6 +41,8 @@ public class TestBigFiveModel(IBigFiveService bigFiveService, UserManager<Applic
 
     public bool DernierEnvoiReussi { get; private set; }
 
+    public bool EstConnecte { get; private set; }
+
     private bool echecSoumission;
 
     // Affiche le questionnaire plutot que le dernier resultat quand aucun resultat n'existe
@@ -49,12 +53,18 @@ public class TestBigFiveModel(IBigFiveService bigFiveService, UserManager<Applic
     public async Task OnGetAsync()
     {
         Questions = bigFiveService.GetQuestions();
-        var utilisateurId = userManager.GetUserId(User)!;
-        DernierResultat = await bigFiveService.GetDernierResultatAsync(utilisateurId);
+        EstConnecte = User.Identity?.IsAuthenticated == true;
+
+        if (EstConnecte)
+        {
+            var utilisateurId = userManager.GetUserId(User)!;
+            DernierResultat = await bigFiveService.GetDernierResultatAsync(utilisateurId);
+        }
     }
 
     public IActionResult OnPostLikertAsync()
     {
+        EstConnecte = User.Identity?.IsAuthenticated == true;
         Questions = bigFiveService.GetQuestions();
         var reponses = LireReponses(Questions.Select(q => q.NumeroQuestion), "bf_");
 
@@ -84,18 +94,35 @@ public class TestBigFiveModel(IBigFiveService bigFiveService, UserManager<Applic
         Repasser = false;
 
         Questions = bigFiveService.GetQuestions();
+        EstConnecte = User.Identity?.IsAuthenticated == true;
         var reponses = LireReponses(Questions.Select(q => q.NumeroQuestion), "bf_");
         var pairesFiabilite = bigFiveService.GetPairesFiabilite();
         var reponsesFiabilite = LireReponses(pairesFiabilite.Select(p => p.PaireId), "fiab_");
 
-        var utilisateurId = userManager.GetUserId(User)!;
-        var (success, errorMessage, resultat) = await bigFiveService.RepondreAsync(utilisateurId, reponses, reponsesFiabilite);
+        bool success;
+        string? errorMessage;
 
-        DernierEnvoiReussi = success;
+        if (EstConnecte)
+        {
+            var utilisateurId = userManager.GetUserId(User)!;
+            BigFiveResultatInfo? resultat;
+            (success, errorMessage, resultat) = await bigFiveService.RepondreAsync(utilisateurId, reponses, reponsesFiabilite);
+
+            DernierEnvoiReussi = success;
+            StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
+            DernierResultat = success ? resultat : await bigFiveService.GetDernierResultatAsync(utilisateurId);
+        }
+        else
+        {
+            BigFiveResultatInfo? resultat;
+            (success, errorMessage, resultat) = bigFiveService.Calculer(reponses, reponsesFiabilite);
+
+            DernierEnvoiReussi = success;
+            StatusMessage = success ? "Voici votre profil. Créez un compte pour le conserver dans votre historique." : errorMessage;
+            DernierResultat = success ? resultat : null;
+        }
+
         echecSoumission = !success;
-        StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
-        DernierResultat = success ? resultat : await bigFiveService.GetDernierResultatAsync(utilisateurId);
-
         if (!success)
         {
             Etape = 1;

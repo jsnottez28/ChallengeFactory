@@ -1,5 +1,4 @@
 using Application.Common.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,10 +6,15 @@ using Web.Data;
 
 namespace Web.Pages.Dashboard;
 
-// Test psychotechnique DISC - accessible a tout utilisateur connecte via un lien fixe
-// (copie-colle manuellement dans le champ "Defi individuel" d'une etape, ou envoye
-// manuellement), pas rattache a une Cohorte/etape particuliere - cf. IDiscService.
-[Authorize]
+// Test psychotechnique DISC - accessible a tout le monde, y compris sans compte, via un lien
+// fixe (copie-colle manuellement dans le champ "Defi individuel" d'une etape, ou envoye
+// manuellement), pas rattache a une Cohorte/etape particuliere - cf. IDiscService. Un
+// visiteur anonyme voit son resultat calcule a la volee (IDiscService.Calculer) mais jamais
+// enregistre ni envoye par email ; un utilisateur connecte beneficie du parcours complet
+// (persistance en historique + email), via IDiscService.RepondreAsync. Le CTA de fin de
+// test pour un visiteur anonyme pointe vers /formations (catalogue BtoC), ou les actions
+// "Rejoindre"/"Demander un embarquement" redirigent deja vers la creation de compte si
+// necessaire - cf. HomeController.Formations/InscriptionFormation/DemanderEmbarquement.
 public class TestDiscModel(IDiscService discService, UserManager<ApplicationUser> userManager) : PageModel
 {
     [BindProperty]
@@ -27,6 +31,8 @@ public class TestDiscModel(IDiscService discService, UserManager<ApplicationUser
 
     public bool DernierEnvoiReussi { get; private set; }
 
+    public bool EstConnecte { get; private set; }
+
     private bool echecSoumission;
 
     // Affiche le questionnaire plutot que le dernier resultat quand aucun resultat n'existe
@@ -37,8 +43,13 @@ public class TestDiscModel(IDiscService discService, UserManager<ApplicationUser
     public async Task OnGetAsync()
     {
         Questions = discService.GetQuestions();
-        var utilisateurId = userManager.GetUserId(User)!;
-        DernierResultat = await discService.GetDernierResultatAsync(utilisateurId);
+        EstConnecte = User.Identity?.IsAuthenticated == true;
+
+        if (EstConnecte)
+        {
+            var utilisateurId = userManager.GetUserId(User)!;
+            DernierResultat = await discService.GetDernierResultatAsync(utilisateurId);
+        }
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -54,14 +65,27 @@ public class TestDiscModel(IDiscService discService, UserManager<ApplicationUser
         Repasser = false;
 
         Questions = discService.GetQuestions();
-        var utilisateurId = userManager.GetUserId(User)!;
+        EstConnecte = User.Identity?.IsAuthenticated == true;
 
-        var (success, errorMessage, resultat) = await discService.RepondreAsync(utilisateurId, Reponses);
+        if (EstConnecte)
+        {
+            var utilisateurId = userManager.GetUserId(User)!;
+            var (success, errorMessage, resultat) = await discService.RepondreAsync(utilisateurId, Reponses);
 
-        DernierEnvoiReussi = success;
-        echecSoumission = !success;
-        StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
-        DernierResultat = success ? resultat : await discService.GetDernierResultatAsync(utilisateurId);
+            DernierEnvoiReussi = success;
+            echecSoumission = !success;
+            StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
+            DernierResultat = success ? resultat : await discService.GetDernierResultatAsync(utilisateurId);
+        }
+        else
+        {
+            var (success, errorMessage, resultat) = discService.Calculer(Reponses);
+
+            DernierEnvoiReussi = success;
+            echecSoumission = !success;
+            StatusMessage = success ? "Voici votre profil. Créez un compte pour le conserver dans votre historique." : errorMessage;
+            DernierResultat = success ? resultat : null;
+        }
 
         return Page();
     }

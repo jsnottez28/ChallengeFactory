@@ -444,15 +444,9 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
         return resultat is null ? null : VersInfo(resultat);
     }
 
-    public async Task<(bool Success, string? ErrorMessage, RiasecResultatInfo? Resultat)> RepondreAsync(
-        string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2)
+    public (bool Success, string? ErrorMessage, RiasecResultatInfo? Resultat) Calculer(
+        Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2)
     {
-        var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
-        if (utilisateur is null)
-        {
-            return (false, "Utilisateur introuvable.", null);
-        }
-
         var (valide, scores) = AnalyserRound1(reponsesRound1);
         if (!valide)
         {
@@ -492,9 +486,11 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
 
         var codeHolland = CalculerCodeHolland(scores!, depDimA, depDimB, depGagnant);
 
-        var resultat = new RiasecResultat
+        // Entite transitoire, jamais ajoutee au DbContext : reutilise VersInfo (pure, ne lit
+        // jamais UtilisateurId/Utilisateur) pour eviter de dupliquer la transformation vers
+        // RiasecResultatInfo entre le parcours connecte (RepondreAsync) et anonyme.
+        var resultatTransitoire = new RiasecResultat
         {
-            UtilisateurId = utilisateurId,
             ScoreR = scores!["R"],
             ScoreI = scores["I"],
             ScoreA = scores["A"],
@@ -507,6 +503,42 @@ public sealed class RiasecService(ApplicationDbContext dbContext, IEmailService 
             DepartageDimensionA = depDimA,
             DepartageDimensionB = depDimB,
             DepartageGagnant = depGagnant,
+            CompleteLe = DateTime.UtcNow,
+        };
+
+        return (true, null, VersInfo(resultatTransitoire));
+    }
+
+    public async Task<(bool Success, string? ErrorMessage, RiasecResultatInfo? Resultat)> RepondreAsync(
+        string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2)
+    {
+        var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
+        if (utilisateur is null)
+        {
+            return (false, "Utilisateur introuvable.", null);
+        }
+
+        var (success, errorMessage, resultatCalcule) = Calculer(reponsesRound1, reponsesFiabilite, reponsesRound2);
+        if (!success || resultatCalcule is null)
+        {
+            return (false, errorMessage, null);
+        }
+
+        var resultat = new RiasecResultat
+        {
+            UtilisateurId = utilisateurId,
+            ScoreR = resultatCalcule.Dimensions.First(d => d.Code == "R").Score,
+            ScoreI = resultatCalcule.Dimensions.First(d => d.Code == "I").Score,
+            ScoreA = resultatCalcule.Dimensions.First(d => d.Code == "A").Score,
+            ScoreS = resultatCalcule.Dimensions.First(d => d.Code == "S").Score,
+            ScoreE = resultatCalcule.Dimensions.First(d => d.Code == "E").Score,
+            ScoreC = resultatCalcule.Dimensions.First(d => d.Code == "C").Score,
+            CodeHolland = resultatCalcule.CodeHolland,
+            NombrePairesCoherentes = resultatCalcule.NombrePairesCoherentes,
+            NombrePairesControle = resultatCalcule.NombrePairesControle,
+            DepartageDimensionA = resultatCalcule.DepartageDimensionA,
+            DepartageDimensionB = resultatCalcule.DepartageDimensionB,
+            DepartageGagnant = resultatCalcule.DepartageGagnant,
             CompleteLe = DateTime.UtcNow,
         };
         dbContext.RiasecResultats.Add(resultat);

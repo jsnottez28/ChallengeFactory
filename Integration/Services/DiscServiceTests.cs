@@ -65,6 +65,25 @@ public class DiscServiceTests
     }
 
     [Fact]
+    public void Calculer_NeTouchePasLaBaseDeDonnees()
+    {
+        // Le parcours anonyme (sans compte) appelle Calculer directement, jamais
+        // RepondreAsync - aucune ligne ne doit etre ecrite en base ni d'email envoye.
+        var dbContext = InMemoryDbContextFactory.Create();
+        var emailService = new FakeEmailService();
+        var discService = new DiscService(dbContext, emailService);
+        var reponses = Enumerable.Range(1, 25).ToDictionary(n => n, _ => "a");
+
+        var (success, _, resultat) = discService.Calculer(reponses);
+
+        Assert.True(success);
+        Assert.NotNull(resultat);
+        Assert.Equal("C", resultat!.ProfilDominant);
+        Assert.False(dbContext.DiscResultats.Any());
+        Assert.Empty(emailService.Envois);
+    }
+
+    [Fact]
     public async Task RepondreAsync_EnregistreLeResultatEtLenvoieParEmail()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();

@@ -1,5 +1,4 @@
 using Application.Common.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,9 +6,12 @@ using Web.Data;
 
 namespace Web.Pages.Dashboard;
 
-// Test des ancres de carriere (Schein, 1990 / Cerdin, 2007) - accessible a tout utilisateur
-// connecte via un lien fixe (meme principe que TestRiasec/TestBigFive), pas rattache a une
-// Cohorte/etape particuliere - cf. IScheinService.
+// Test des ancres de carriere (Schein, 1990 / Cerdin, 2007) - accessible a tout le monde, y
+// compris sans compte, via un lien fixe (meme principe que TestRiasec/TestBigFive), pas
+// rattache a une Cohorte/etape particuliere - cf. IScheinService. Un visiteur anonyme voit
+// son resultat calcule a la volee (IScheinService.Calculer) mais jamais enregistre ni envoye
+// par email ; un utilisateur connecte beneficie du parcours complet (persistance + email),
+// via IScheinService.RepondreAsync - meme principe que TestDisc.cshtml.cs.
 //
 // Flux en 2 etapes : OnGetAsync affiche l'etape 1 (45 affirmations, echelle de Likert).
 // OnPostLikertAsync valide les 45 reponses et affiche l'etape 2 (choisir exactement 3
@@ -21,7 +23,6 @@ namespace Web.Pages.Dashboard;
 // [BindProperty] sur un Dictionary<int,int> - meme principe que TestBigFive.cshtml.cs : le
 // binder de dictionnaire d'ASP.NET Core s'est avere instable sur un flux a plusieurs
 // formulaires avec report de valeurs en champs caches.
-[Authorize]
 public class TestScheinModel(IScheinService scheinService, UserManager<ApplicationUser> userManager) : PageModel
 {
     [BindProperty(SupportsGet = true)]
@@ -39,6 +40,8 @@ public class TestScheinModel(IScheinService scheinService, UserManager<Applicati
 
     public bool DernierEnvoiReussi { get; private set; }
 
+    public bool EstConnecte { get; private set; }
+
     private bool echecSoumission;
 
     public bool AfficherQuestionnaire => DernierResultat is null || Repasser || echecSoumission;
@@ -46,13 +49,19 @@ public class TestScheinModel(IScheinService scheinService, UserManager<Applicati
     public async Task OnGetAsync()
     {
         Questions = scheinService.GetQuestions();
-        var utilisateurId = userManager.GetUserId(User)!;
-        DernierResultat = await scheinService.GetDernierResultatAsync(utilisateurId);
+        EstConnecte = User.Identity?.IsAuthenticated == true;
+
+        if (EstConnecte)
+        {
+            var utilisateurId = userManager.GetUserId(User)!;
+            DernierResultat = await scheinService.GetDernierResultatAsync(utilisateurId);
+        }
     }
 
     public IActionResult OnPostLikertAsync()
     {
         Questions = scheinService.GetQuestions();
+        EstConnecte = User.Identity?.IsAuthenticated == true;
         var reponses = LireReponsesLikert();
 
         if (reponses.Count != Questions.Count)
@@ -77,6 +86,7 @@ public class TestScheinModel(IScheinService scheinService, UserManager<Applicati
         Repasser = false;
 
         Questions = scheinService.GetQuestions();
+        EstConnecte = User.Identity?.IsAuthenticated == true;
         var reponses = LireReponsesLikert();
         var choixPrioritaires = Request.Form["choix"]
             .Select(valeur => int.TryParse(valeur, out var numero) ? numero : (int?)null)
@@ -84,15 +94,27 @@ public class TestScheinModel(IScheinService scheinService, UserManager<Applicati
             .Select(numero => numero!.Value)
             .ToList();
 
-        var utilisateurId = userManager.GetUserId(User)!;
-        var (success, errorMessage, resultat) = await scheinService.RepondreAsync(utilisateurId, reponses, choixPrioritaires);
+        if (EstConnecte)
+        {
+            var utilisateurId = userManager.GetUserId(User)!;
+            var (success, errorMessage, resultat) = await scheinService.RepondreAsync(utilisateurId, reponses, choixPrioritaires);
 
-        DernierEnvoiReussi = success;
-        echecSoumission = !success;
-        StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
-        DernierResultat = success ? resultat : await scheinService.GetDernierResultatAsync(utilisateurId);
+            DernierEnvoiReussi = success;
+            echecSoumission = !success;
+            StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
+            DernierResultat = success ? resultat : await scheinService.GetDernierResultatAsync(utilisateurId);
+        }
+        else
+        {
+            var (success, errorMessage, resultat) = scheinService.Calculer(reponses, choixPrioritaires);
 
-        if (!success)
+            DernierEnvoiReussi = success;
+            echecSoumission = !success;
+            StatusMessage = success ? "Voici votre profil. Créez un compte pour le conserver dans votre historique." : errorMessage;
+            DernierResultat = success ? resultat : null;
+        }
+
+        if (echecSoumission)
         {
             // Si les 45 reponses Likert etaient valides mais pas le choix des 3 affirmations,
             // on repart directement a l'etape 2 (pas la peine de refaire les 45 affirmations)

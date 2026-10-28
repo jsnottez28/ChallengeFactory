@@ -96,14 +96,8 @@ public sealed class DiscService(ApplicationDbContext dbContext, IEmailService em
         return resultat is null ? null : VersInfo(resultat);
     }
 
-    public async Task<(bool Success, string? ErrorMessage, DiscResultatInfo? Resultat)> RepondreAsync(string utilisateurId, Dictionary<int, string> reponses)
+    public (bool Success, string? ErrorMessage, DiscResultatInfo? Resultat) Calculer(Dictionary<int, string> reponses)
     {
-        var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
-        if (utilisateur is null)
-        {
-            return (false, "Utilisateur introuvable.", null);
-        }
-
         for (var numero = 1; numero <= Questions.Length; numero++)
         {
             if (!reponses.TryGetValue(numero, out var lettre) || lettre.Length != 1 || !Lettres.Contains(lettre[0]))
@@ -127,15 +121,46 @@ public sealed class DiscService(ApplicationDbContext dbContext, IEmailService em
         }
 
         var dominant = scores.OrderByDescending(s => s.Value).First().Key;
+        var profil = Profils[dominant];
 
-        var resultat = new DiscResultat
+        var info = new DiscResultatInfo
         {
-            UtilisateurId = utilisateurId,
             ScoreD = scores['D'],
             ScoreI = scores['I'],
             ScoreS = scores['S'],
             ScoreC = scores['C'],
             ProfilDominant = dominant.ToString(),
+            ProfilDominantNom = profil.Nom,
+            ProfilDominantDescription = profil.Description,
+            ProfilDominantTraits = [.. profil.Traits],
+            CompleteLe = DateTime.UtcNow,
+        };
+
+        return (true, null, info);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage, DiscResultatInfo? Resultat)> RepondreAsync(string utilisateurId, Dictionary<int, string> reponses)
+    {
+        var utilisateur = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == utilisateurId);
+        if (utilisateur is null)
+        {
+            return (false, "Utilisateur introuvable.", null);
+        }
+
+        var (success, errorMessage, resultatCalcule) = Calculer(reponses);
+        if (!success || resultatCalcule is null)
+        {
+            return (false, errorMessage, null);
+        }
+
+        var resultat = new DiscResultat
+        {
+            UtilisateurId = utilisateurId,
+            ScoreD = resultatCalcule.ScoreD,
+            ScoreI = resultatCalcule.ScoreI,
+            ScoreS = resultatCalcule.ScoreS,
+            ScoreC = resultatCalcule.ScoreC,
+            ProfilDominant = resultatCalcule.ProfilDominant,
             CompleteLe = DateTime.UtcNow,
         };
         dbContext.DiscResultats.Add(resultat);

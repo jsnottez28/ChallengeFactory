@@ -111,6 +111,14 @@ public interface IRiasecService
     // suffisamment tranche).
     RiasecRound2Info? PreparerRound2(Dictionary<int, int> reponsesRound1);
 
+    // Calcule le resultat a partir des reponses brutes, sans aucun acces base de donnees ni
+    // envoi d'email - utilise en interne par RepondreAsync (utilisateur connecte : persiste
+    // et envoie un email) et directement par le parcours anonyme (resultat affiche a la
+    // volee, jamais enregistre tant qu'aucun compte n'existe). Memes parametres que
+    // RepondreAsync, sans l'identifiant utilisateur.
+    (bool Success, string? ErrorMessage, RiasecResultatInfo? Resultat) Calculer(
+        Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2);
+
     // Dernier resultat en date pour cet utilisateur, ou null s'il n'a jamais passe le test.
     Task<RiasecResultatInfo?> GetDernierResultatAsync(string utilisateurId);
 

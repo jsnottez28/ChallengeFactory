@@ -1,5 +1,4 @@
 using Application.Common.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -8,9 +7,12 @@ using Web.Data;
 namespace Web.Pages.Dashboard;
 
 // Test psychotechnique RIASEC a choix force par paires, en 2 ou 3 rounds - accessible a
-// tout utilisateur connecte via un lien fixe (copie-colle manuellement dans le champ
-// "Defi individuel" d'une etape, ou envoye manuellement), pas rattache a une
-// Cohorte/etape particuliere - cf. IRiasecService.
+// tout le monde, y compris sans compte, via un lien fixe (copie-colle manuellement dans le
+// champ "Defi individuel" d'une etape, ou envoye manuellement), pas rattache a une
+// Cohorte/etape particuliere - cf. IRiasecService. Un visiteur anonyme voit son resultat
+// calcule a la volee (IRiasecService.Calculer) mais jamais enregistre ni envoye par email ;
+// un utilisateur connecte beneficie du parcours complet (persistance + email), via
+// IRiasecService.RepondreAsync - meme principe que TestDisc.cshtml.cs.
 //
 // Flux : OnGetAsync affiche le round 1 (30 paires). OnPostRound1Async construit le round
 // de fiabilite (cf. IRiasecService.PreparerFiabilite, toujours 6 paires, jamais
@@ -26,7 +28,6 @@ namespace Web.Pages.Dashboard;
 // report de valeurs en champs caches (FormatException sur le nom de propriete lui-meme).
 // Lecture manuelle, simple et explicite - le meme principe que Niveaux[...] ailleurs sur la
 // plateforme (TestPositionnement) fonctionne en formulaire unique, mais pas ici.
-[Authorize]
 public class TestRiasecModel(IRiasecService riasecService, UserManager<ApplicationUser> userManager) : PageModel
 {
     [BindProperty(SupportsGet = true)]
@@ -50,14 +51,21 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
 
     public bool DernierEnvoiReussi { get; private set; }
 
+    public bool EstConnecte { get; private set; }
+
     private bool echecSoumission;
 
     public bool AfficherQuestionnaire => DernierResultat is null || Repasser || echecSoumission;
 
     public async Task OnGetAsync()
     {
-        var utilisateurId = userManager.GetUserId(User)!;
-        DernierResultat = await riasecService.GetDernierResultatAsync(utilisateurId);
+        EstConnecte = User.Identity?.IsAuthenticated == true;
+
+        if (EstConnecte)
+        {
+            var utilisateurId = userManager.GetUserId(User)!;
+            DernierResultat = await riasecService.GetDernierResultatAsync(utilisateurId);
+        }
 
         if (AfficherQuestionnaire)
         {
@@ -65,9 +73,9 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
         }
     }
 
-    public async Task<IActionResult> OnPostRound1Async()
+    public IActionResult OnPostRound1Async()
     {
-        var utilisateurId = userManager.GetUserId(User)!;
+        EstConnecte = User.Identity?.IsAuthenticated == true;
         var pairesRound1 = riasecService.GetPairesRound1();
         var reponsesRound1 = LireReponses(pairesRound1, "pair_");
 
@@ -89,7 +97,7 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
 
     public async Task<IActionResult> OnPostFiabiliteAsync()
     {
-        var utilisateurId = userManager.GetUserId(User)!;
+        EstConnecte = User.Identity?.IsAuthenticated == true;
         var pairesRound1 = riasecService.GetPairesRound1();
         var reponsesRound1 = LireReponses(pairesRound1, "pair_");
 
@@ -108,7 +116,7 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
 
         if (round2.Paires.Count == 0)
         {
-            return await FinaliserAsync(utilisateurId, reponsesRound1, reponsesFiabilite, []);
+            return await FinaliserAsync(reponsesRound1, reponsesFiabilite, []);
         }
 
         Etape = 3;
@@ -120,7 +128,7 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
 
     public async Task<IActionResult> OnPostRound2Async()
     {
-        var utilisateurId = userManager.GetUserId(User)!;
+        EstConnecte = User.Identity?.IsAuthenticated == true;
         var pairesRound1 = riasecService.GetPairesRound1();
         var reponsesRound1 = LireReponses(pairesRound1, "pair_");
 
@@ -131,7 +139,7 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
         var pairesRound2 = round2?.Paires ?? [];
         var reponsesRound2 = LireReponses(pairesRound2, "pair2_");
 
-        return await FinaliserAsync(utilisateurId, reponsesRound1, reponsesFiabilite, reponsesRound2);
+        return await FinaliserAsync(reponsesRound1, reponsesFiabilite, reponsesRound2);
     }
 
     private Dictionary<int, int> LireReponses(List<RiasecPaireInfo> paires, string prefixe)
@@ -148,7 +156,7 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
         return reponses;
     }
 
-    private async Task<IActionResult> FinaliserAsync(string utilisateurId, Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2)
+    private async Task<IActionResult> FinaliserAsync(Dictionary<int, int> reponsesRound1, Dictionary<int, int> reponsesFiabilite, Dictionary<int, int> reponsesRound2)
     {
         // Repasser est lue depuis la query string (SupportsGet=true) MEME sur ces POST : les
         // <form> n'ont pas d'action explicite, donc ils soumettent vers l'URL courante - si
@@ -160,14 +168,27 @@ public class TestRiasecModel(IRiasecService riasecService, UserManager<Applicati
         // d'echec) le round 1 via echecSoumission - jamais une intention "repasser" perimee.
         Repasser = false;
 
-        var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateurId, reponsesRound1, reponsesFiabilite, reponsesRound2);
+        if (EstConnecte)
+        {
+            var utilisateurId = userManager.GetUserId(User)!;
+            var (success, errorMessage, resultat) = await riasecService.RepondreAsync(utilisateurId, reponsesRound1, reponsesFiabilite, reponsesRound2);
 
-        DernierEnvoiReussi = success;
-        echecSoumission = !success;
-        StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
-        DernierResultat = success ? resultat : await riasecService.GetDernierResultatAsync(utilisateurId);
+            DernierEnvoiReussi = success;
+            echecSoumission = !success;
+            StatusMessage = success ? "Merci, votre test est terminé. Votre profil est ci-dessous et vous a été envoyé par email." : errorMessage;
+            DernierResultat = success ? resultat : await riasecService.GetDernierResultatAsync(utilisateurId);
+        }
+        else
+        {
+            var (success, errorMessage, resultat) = riasecService.Calculer(reponsesRound1, reponsesFiabilite, reponsesRound2);
 
-        if (!success)
+            DernierEnvoiReussi = success;
+            echecSoumission = !success;
+            StatusMessage = success ? "Voici votre profil. Créez un compte pour le conserver dans votre historique." : errorMessage;
+            DernierResultat = success ? resultat : null;
+        }
+
+        if (echecSoumission)
         {
             Etape = 1;
             PairesRound1 = riasecService.GetPairesRound1();

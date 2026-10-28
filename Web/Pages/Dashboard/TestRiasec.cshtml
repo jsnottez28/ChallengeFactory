@@ -118,6 +118,18 @@ body {
 @@media (max-width: 620px) { .synthese-grid { grid-template-columns: 1fr; } }
 .resume-box { background: #f1efe8; border-radius: 12px; padding: 1rem 1.25rem; font-size: 14px; color: #2c2c2a; line-height: 1.6; }
 
+.cta-box {
+  background: linear-gradient(135deg, #1a1a18, #2c2c2a);
+  border-radius: 14px; padding: 1.5rem; margin-top: 1.5rem; text-align: center;
+}
+.cta-box h3 { color: #fff; font-size: 18px; margin-bottom: 8px; }
+.cta-box p { color: #d3d1c7; font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+.cta-box a.btn-cta {
+  display: inline-block; background: #16A085; color: #fff; text-decoration: none;
+  padding: 12px 28px; border-radius: 10px; font-weight: 600; font-size: 14px;
+}
+.cta-box a.btn-cta:hover { background: #0F6E56; }
+
 .restart-row { display: flex; justify-content: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0dfd8; }
 .restart-row a.btn { text-decoration: none; }
 
@@ -399,6 +411,15 @@ body {
       <p style="text-align:center; font-size:12px; color:#888780; margin-top:0.25rem;">
         Cohérence des réponses : @r.NombrePairesCoherentes/@r.NombrePairesControle (indicateur de fiabilité, sans incidence sur votre profil)
       </p>
+
+      @if (!Model.EstConnecte)
+      {
+        <div class="cta-box">
+          <h3>Vous avez testé en tant que visiteur</h3>
+          <p>Ce résultat n'a pas été enregistré. Créez votre compte Challenges Factory pour conserver vos résultats dans votre historique, rejoindre une Cohorte ouverte, ou demander la création d'une Cohorte pour votre équipe.</p>
+          <a class="btn-cta" href="/formations">Découvrir les Challenges →</a>
+        </div>
+      }
 
       <div class="restart-row">
         <a class="btn" href="?Repasser=true">↺ Repasser le questionnaire</a>

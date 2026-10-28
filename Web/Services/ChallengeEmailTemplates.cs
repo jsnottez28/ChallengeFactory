@@ -371,6 +371,31 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // Test de gestion des conflits Thomas-Kilmann (TKI) : envoye automatiquement des que le
+    // stagiaire termine le test (cf. KilmannService.RepondreAsync).
+    public static (string Sujet, string CorpsHtml) ResultatKilmann(Application.Common.Interfaces.KilmannResultatInfo resultat)
+    {
+        const string sujet = "Votre profil de gestion des conflits (Thomas-Kilmann)";
+
+        var dominant = resultat.Modes.First(m => m.Code == resultat.ProfilDominant);
+
+        var listeModes = string.Join("", resultat.Modes
+            .OrderByDescending(m => m.Score)
+            .Select(m => $"<li>{WebUtility.HtmlEncode(m.Nom)} : {m.Score}/12</li>"));
+
+        var corps = $"""
+            <p>Bonjour,</p>
+            <p>Merci d'avoir complété le test de gestion des conflits Thomas-Kilmann. Voici votre résultat :</p>
+            <p><strong>Mode dominant : {WebUtility.HtmlEncode(dominant.Nom)}</strong></p>
+            <p>{WebUtility.HtmlEncode(dominant.Description)}</p>
+            <p>Détail de vos scores (sur 12 points chacun) :</p>
+            <ul>{listeModes}</ul>
+            <p style="color:#888780; font-size:12px;">Le résultat de ce test peut varier d'une situation à l'autre — il reflète votre attitude face à un conflit précis, pas un trait fixe.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
     // Pre-diagnostic carbone : jamais nomme "Bilan Carbone®" (marque deposee de
     // l'Association Bilan Carbone, reservee a la methode complete realisee par un
     // praticien) - cf. IPreBilanCarboneService.
