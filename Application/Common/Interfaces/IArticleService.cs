@@ -68,6 +68,11 @@ public interface IArticleService
 
     Task<Article?> GetPublicParSlugAsync(string slug);
 
+    // N'importe quel article par slug, quel que soit son statut (y compris Brouillon ou
+    // Programme) - reserve a l'apercu admin (cf. ArticlesController.Details, qui verifie
+    // lui-meme le Droit ARTICLE.CONSULTER avant d'appeler cette methode).
+    Task<Article?> GetParSlugAsync(string slug);
+
     // Les N articles publics les plus recents, pour le flux RSS.
     Task<List<Article>> GetDerniersPublicsAsync(int nombre);
 

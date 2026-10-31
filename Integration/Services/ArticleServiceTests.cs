@@ -191,6 +191,22 @@ public class ArticleServiceTests
     }
 
     [Fact]
+    public async Task GetParSlugAsync_RenvoieLArticleMemeEnBrouillon()
+    {
+        // Utilise par l'apercu admin (cf. ArticlesController.Details) : contrairement a
+        // GetPublicParSlugAsync, aucun filtre de statut/date.
+        var service = new ArticleService(InMemoryDbContextFactory.Create());
+        var input = InputValide();
+        input.Statut = StatutArticle.Brouillon;
+        await service.CreateAsync(input);
+
+        var resultat = await service.GetParSlugAsync("mon-premier-article");
+
+        Assert.NotNull(resultat);
+        Assert.Equal(StatutArticle.Brouillon, resultat!.Statut);
+    }
+
+    [Fact]
     public async Task GetPublicParSlugAsync_RenvoieNull_SiBrouillonOuProgramme()
     {
         var service = new ArticleService(InMemoryDbContextFactory.Create());

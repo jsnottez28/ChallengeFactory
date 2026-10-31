@@ -35,6 +35,10 @@
     }
     <meta name="description" content="@metaDescription" />
     <link rel="canonical" href="@urlCanonique" />
+    @if (ViewData["Robots"] is string robots)
+    {
+        <meta name="robots" content="@robots" />
+    }
 
     <meta property="og:type" content="@ogType" />
     <meta property="og:site_name" content="Challenges Factory" />

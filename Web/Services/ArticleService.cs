@@ -151,6 +151,11 @@ public sealed partial class ArticleService(ApplicationDbContext dbContext) : IAr
     public async Task<List<Article>> GetDerniersPublicsAsync(int nombre) =>
         await RequetePublique().Take(nombre).ToListAsync();
 
+    public async Task<Article?> GetParSlugAsync(string slug) =>
+        await dbContext.Articles
+            .Include(a => a.Sources.OrderBy(s => s.Ordre))
+            .FirstOrDefaultAsync(a => a.Slug == slug);
+
     public string RendreHtml(string markdown) =>
         string.IsNullOrWhiteSpace(markdown) ? string.Empty : Markdown.ToHtml(markdown, Pipeline);
 

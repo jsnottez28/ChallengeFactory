@@ -2,6 +2,7 @@ using System.Text;
 using System.Xml.Linq;
 using Application.Common.Interfaces;
 using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers;
@@ -9,9 +10,12 @@ namespace Web.Controllers;
 // Blog public (/articles) - toujours accessible sans compte, meme principe que les tests
 // psychotechniques (cf. TestDiscModel) meme si ici il n'y a pas de notion de connexion du
 // tout : un article publie est visible par n'importe qui. Edition reservee a
-// /admin/articles (cf. ArticlesAdminController).
+// /admin/articles (cf. ArticlesAdminController). Exception : Details() autorise aussi un
+// apercu aux titulaires du Droit ARTICLE.CONSULTER, pour relire un Brouillon/article
+// Programme avant publication (meme URL /articles/{slug}, pas de lien d'apercu separe a
+// gerer).
 [Route("articles")]
-public class ArticlesController(IArticleService articleService) : Controller
+public class ArticlesController(IArticleService articleService, IAuthorizationService authorizationService) : Controller
 {
     private const int TaillePage = 9;
     private const string DomainePublic = "https://challenges-factory.com";
@@ -60,15 +64,31 @@ public class ArticlesController(IArticleService articleService) : Controller
     [HttpGet("{slug}")]
     public async Task<IActionResult> Details(string slug)
     {
-        var article = await articleService.GetPublicParSlugAsync(slug);
+        var article = await articleService.GetParSlugAsync(slug);
         if (article is null)
         {
             return NotFound();
         }
 
+        var estPublic = article.Statut == StatutArticle.Publie && article.DatePublication <= DateTime.UtcNow;
+        if (!estPublic)
+        {
+            var autorisation = await authorizationService.AuthorizeAsync(User, "Droit:ARTICLE.CONSULTER");
+            if (!autorisation.Succeeded)
+            {
+                return NotFound();
+            }
+        }
+
         ViewData["Title"] = article.Titre;
         ViewData["MetaDescription"] = article.MetaDescription;
         ViewData["OgType"] = "article";
+        if (!estPublic)
+        {
+            // Jamais indexer un apercu de Brouillon/article Programme, meme accessible aux
+            // seuls admins connectes.
+            ViewData["Robots"] = "noindex, nofollow";
+        }
         if (!string.IsNullOrWhiteSpace(article.ImageCouverture))
         {
             ViewData["OgImage"] = $"{DomainePublic}/uploads/articles/{article.ImageCouverture}";
@@ -78,6 +98,8 @@ public class ArticlesController(IArticleService articleService) : Controller
         {
             Titre = article.Titre,
             Auteur = article.Auteur,
+            EstApercu = !estPublic,
+            StatutAffiche = articleService.DeterminerStatutAffiche(article),
             // Stocke en UTC (Kind=Unspecified apres le round-trip SQL Server, mais la valeur
             // numerique est bien l'instant UTC - cf. ArticlesAdminController.VersInput) :
             // ToLocalTime() traite un DateTime Unspecified comme deja UTC, conversion correcte
@@ -127,6 +149,8 @@ public class ArticleDetailViewModel
     public string? ImageCouverture { get; set; }
     public string ContenuHtml { get; set; } = string.Empty;
     public List<ArticleSourceViewModel> Sources { get; set; } = [];
+    public bool EstApercu { get; set; }
+    public string StatutAffiche { get; set; } = string.Empty;
 }
 
 public class ArticleSourceViewModel
