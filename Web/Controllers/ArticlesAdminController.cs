@@ -129,6 +129,11 @@ public class ArticlesAdminController(IArticleService articleService, IWebHostEnv
             slug = articleService.GenererSlug(titre);
         }
 
+        // Le champ datetime-local du formulaire ne porte aucune information de fuseau : la
+        // valeur saisie est l'heure murale de l'admin (France). On la marque explicitement
+        // Local ici ; la conversion effective en UTC (seule valeur fiable a comparer a
+        // DateTime.UtcNow pour decider si l'article est visible) n'a lieu qu'au moment de
+        // VersInput, juste avant persistance - cf. commentaire la-bas.
         DateTime.TryParse(Request.Form["datePublication"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var datePublication);
         Enum.TryParse<StatutArticle>(Request.Form["statut"], out var statut);
 
@@ -156,7 +161,12 @@ public class ArticlesAdminController(IArticleService articleService, IWebHostEnv
         ContenuMarkdown = model.ContenuMarkdown,
         ImageCouverture = nomFichierImage ?? model.ImageCouvertureActuelle,
         Auteur = model.Auteur,
-        DatePublication = model.DatePublication,
+        // model.DatePublication est toujours en heure locale (France) a ce stade - cf.
+        // LireFormulaire/VersFormModel. Conversion explicite en UTC ici, juste avant
+        // persistance : SQL Server (datetime2) ne conserve aucune information de fuseau, donc
+        // c'est la SEULE valeur qui doit etre comparee a DateTime.UtcNow cote service
+        // (ArticleService.RequetePublique) pour decider si l'article est visible.
+        DatePublication = DateTime.SpecifyKind(model.DatePublication, DateTimeKind.Local).ToUniversalTime(),
         Statut = model.Statut,
         Sources = [.. model.SourcesTexte
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -179,7 +189,12 @@ public class ArticlesAdminController(IArticleService articleService, IWebHostEnv
         ContenuMarkdown = article.ContenuMarkdown,
         ImageCouvertureActuelle = article.ImageCouverture,
         Auteur = article.Auteur,
-        DatePublication = article.DatePublication,
+        // article.DatePublication revient de la base en UTC (Kind=Unspecified apres le
+        // round-trip SQL Server, mais la valeur numerique est bien l'instant UTC - cf.
+        // VersInput) : ToLocalTime() traite un DateTime Unspecified comme deja UTC, donc
+        // cette conversion est correcte et affiche l'heure murale francaise dans le champ
+        // datetime-local du formulaire.
+        DatePublication = DateTime.SpecifyKind(article.DatePublication, DateTimeKind.Utc).ToLocalTime(),
         Statut = article.Statut,
         SourcesTexte = string.Join('\n', article.Sources.OrderBy(s => s.Ordre)
             .Select(s => string.IsNullOrWhiteSpace(s.Libelle) ? s.Url : $"{s.Libelle} | {s.Url}")),

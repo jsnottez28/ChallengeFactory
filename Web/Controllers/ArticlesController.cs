@@ -48,7 +48,7 @@ public class ArticlesController(IArticleService articleService) : Controller
                 new XElement("title", article.Titre),
                 new XElement("link", $"{DomainePublic}/articles/{article.Slug}"),
                 new XElement("guid", $"{DomainePublic}/articles/{article.Slug}"),
-                new XElement("pubDate", article.DatePublication.ToUniversalTime().ToString("r")),
+                new XElement("pubDate", DateTime.SpecifyKind(article.DatePublication, DateTimeKind.Utc).ToString("r")),
                 new XElement("description", article.Resume))));
 
         var rss = new XElement("rss", new XAttribute("version", "2.0"), canal);
@@ -78,7 +78,11 @@ public class ArticlesController(IArticleService articleService) : Controller
         {
             Titre = article.Titre,
             Auteur = article.Auteur,
-            DatePublication = article.DatePublication,
+            // Stocke en UTC (Kind=Unspecified apres le round-trip SQL Server, mais la valeur
+            // numerique est bien l'instant UTC - cf. ArticlesAdminController.VersInput) :
+            // ToLocalTime() traite un DateTime Unspecified comme deja UTC, conversion correcte
+            // pour l'affichage.
+            DatePublication = DateTime.SpecifyKind(article.DatePublication, DateTimeKind.Utc).ToLocalTime(),
             ImageCouverture = article.ImageCouverture,
             ContenuHtml = articleService.RendreHtml(article.ContenuMarkdown),
             Sources = [.. article.Sources.Select(s => new ArticleSourceViewModel { Libelle = s.Libelle, Url = s.Url })],
@@ -93,7 +97,7 @@ public class ArticlesController(IArticleService articleService) : Controller
         Titre = article.Titre,
         Resume = article.Resume,
         Auteur = article.Auteur,
-        DatePublication = article.DatePublication,
+        DatePublication = DateTime.SpecifyKind(article.DatePublication, DateTimeKind.Utc).ToLocalTime(),
         ImageCouverture = article.ImageCouverture,
     };
 }

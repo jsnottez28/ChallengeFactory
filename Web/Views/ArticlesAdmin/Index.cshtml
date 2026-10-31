@@ -70,7 +70,7 @@
                                     <tr>
                                         <td class="fw-semibold">@article.Titre</td>
                                         <td>@article.Auteur</td>
-                                        <td>@article.DatePublication.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@DateTime.SpecifyKind(article.DatePublication, DateTimeKind.Utc).ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                                         <td><span class="badge @badgeClasse">@statutAffiche</span></td>
                                         <td class="text-end">
                                             <div class="d-inline-flex gap-2">
