@@ -102,6 +102,18 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// Applique automatiquement les migrations EF Core en attente au demarrage, dans tous les
+// environnements : evite les oublis de "dotnet ef database update" apres deploiement (deja
+// arrive en pratique - cf. table Articles absente en prod). Compromis assume : le compte SQL
+// de l'application doit disposer des droits de modification de schema (CREATE/ALTER TABLE),
+// pas seulement lecture/ecriture des donnees ; en deploiement mono-instance (IIS, pas de
+// scale-out), le risque classique de migrations concurrentes entre plusieurs instances ne
+// s'applique pas.
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
