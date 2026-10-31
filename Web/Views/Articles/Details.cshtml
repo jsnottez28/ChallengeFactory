@@ -1,0 +1,54 @@
+@model Web.Controllers.ArticleDetailViewModel
+@{
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+}
+
+<section class="cf-hero-home" style="padding-bottom:40px;">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <a class="cf-badge text-decoration-none" asp-controller="Articles" asp-action="Index">← Articles</a>
+                <h1 class="cf-h1 mb-3 mt-3">@Model.Titre</h1>
+                <p class="text-muted mb-0">
+                    @Model.Auteur · @Model.DatePublication.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                @if (!string.IsNullOrWhiteSpace(Model.ImageCouverture))
+                {
+                    <img src="~/uploads/articles/@Model.ImageCouverture" alt="" class="w-100 mb-5" style="border-radius:var(--cf-radius-lg);">
+                }
+
+                <div class="cf-article-body">
+                    @Html.Raw(Model.ContenuHtml)
+                </div>
+
+                <div class="text-center my-5">
+                    <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                        📅 Réserver mon pré-diagnostic carbone (30 min)
+                    </a>
+                </div>
+
+                @if (Model.Sources.Count > 0)
+                {
+                    <p class="text-muted small">
+                        Sources :
+                        @for (var i = 0; i < Model.Sources.Count; i++)
+                        {
+                            var source = Model.Sources[i];
+                            <a href="@source.Url" target="_blank" rel="noopener">@(string.IsNullOrWhiteSpace(source.Libelle) ? source.Url : source.Libelle)</a>
+                            @(i < Model.Sources.Count - 1 ? " · " : "")
+                        }
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</section>

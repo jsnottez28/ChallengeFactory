@@ -1,0 +1,61 @@
+@model Web.Controllers.ArticlesIndexViewModel
+
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">Articles</span>
+                <h1 class="cf-h1 mb-3">Nos derniers <span class="cf-accent">articles</span>.</h1>
+                <p class="cf-lead" style="max-width:640px;">
+                    Décarbonation, compétences, méthode : nos analyses et retours d'expérience, publiés au fil de l'eau.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /hero -->
+
+<!-- liste des articles -->
+<section class="cf-section pt-0">
+    <div class="container">
+        @if (Model.Articles.Count == 0)
+        {
+            <p class="text-muted">Aucun article publié pour le moment.</p>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var article in Model.Articles)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <a class="cf-article-card cf-card h-100" asp-controller="Articles" asp-action="Details" asp-route-slug="@article.Slug">
+                            @if (!string.IsNullOrWhiteSpace(article.ImageCouverture))
+                            {
+                                <img src="~/uploads/articles/@article.ImageCouverture" alt="" class="w-100 mb-3" style="border-radius:var(--cf-radius-md);aspect-ratio:1200/630;object-fit:cover;">
+                            }
+                            <span class="cf-code-tag">@article.DatePublication.ToString("dd/MM/yyyy")</span>
+                            <h3 class="h5 mb-2 cf-article-card-title">@article.Titre</h3>
+                            <p class="mb-0 small text-muted">@article.Resume</p>
+                        </a>
+                    </div>
+                }
+            </div>
+
+            @if (Model.NombrePages > 1)
+            {
+                <nav aria-label="Pagination" class="mt-5">
+                    <ul class="pagination justify-content-center mb-0">
+                        @for (var p = 1; p <= Model.NombrePages; p++)
+                        {
+                            <li class="page-item @(p == Model.Page ? "active" : "")">
+                                <a class="page-link" asp-controller="Articles" asp-action="Index" asp-route-page="@p">@p</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+</section>
+<!-- /liste des articles -->

@@ -1,0 +1,128 @@
+@model Web.Controllers.ArticleFormViewModel
+@{
+    var estModification = Model.Id.HasValue;
+    ViewData["Title"] = estModification ? "Modifier un article" : "Nouvel article";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="ArticlesAdmin" asp-action="Index">Articles</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            <a asp-controller="ArticlesAdmin" asp-action="Index" class="btn btn-outline-secondary">Retour aux articles</a>
+        </div>
+
+        <form id="articleForm" method="post" asp-controller="ArticlesAdmin" asp-action="@(estModification ? "Edit" : "Create")" asp-route-id="@Model.Id" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="imageActuelle" value="@Model.ImageCouvertureActuelle">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-1">Identité de l'article</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="titre" class="form-label">Titre</label>
+                            <input id="titre" name="titre" class="form-control" value="@Model.Titre" required>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="slug" class="form-label">Slug (URL : /articles/...)</label>
+                            <input id="slug" name="slug" class="form-control" value="@Model.Slug" pattern="[a-z0-9]+(-[a-z0-9]+)*" required>
+                            <div class="form-text">Généré automatiquement depuis le titre, modifiable.</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="auteur" class="form-label">Auteur</label>
+                            <input id="auteur" name="auteur" class="form-control" value="@Model.Auteur" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="resume" class="form-label">Résumé (affiché dans la liste des articles)</label>
+                            <textarea id="resume" name="resume" class="form-control" rows="2" required>@Model.Resume</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label for="meta" class="form-label">Meta description (160 caractères max)</label>
+                            <textarea id="meta" name="meta" class="form-control" rows="2" maxlength="160" required>@Model.MetaDescription</textarea>
+                            <div class="form-text"><span id="metaCompteur">0</span>/160 caractères</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="datePublication" class="form-label">Date de publication</label>
+                            <input id="datePublication" name="datePublication" type="datetime-local" class="form-control" value="@Model.DatePublication.ToString("yyyy-MM-ddTHH:mm")" required>
+                            <div class="form-text">Une date future publie automatiquement l'article (statut affiché "Programmé" jusque-là).</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="statut" class="form-label">Statut</label>
+                            <select id="statut" name="statut" class="form-select">
+                                <option value="Brouillon" selected="@(Model.Statut == Domain.Entities.StatutArticle.Brouillon)">Brouillon</option>
+                                <option value="Publie" selected="@(Model.Statut == Domain.Entities.StatutArticle.Publie)">Publié / Programmé</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-1">Image de couverture</h2>
+                    <p class="text-muted mb-0">JPG, PNG ou WEBP. Redimensionnée automatiquement en 1200×630 au moment de la sélection.</p>
+                </div>
+                <div class="card-body p-4">
+                    <input id="image" name="image" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+                    <div class="mt-3">
+                        <img id="imageApercu" src="@(string.IsNullOrWhiteSpace(Model.ImageCouvertureActuelle) ? "" : Url.Content("~/uploads/articles/" + Model.ImageCouvertureActuelle))" alt="Aperçu de l'image de couverture" class="img-fluid rounded @(string.IsNullOrWhiteSpace(Model.ImageCouvertureActuelle) ? "d-none" : "")" style="max-width:400px;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-1">Contenu (Markdown)</h2>
+                    <p class="text-muted mb-0">Aperçu indicatif : le rendu final (toujours recalculé côté serveur) peut différer légèrement.</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                            <label for="contenu" class="form-label">Markdown</label>
+                            <textarea id="contenu" name="contenu" class="form-control" rows="20" required>@Model.ContenuMarkdown</textarea>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <label class="form-label">Aperçu</label>
+                            <div id="apercuMarkdown" class="border rounded p-3" style="min-height:480px;overflow:auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-1">Sources</h2>
+                    <p class="text-muted mb-0">Une source par ligne, au format « Libellé | URL » (ou juste l'URL).</p>
+                </div>
+                <div class="card-body p-4">
+                    <textarea id="sources" name="sources" class="form-control" rows="4" placeholder="BEGES obligatoire — Projet Celsius | https://exemple.fr/article">@Model.SourcesTexte</textarea>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="ArticlesAdmin" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">@(estModification ? "Enregistrer" : "Créer l'article")</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/article-form.js" asp-append-version="true"></script>
+}

@@ -24,11 +24,19 @@
             urlCanonique = domainePublic + "/";
         }
         var titrePage = $"{ViewData["Title"]} - Challenges Factory";
+
+        // Une page peut fournir son propre visuel de partage (ex. image de couverture d'un
+        // article, deja 1200x630 - cf. ArticlesController) via ViewData["OgImage"] (URL
+        // absolue complete) et ViewData["OgType"] ("article" au lieu de "website"). A
+        // defaut, on reprend le visuel de marque generique ci-dessous.
+        var ogImage = ViewData["OgImage"] as string
+            ?? domainePublic + Url.Content("~/brand/og-image.png");
+        var ogType = ViewData["OgType"] as string ?? "website";
     }
     <meta name="description" content="@metaDescription" />
     <link rel="canonical" href="@urlCanonique" />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="@ogType" />
     <meta property="og:site_name" content="Challenges Factory" />
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:title" content="@titrePage" />
@@ -42,10 +50,10 @@
        Bebas Neue deja chargee ci-dessous) - pas une nouvelle charte inventee, juste la
        reprise du wordmark header/footer existant. A remplacer si un vrai visuel de marque
        (photo, illustration) est fourni un jour. *@
-    <meta property="og:image" content="@(domainePublic + Url.Content("~/brand/og-image.png"))" />
+    <meta property="og:image" content="@ogImage" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta name="twitter:image" content="@(domainePublic + Url.Content("~/brand/og-image.png"))" />
+    <meta name="twitter:image" content="@ogImage" />
 
     <link rel="icon" type="image/png" sizes="32x32" href="~/brand/favicon-32.png" asp-append-version="true" />
     <link rel="icon" type="image/png" sizes="16x16" href="~/brand/favicon-16.png" asp-append-version="true" />
@@ -114,6 +122,7 @@
                                     <li><a asp-controller="Home" asp-action="Methode">La méthode</a></li>
                                     <li><a asp-controller="Home" asp-action="APropos">À propos</a></li>
                                     <li><a asp-controller="Home" asp-action="LeLab">Le Lab</a></li>
+                                    <li><a asp-controller="Articles" asp-action="Index">Articles</a></li>
                                     <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
                                 </ul>
                             </div>
@@ -200,6 +209,7 @@
                                 <li><a asp-controller="Home" asp-action="Methode">La méthode CBL</a></li>
                                 <li><a asp-controller="Home" asp-action="BilanCarboneEureEtLoir">Bilan Carbone en Eure-et-Loir</a></li>
                                 <li><a asp-controller="Home" asp-action="LeLab">Le Lab</a></li>
+                                <li><a asp-controller="Articles" asp-action="Index">Articles</a></li>
                                 <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
                             </ul>
                         </div>

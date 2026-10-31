@@ -23,6 +23,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Badge> Badges { get; set; }
     public DbSet<CarteCompetence> CartesCompetences { get; set; }
     public DbSet<CarteRessource> CarteRessources { get; set; }
+    public DbSet<Article> Articles { get; set; }
+    public DbSet<ArticleSource> ArticleSources { get; set; }
     public DbSet<CarteAttribution> CarteAttributions { get; set; }
     public DbSet<Challenge> Challenges { get; set; }
     public DbSet<ChallengeEtape> ChallengeEtapes { get; set; }
@@ -236,6 +238,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(r => r.CarteCompetence)
             .WithMany(c => c.Ressources)
             .HasForeignKey(r => r.CarteCompetenceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Article>()
+            .HasIndex(a => a.Slug)
+            .IsUnique();
+
+        builder.Entity<ArticleSource>()
+            .HasOne(s => s.Article)
+            .WithMany(a => a.Sources)
+            .HasForeignKey(s => s.ArticleId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Pas d'unicite globale sur (CarteCompetenceId, UtilisateurId) seuls : une meme

@@ -63,6 +63,7 @@ builder.Services.AddScoped<IDroitService, DroitService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IDocumentLegalService, DocumentLegalService>();
 builder.Services.AddScoped<ICarteCompetenceService, CarteCompetenceService>();
+builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<ICarteApprenantService, CarteApprenantService>();
 builder.Services.AddScoped<IChallengeService, ChallengeService>();
 builder.Services.AddScoped<ICohorteService, CohorteService>();
