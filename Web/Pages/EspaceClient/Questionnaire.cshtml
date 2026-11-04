@@ -1,0 +1,97 @@
+@page
+@using Web.Services
+@model Web.Pages.EspaceClient.QuestionnaireModel
+@{
+    ViewData["Title"] = "Questionnaire Bilan Carbone®";
+    string? Valeur(string code) => Model.Reponses.TryGetValue(code, out var v) ? v : null;
+    string[] ouiNon = [QuestionnaireCollecteCatalogue.Oui, QuestionnaireCollecteCatalogue.Non, QuestionnaireCollecteCatalogue.NeSaitPas];
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/EspaceClient/Index">Mon espace client</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Questionnaire</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="mb-4" style="max-width: 820px;">
+            <p class="text-muted mb-1">Préparation de votre Bilan Carbone®</p>
+            <h1 class="h3 mb-2">@Model.Dossier?.RaisonSociale</h1>
+            <p class="mb-0">Ces questions nous permettent d'identifier les postes d'émissions qui concernent votre entreprise, pour ne vous demander que les documents utiles. En cas de doute, répondez « @QuestionnaireCollecteCatalogue.NeSaitPas » : nous vérifierons ensemble.</p>
+        </div>
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <form method="post" style="max-width: 820px;">
+            @foreach (var groupe in QuestionnaireCollecteCatalogue.Questions.GroupBy(q => q.Poste))
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @foreach (var question in groupe)
+                        {
+                            var nom = $"Reponses[{question.Code}]";
+                            var valeur = Valeur(question.Code);
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold d-block">@question.Libelle</label>
+                                @if (!string.IsNullOrWhiteSpace(question.Aide))
+                                {
+                                    <p class="text-muted small mb-2">@question.Aide</p>
+                                }
+
+                                @switch (question.Type)
+                                {
+                                    case TypeQuestionCollecte.OuiNon:
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @for (var i = 0; i < ouiNon.Length; i++)
+                                            {
+                                                var id = $"{question.Code}-{i}";
+                                                <input class="btn-check" type="radio" name="@nom" id="@id" value="@ouiNon[i]" autocomplete="off" checked="@(valeur == ouiNon[i])">
+                                                <label class="btn btn-outline-secondary btn-sm" for="@id">@ouiNon[i]</label>
+                                            }
+                                        </div>
+                                        break;
+                                    case TypeQuestionCollecte.Choix:
+                                        <select class="form-select" name="@nom" style="max-width: 320px;">
+                                            <option value="">— Choisir —</option>
+                                            @foreach (var choix in question.Choix ?? Array.Empty<string>())
+                                            {
+                                                <option value="@choix" selected="@(valeur == choix)">@choix</option>
+                                            }
+                                        </select>
+                                        break;
+                                    case TypeQuestionCollecte.Nombre:
+                                        <div class="input-group" style="max-width: 260px;">
+                                            <input type="number" min="0" step="any" class="form-control" name="@nom" value="@valeur" placeholder="Facultatif">
+                                            @if (!string.IsNullOrWhiteSpace(question.Unite))
+                                            {
+                                                <span class="input-group-text">@question.Unite</span>
+                                            }
+                                        </div>
+                                        break;
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="d-flex flex-wrap gap-2 mb-5">
+                <button type="submit" name="bouton" value="enregistrer" class="btn btn-outline-secondary">Enregistrer et reprendre plus tard</button>
+                <button type="submit" name="bouton" value="envoyer" class="btn btn-primary">Envoyer mon questionnaire</button>
+            </div>
+        </form>
+    </div>
+</section>

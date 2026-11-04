@@ -83,6 +83,7 @@ builder.Services.AddScoped<IBigFiveService, BigFiveService>();
 builder.Services.AddScoped<IScheinService, ScheinService>();
 builder.Services.AddScoped<IKilmannService, KilmannService>();
 builder.Services.AddScoped<IPreBilanCarboneService, PreBilanCarboneService>();
+builder.Services.AddScoped<ICollecteCarboneService, CollecteCarboneService>();
 builder.Services.AddScoped<IQualiopiDashboardService, QualiopiDashboardService>();
 
 builder.Services.Configure<PreuveFichierStockageSettings>(

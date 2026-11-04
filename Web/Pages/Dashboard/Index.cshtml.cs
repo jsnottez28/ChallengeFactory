@@ -39,6 +39,14 @@ public class IndexModel(
             return Forbid();
         }
 
+        // Un compte client Bilan Carbone(R) n'a pas de parcours : son accueil est l'espace
+        // client (cf. Domain.Entities.TypeCompte).
+        var utilisateurConnecte = await userManager.GetUserAsync(User);
+        if (utilisateurConnecte?.TypeCompte == TypeCompte.ClientCarbone)
+        {
+            return RedirectToPage("/EspaceClient/Index");
+        }
+
         ParcoursEnCours = await cohorteService.GetMesParcoursEnCoursAsync(userId);
         Points = await preuveService.GetMesPointsAsync(userId);
         Badges = await preuveService.GetMesBadgesAsync(userId);

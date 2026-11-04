@@ -1,14 +1,19 @@
 using Application.Common.Interfaces;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Web.Data;
 
 namespace Web.Controllers;
 
 // Cote Gestionnaire (CRM) : liste des Pre-diagnostics carbone deposes par des prospects -
 // cf. Web.Controllers.PreDiagnosticCarboneController pour le formulaire public.
 [Route("Administration/[controller]")]
-public class PreDiagnosticsCarboneController(IPreBilanCarboneService preBilanService) : Controller
+public class PreDiagnosticsCarboneController(
+    IPreBilanCarboneService preBilanService,
+    ICollecteCarboneService collecteService,
+    UserManager<ApplicationUser> userManager) : Controller
 {
     [HttpGet("")]
     [Authorize(Policy = "Droit:PREBILAN.CONSULTER")]
@@ -36,6 +41,14 @@ public class PreDiagnosticsCarboneController(IPreBilanCarboneService preBilanSer
         }
 
         ViewData["InfoCrm"] = infoCrm;
+
+        var dossier = await collecteService.GetDossierParPreBilanAsync(id);
+        ViewData["Dossier"] = dossier;
+        if (dossier?.StatutQuestionnaire == StatutQuestionnaireCollecte.Soumis)
+        {
+            ViewData["Checklist"] = await collecteService.GetChecklistAsync(dossier.Id);
+        }
+
         return View(resultat);
     }
 
@@ -48,4 +61,56 @@ public class PreDiagnosticsCarboneController(IPreBilanCarboneService preBilanSer
         TempData["StatusMessage"] = success ? "Statut mis à jour." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }
+
+    // --- Dossier client Bilan Carbone(R) (cf. ICollecteCarboneService) ---------------
+
+    [HttpPost("{id:int}/OuvrirCompteClient")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> OuvrirCompteClient(int id)
+    {
+        var gestionnaireId = userManager.GetUserId(User) ?? string.Empty;
+        var (success, errorMessage) = await collecteService.OuvrirCompteClientAsync(id, gestionnaireId, LienActivation);
+        TempData["StatusMessage"] = success
+            ? "Espace client ouvert : le client a reçu son identifiant et le lien pour définir son mot de passe."
+            : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/RenvoyerInvitationClient")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RenvoyerInvitationClient(int id)
+    {
+        var (success, errorMessage) = await collecteService.RenvoyerInvitationAsync(id, LienActivation);
+        TempData["StatusMessage"] = success ? "Nouvelle invitation envoyée au client." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/EnvoyerQuestionnaire")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnvoyerQuestionnaire(int id)
+    {
+        var lien = Url.Page("/EspaceClient/Questionnaire", null, null, Request.Scheme) ?? "/EspaceClient/Questionnaire";
+        var (success, errorMessage) = await collecteService.EnvoyerQuestionnaireAsync(id, lien);
+        TempData["StatusMessage"] = success ? "Questionnaire envoyé : le client a reçu le lien vers son espace." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpGet("{id:int}/TableurCollecte")]
+    [Authorize(Policy = "Droit:PREBILAN.CONSULTER")]
+    public async Task<IActionResult> TableurCollecte(int id)
+    {
+        var tableur = await collecteService.GenererTableurAsync(id);
+        if (tableur is null)
+        {
+            return NotFound();
+        }
+
+        return File(tableur.Value.Contenu, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", tableur.Value.NomFichier);
+    }
+
+    private string LienActivation(string token) =>
+        Url.Page("/Compte/DefinirMotDePasse", null, new { token }, Request.Scheme) ?? $"/Compte/DefinirMotDePasse?token={token}";
 }

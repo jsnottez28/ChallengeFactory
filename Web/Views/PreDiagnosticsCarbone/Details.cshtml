@@ -4,6 +4,8 @@
 @{
     ViewData["Title"] = "Pré-diagnostic carbone";
     var infoCrm = ViewData["InfoCrm"] as PreBilanCarboneInfo;
+    var dossier = ViewData["Dossier"] as DossierCarboneInfo;
+    var checklist = ViewData["Checklist"] as List<ElementCollecteInfo>;
 
     string LibellePoste(PosteEmission poste) => poste switch
     {
@@ -126,7 +128,128 @@
                         </droit-visible>
                     </div>
                 </div>
+
+                @* Dossier client Bilan Carbone(R) : compte ClientCarbone distinct des comptes de
+                   parcours, puis questionnaire de collecte (cf. ICollecteCarboneService). *@
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-0">Espace client Bilan Carbone®</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (dossier is null)
+                        {
+                            <p class="text-muted small">Aucun espace client. L'ouverture crée un compte client (distinct des comptes de parcours) avec l'email du prospect, et lui envoie son identifiant + un lien pour définir son mot de passe.</p>
+                            <droit-visible code="PREBILAN.MODIFIER">
+                                <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="OuvrirCompteClient" asp-route-id="@Model.Id">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-primary w-100">Ouvrir le compte client</button>
+                                </form>
+                            </droit-visible>
+                        }
+                        else
+                        {
+                            <p class="mb-1"><strong>Compte :</strong> @dossier.ClientEmail</p>
+                            <p class="mb-1"><strong>Ouvert le :</strong> @dossier.OuvertLe.ToLocalTime().ToString("dd/MM/yyyy")</p>
+                            <p class="mb-3">
+                                <strong>Activation :</strong>
+                                @if (dossier.CompteActive)
+                                {
+                                    <span class="badge bg-success">Mot de passe défini</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">En attente</span>
+                                }
+                            </p>
+
+                            <p class="mb-3">
+                                <strong>Questionnaire :</strong>
+                                @switch (dossier.StatutQuestionnaire)
+                                {
+                                    case null:
+                                        <span class="badge bg-secondary">Non envoyé</span>
+                                        break;
+                                    case StatutQuestionnaireCollecte.Envoye:
+                                        <span class="badge bg-info text-dark">Envoyé le @dossier.QuestionnaireEnvoyeLe?.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                        break;
+                                    case StatutQuestionnaireCollecte.EnCours:
+                                        <span class="badge bg-warning text-dark">En cours de saisie</span>
+                                        break;
+                                    case StatutQuestionnaireCollecte.Soumis:
+                                        <span class="badge bg-success">Complété le @dossier.QuestionnaireSoumisLe?.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                        break;
+                                }
+                            </p>
+
+                            <droit-visible code="PREBILAN.MODIFIER">
+                                <div class="d-grid gap-2">
+                                    <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="EnvoyerQuestionnaire" asp-route-id="@Model.Id">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            @(dossier.StatutQuestionnaire is null ? "Envoyer le questionnaire" : dossier.StatutQuestionnaire == StatutQuestionnaireCollecte.Soumis ? "Rouvrir et renvoyer le questionnaire" : "Renvoyer le questionnaire")
+                                        </button>
+                                    </form>
+                                    @if (!dossier.CompteActive)
+                                    {
+                                        <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="RenvoyerInvitationClient" asp-route-id="@Model.Id">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-secondary w-100">Renvoyer l'invitation (mot de passe)</button>
+                                        </form>
+                                    }
+                                </div>
+                            </droit-visible>
+                        }
+
+                        <hr />
+                        <a class="btn btn-outline-success w-100" asp-controller="PreDiagnosticsCarbone" asp-action="TableurCollecte" asp-route-id="@Model.Id">
+                            Télécharger le tableur de collecte (.xlsx)
+                        </a>
+                        <p class="text-muted small mt-2 mb-0">Pré-rempli avec le pré-diagnostic@(dossier?.StatutQuestionnaire == StatutQuestionnaireCollecte.Soumis ? " et les réponses au questionnaire" : "") ; un onglet par poste concerné.</p>
+                    </div>
+                </div>
             </div>
         </div>
+
+        @if (checklist is not null && checklist.Count > 0)
+        {
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-0">Check-list de collecte (@checklist.Count données)</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Poste</th>
+                                    <th scope="col">Donnée</th>
+                                    <th scope="col">Pièce justificative</th>
+                                    <th scope="col">Référent</th>
+                                    <th scope="col">Pourquoi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var element in checklist)
+                                {
+                                    <tr>
+                                        <td class="text-nowrap">@Web.Services.QuestionnaireCollecteCatalogue.LibellePoste(element.Poste)</td>
+                                        <td>
+                                            @element.Donnee
+                                            @if (element.Valeur.HasValue)
+                                            {
+                                                <span class="badge bg-success-subtle text-success-emphasis ms-1">@element.Valeur.Value.ToString("N2") @element.Unite</span>
+                                            }
+                                        </td>
+                                        <td class="small">@element.PieceJustificative</td>
+                                        <td class="small">@element.Referent</td>
+                                        <td class="small text-muted">@element.Declencheur</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </section>

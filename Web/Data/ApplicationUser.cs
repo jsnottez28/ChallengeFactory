@@ -19,6 +19,11 @@ public class ApplicationUser : IdentityUser
     // par defaut ; l'auto-inscription publique (/Register) le repositionne en BtoC.
     public ModePlateforme Mode { get; set; } = ModePlateforme.BtoB;
 
+    // Participant (parcours) ou ClientCarbone (espace client Bilan Carbone(R)) - cf.
+    // Domain.Entities.TypeCompte. Un compte ClientCarbone n'est cree que par un
+    // Gestionnaire, depuis la fiche CRM d'un Pre-diagnostic (ICollecteCarboneService).
+    public TypeCompte TypeCompte { get; set; } = TypeCompte.Participant;
+
     public string? Telephone { get; set; }
     public DateTime CreeLe { get; set; } = DateTime.UtcNow;
 

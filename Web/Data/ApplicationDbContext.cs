@@ -60,6 +60,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<FacteurEmission> FacteursEmission { get; set; }
     public DbSet<PreBilanCarbone> PreBilansCarbone { get; set; }
     public DbSet<PreBilanLigne> PreBilanLignes { get; set; }
+    public DbSet<DossierCarbone> DossiersCarbone { get; set; }
+    public DbSet<QuestionnaireCollecte> QuestionnairesCollecte { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -793,5 +795,30 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(l => l.FacteurEmissionId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Un seul dossier client par Pre-diagnostic.
+        builder.Entity<DossierCarbone>()
+            .HasIndex(d => d.PreBilanCarboneId)
+            .IsUnique();
+
+        builder.Entity<DossierCarbone>()
+            .HasOne(d => d.PreBilanCarbone)
+            .WithMany()
+            .HasForeignKey(d => d.PreBilanCarboneId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<DossierCarbone>()
+            .HasOne(d => d.ClientUtilisateur)
+            .WithMany()
+            .HasForeignKey(d => d.ClientUtilisateurId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<DossierCarbone>().Property(d => d.RaisonSociale).HasMaxLength(200);
+
+        builder.Entity<QuestionnaireCollecte>()
+            .HasOne(q => q.DossierCarbone)
+            .WithOne(d => d.Questionnaire)
+            .HasForeignKey<QuestionnaireCollecte>(q => q.DossierCarboneId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

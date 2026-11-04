@@ -453,4 +453,41 @@ public static class ChallengeEmailTemplates
 
         return (sujet, corps);
     }
+
+    // Ouverture d'un espace client Bilan Carbone(R) (compte ClientCarbone) depuis un
+    // Pre-diagnostic - cf. ICollecteCarboneService.OuvrirCompteClientAsync.
+    public static (string Sujet, string CorpsHtml) BienvenueEspaceClientCarbone(string? prenom, string identifiant, string raisonSociale, string lienActivation)
+    {
+        const string sujet = "Votre espace client Bilan Carbone® — Challenges Factory";
+
+        var salutation = string.IsNullOrWhiteSpace(prenom) ? "Bonjour," : $"Bonjour {WebUtility.HtmlEncode(prenom)},";
+
+        var corps = $"""
+            <p>{salutation}</p>
+            <p>Suite à votre pré-diagnostic carbone, nous avons ouvert l'espace client de <strong>{WebUtility.HtmlEncode(raisonSociale)}</strong> sur Challenges Factory. C'est depuis cet espace que nous préparerons ensemble votre Bilan Carbone®, puis votre plan d'action de décarbonation.</p>
+            <p>Votre identifiant de connexion : <strong>{WebUtility.HtmlEncode(identifiant)}</strong></p>
+            <p>Pour activer votre accès, définissez votre mot de passe :</p>
+            <p><a href="{lienActivation}">Définir mon mot de passe</a></p>
+            <p>Ce lien est valable 7 jours. Vous recevrez ensuite un second email vous invitant à compléter le questionnaire de préparation de votre Bilan Carbone®.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    public static (string Sujet, string CorpsHtml) QuestionnaireCollecteCarbone(string? prenom, string raisonSociale, string lienQuestionnaire)
+    {
+        const string sujet = "Préparez votre Bilan Carbone® : votre questionnaire est disponible";
+
+        var salutation = string.IsNullOrWhiteSpace(prenom) ? "Bonjour," : $"Bonjour {WebUtility.HtmlEncode(prenom)},";
+
+        var corps = $"""
+            <p>{salutation}</p>
+            <p>Le questionnaire de préparation du Bilan Carbone® de <strong>{WebUtility.HtmlEncode(raisonSociale)}</strong> est disponible dans votre espace client.</p>
+            <p>Une vingtaine de questions simples (oui / non, quelques chiffres) nous permettent d'identifier les postes d'émissions qui vous concernent et de vous remettre la liste précise des documents à rassembler. Comptez 5 à 10 minutes ; vous pouvez enregistrer et reprendre plus tard.</p>
+            <p><a href="{lienQuestionnaire}">Remplir mon questionnaire</a></p>
+            <p>Vous devrez vous connecter avec l'identifiant et le mot de passe de votre espace client.</p>
+            """;
+
+        return (sujet, corps);
+    }
 }

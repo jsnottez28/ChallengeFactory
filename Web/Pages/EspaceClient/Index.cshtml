@@ -1,0 +1,111 @@
+@page
+@using Domain.Entities
+@using Web.Services
+@model Web.Pages.EspaceClient.IndexModel
+@{
+    ViewData["Title"] = "Mon espace client";
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="mb-4">
+            <p class="text-muted mb-1">Espace client Bilan Carbone®</p>
+            <h1 class="h3 mb-0">@(Model.Dossier?.RaisonSociale ?? "Mon espace client")</h1>
+        </div>
+
+        @if (Model.Dossier is null)
+        {
+            <div class="card border-0 shadow-sm" style="max-width: 720px;">
+                <div class="card-body p-4">
+                    <p class="mb-0">Votre espace est en cours de préparation. Votre consultant vous enverra prochainement le questionnaire de préparation de votre Bilan Carbone®.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-1">Étape 1</p>
+                            <h2 class="h5">Questionnaire de préparation</h2>
+                            @switch (Model.Dossier.StatutQuestionnaire)
+                            {
+                                case null:
+                                    <p class="text-muted mb-0">Votre consultant vous l'enverra prochainement.</p>
+                                    break;
+                                case StatutQuestionnaireCollecte.Soumis:
+                                    <p class="mb-0"><span class="badge bg-success">Envoyé le @Model.Dossier.QuestionnaireSoumisLe?.ToLocalTime().ToString("dd/MM/yyyy")</span></p>
+                                    break;
+                                default:
+                                    <p class="mb-3">Une vingtaine de questions pour identifier les postes d'émissions qui vous concernent (5 à 10 minutes).</p>
+                                    <a class="btn btn-primary" asp-page="/EspaceClient/Questionnaire">@(Model.Dossier.StatutQuestionnaire == StatutQuestionnaireCollecte.EnCours ? "Reprendre le questionnaire" : "Remplir le questionnaire")</a>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-1">Étape 2</p>
+                            <h2 class="h5">Collecte des données</h2>
+                            <p class="mb-0">@(Model.Checklist.Count > 0 ? $"{Model.Checklist.Count} données à rassembler — voir la liste ci-dessous." : "La liste des documents à rassembler s'affichera ici après l'envoi du questionnaire.")</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-1">Étape 3</p>
+                            <h2 class="h5">Plan d'action de décarbonation</h2>
+                            <p class="text-muted mb-0">Disponible après la réalisation de votre Bilan Carbone®.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Checklist.Count > 0)
+            {
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-1">Documents et données à rassembler</h2>
+                        <p class="text-muted small mb-0">Votre consultant vous transmettra le tableur de collecte correspondant. Les valeurs déjà connues viennent de votre pré-diagnostic : il suffira de les confirmer.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        @foreach (var groupe in Model.Checklist.GroupBy(e => e.Poste))
+                        {
+                            <h3 class="h6 mt-3 text-success">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</h3>
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var element in groupe)
+                                {
+                                    <li class="border-bottom py-2">
+                                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                                            <span>
+                                                @element.Donnee
+                                                @if (element.Valeur.HasValue)
+                                                {
+                                                    <span class="badge bg-success-subtle text-success-emphasis ms-1">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span>
+                                                }
+                                            </span>
+                                            <span class="text-muted small">@element.Referent</span>
+                                        </div>
+                                        <div class="small text-muted">📄 @element.PieceJustificative</div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>
