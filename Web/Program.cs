@@ -46,7 +46,7 @@ builder.Services.AddScoped<IEmailService>(sp =>
 
     if (env.IsDevelopment() && (settings.UseConsoleEmail || string.IsNullOrWhiteSpace(settings.SmtpHost)))
     {
-        return new ConsoleEmailService();
+        return new ConsoleEmailService(sp.GetRequiredService<ILogger<ConsoleEmailService>>());
     }
 
     return new SmtpEmailService(Options.Create(settings), sp.GetRequiredService<ILogger<SmtpEmailService>>());
