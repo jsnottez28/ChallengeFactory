@@ -211,6 +211,32 @@
                             Télécharger le tableur de collecte (.xlsx)
                         </a>
                         <p class="text-muted small mt-2 mb-0">Pré-rempli avec le pré-diagnostic@(dossier?.StatutQuestionnaire == StatutQuestionnaireCollecte.Soumis ? " et les réponses au questionnaire" : "") ; un onglet par poste concerné.</p>
+
+                        @if (dossier?.TableurDeposeLe is not null)
+                        {
+                            <hr />
+                            <p class="mb-1"><strong>Dépôt du client :</strong> @dossier.TableurDeposeLe.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                            @if (dossier.TableurDeposeAvancementPourcent is int avancement)
+                            {
+                                <div class="progress mb-2" style="height: 10px;" role="progressbar" aria-valuenow="@avancement" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar bg-success" style="width: @(avancement)%;"></div>
+                                </div>
+                                <p class="text-muted small mb-2">Avancement estimé : <strong>@avancement %</strong> des lignes au statut Reçu/Validé.</p>
+                            }
+                            <p class="mb-3">
+                                @if (dossier.CollecteDeclareeTerminee == true)
+                                {
+                                    <span class="badge bg-success">Collecte déclarée terminée par le client</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Collecte en cours (déclarée non terminée)</span>
+                                }
+                            </p>
+                            <a class="btn btn-outline-primary w-100" asp-controller="PreDiagnosticsCarbone" asp-action="TableurDepose" asp-route-id="@Model.Id">
+                                Télécharger le fichier déposé par le client
+                            </a>
+                        }
                     </div>
                 </div>
             </div>

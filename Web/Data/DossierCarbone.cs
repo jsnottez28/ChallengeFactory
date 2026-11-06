@@ -26,6 +26,23 @@ public class DossierCarbone
     public string? OuvertParId { get; set; }
 
     public QuestionnaireCollecte? Questionnaire { get; set; }
+
+    // Dernier tableur de collecte .xlsx depose par le client depuis son Espace Client -
+    // un seul conserve (le precedent est supprime du stockage a chaque nouveau depot),
+    // jamais un historique complet. CheminStockage : reference opaque
+    // IPreuveFichierStockageService, jamais exposee telle quelle en dehors du service.
+    public string? TableurDeposeCheminStockage { get; set; }
+    public string? TableurDeposeNomFichier { get; set; }
+    public DateTime? TableurDeposeLe { get; set; }
+
+    // Avancement estimatif (0-100), recalcule a chaque depot : % des lignes du tableur au
+    // statut Recu/Valide. Approximatif par nature (cf. TableurCollecteAvancementCalculator)
+    // - jamais presente comme une mesure exacte.
+    public int? TableurDeposeAvancementPourcent { get; set; }
+
+    // Declaration du client au moment du depot ("j'ai termine la collecte") - purement
+    // informatif pour le Gestionnaire, ne bloque jamais un depot ulterieur.
+    public bool? CollecteDeclareeTerminee { get; set; }
 }
 
 // Questionnaire de collecte (questions de filtrage du Bilan Carbone(R)) rempli par le client

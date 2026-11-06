@@ -1309,6 +1309,9 @@ namespace Web.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<bool?>("CollecteDeclareeTerminee")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("OuvertLe")
                         .HasColumnType("datetime2");
 
@@ -1322,6 +1325,18 @@ namespace Web.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("TableurDeposeAvancementPourcent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TableurDeposeCheminStockage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("TableurDeposeLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TableurDeposeNomFichier")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

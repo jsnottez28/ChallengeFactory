@@ -49,6 +49,11 @@ public sealed class DossierCarboneInfo
     public DateTime? QuestionnaireSoumisLe { get; set; }
 
     public Dictionary<string, string> Reponses { get; set; } = [];
+
+    public string? TableurDeposeNomFichier { get; set; }
+    public DateTime? TableurDeposeLe { get; set; }
+    public int? TableurDeposeAvancementPourcent { get; set; }
+    public bool? CollecteDeclareeTerminee { get; set; }
 }
 
 // Dossier client carbone : ouverture d'un compte ClientCarbone a partir d'un
@@ -90,5 +95,17 @@ public interface ICollecteCarboneService
     Task<List<ElementCollecteInfo>> GetChecklistAsync(int dossierId);
 
     // Tableur de collecte .xlsx (colonnes de la Matrice de collecte ABC, pre-rempli).
-    Task<(byte[] Contenu, string NomFichier)?> GenererTableurAsync(int preBilanId);
+    // lienEspaceClient (optionnel) : affiche dans la feuille "Lisez-moi" un lien de retour
+    // vers l'Espace Client, pour suivre sa progression et retrouver ce fichier en ligne.
+    Task<(byte[] Contenu, string NomFichier)?> GenererTableurAsync(int preBilanId, string? lienEspaceClient = null);
+
+    // Depot par le client de son tableur de collecte rempli - remplace le depot precedent
+    // (un seul conserve, jamais un historique). Recalcule l'avancement estimatif a partir
+    // du contenu (cf. TableurCollecteAvancementCalculator). Refuse si le fichier n'est pas
+    // un classeur Excel valide.
+    Task<(bool Success, string? ErrorMessage)> DeposerTableurRempliAsync(string clientUtilisateurId, Stream contenu, string nomFichier, bool collecteDeclareeTerminee);
+
+    // Cote Gestionnaire : le dernier fichier depose par le client, tel quel (pas
+    // regenere) - null si aucun depot n'a encore ete fait.
+    Task<(Stream Contenu, string NomFichier)?> TelechargerDernierTableurDeposeAsync(int preBilanId);
 }

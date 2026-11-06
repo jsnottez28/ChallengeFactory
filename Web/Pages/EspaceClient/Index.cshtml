@@ -15,6 +15,13 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
             </div>
         }
+        @if (TempData["ErreurDepotTableur"] is string erreurDepot && !string.IsNullOrWhiteSpace(erreurDepot))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @erreurDepot
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
 
         <div class="mb-4">
             <p class="text-muted mb-1">Espace client Bilan Carbone®</p>
@@ -59,6 +66,19 @@
                             <p class="text-muted small mb-1">Étape 2</p>
                             <h2 class="h5">Collecte des données</h2>
                             <p class="mb-2">@(Model.Checklist.Count > 0 ? $"{Model.Checklist.Count} données à rassembler — voir la liste ci-dessous." : "La liste des documents à rassembler s'affichera ici après l'envoi du questionnaire.")</p>
+                            @if (Model.Dossier.TableurDeposeAvancementPourcent is int avancement)
+                            {
+                                <div class="progress mb-1" style="height: 8px;" role="progressbar" aria-valuenow="@avancement" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar bg-success" style="width: @(avancement)%;"></div>
+                                </div>
+                                <p class="text-muted small mb-2">
+                                    Avancement estimé : <strong>@avancement %</strong>
+                                    @if (Model.Dossier.TableurDeposeLe is DateTime deposeLe)
+                                    {
+                                        <text> (dernier dépôt le @deposeLe.ToLocalTime().ToString("dd/MM/yyyy"))</text>
+                                    }
+                                </p>
+                            }
                             <a class="btn btn-outline-success btn-sm" asp-page="/EspaceClient/Index" asp-page-handler="Tableur">⬇️ Télécharger mon tableur de collecte (.xlsx)</a>
                         </div>
                     </div>
@@ -71,6 +91,27 @@
                             <p class="text-muted mb-0">Disponible après la réalisation de votre Bilan Carbone®.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-4" style="max-width: 720px;">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h2 class="h5 mb-1">Déposer mon tableur rempli</h2>
+                    <p class="text-muted small mb-0">Une fois vos données saisies dans le tableur téléchargé ci-dessus, déposez-le ici pour mettre à jour votre avancement et le transmettre à votre consultant.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" asp-page-handler="DeposerTableur" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="fichier" class="form-label">Fichier (.xlsx)</label>
+                            <input type="file" class="form-control" id="fichier" name="fichier" accept=".xlsx" required>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="collecteTerminee" name="collecteTerminee" value="true">
+                            <label class="form-check-label" for="collecteTerminee">J'ai terminé la collecte de toutes les données</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Déposer ce fichier</button>
+                    </form>
                 </div>
             </div>
 

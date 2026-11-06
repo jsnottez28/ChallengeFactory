@@ -25,7 +25,24 @@ public static class TableurCollecteGenerator
     private static readonly XLColor VertClair = XLColor.FromHtml("#E8F5E9");
     private static readonly XLColor Orange = XLColor.FromHtml("#F28C28");
 
-    public static byte[] Generer(string raisonSociale, DateTime dateGeneration, IReadOnlyList<ElementCollecteInfo> elements)
+    // Un mot sur l'enjeu de chaque poste + un exemple concret, affiche en tete de chaque
+    // onglet - pour que remplir le tableur ait du sens plutot que de cocher des cases.
+    private static readonly IReadOnlyDictionary<PosteCollecte, string> NotesPedagogiques = new Dictionary<PosteCollecte, string>
+    {
+        [PosteCollecte.Descriptif] = "Ces informations cadrent le périmètre de votre Bilan Carbone® (taille, activité, année de référence) : elles ne génèrent pas d'émissions mais permettent de comparer vos résultats dans le temps et à des entreprises similaires.",
+        [PosteCollecte.Energie] = "L'énergie de vos sites (électricité, gaz, fioul…) est souvent le poste le plus facile à mesurer précisément grâce à vos factures. Exemple : 20 000 kWh d'électricité par an représentent environ 1,2 t CO2e.",
+        [PosteCollecte.AutresEmissionsDirectes] = "Les fuites de fluides frigorigènes (climatisation, chambres froides) sont un poste invisible en comptabilité mais souvent très impactant : quelques kg de gaz R410a peuvent représenter plusieurs tonnes de CO2e.",
+        [PosteCollecte.DechetsDirects] = "Le traitement de vos déchets (collecte, incinération, enfouissement) émet du CO2 selon le mode de traitement choisi : le recyclage émet généralement moins que l'enfouissement.",
+        [PosteCollecte.Immobilisations] = "Vos bâtiments, véhicules et équipements ont nécessité de l'énergie et des matières pour être fabriqués : cet impact est amorti sur leur durée de vie, comme en comptabilité.",
+        [PosteCollecte.IntrantsBiensEtMatieres] = "Les matières premières et produits physiques que vous achetez (métaux, plastiques, papier…) ont une empreinte carbone liée à leur fabrication, calculée au poids.",
+        [PosteCollecte.IntrantsServices] = "Vos dépenses de services (conseil, informatique, assurances…) sont estimées via un ratio €→CO2e par secteur d'activité, à partir de votre comptabilité (export FEC).",
+        [PosteCollecte.Fret] = "Le transport de marchandises (vos achats livrés, vos produits expédiés) émet du CO2 selon le mode utilisé (route, rail, mer, air) et la distance parcourue.",
+        [PosteCollecte.Deplacements] = "Les trajets domicile-travail et professionnels comptent parmi les postes les plus variables d'une entreprise à l'autre : un trajet en covoiturage ou à vélo pèse bien moins qu'une voiture seule.",
+        [PosteCollecte.Utilisation] = "Si vos produits consomment de l'énergie une fois chez le client (appareil électrique, véhicule…), cette consommation sur toute leur durée de vie fait partie de votre empreinte.",
+        [PosteCollecte.FinDeVie] = "Le devenir de vos produits et emballages une fois jetés (recyclage, incinération) complète le cycle de vie de ce que vous mettez sur le marché.",
+    };
+
+    public static byte[] Generer(string raisonSociale, DateTime dateGeneration, IReadOnlyList<ElementCollecteInfo> elements, string? lienEspaceClient = null)
     {
         using var classeur = new XLWorkbook();
 
@@ -34,7 +51,7 @@ public static class TableurCollecteGenerator
             .OrderBy(g => g.Key)
             .ToList();
 
-        EcrireLisezMoi(classeur.Worksheets.Add("Lisez-moi"), raisonSociale, dateGeneration);
+        EcrireLisezMoi(classeur.Worksheets.Add("Lisez-moi"), raisonSociale, dateGeneration, lienEspaceClient);
         var suivi = classeur.Worksheets.Add("Suivi");
 
         foreach (var groupe in parPoste)
@@ -56,7 +73,7 @@ public static class TableurCollecteGenerator
         return nom.Length > 31 ? nom[..31] : nom;
     }
 
-    private static void EcrireLisezMoi(IXLWorksheet feuille, string raisonSociale, DateTime dateGeneration)
+    private static void EcrireLisezMoi(IXLWorksheet feuille, string raisonSociale, DateTime dateGeneration, string? lienEspaceClient)
     {
         feuille.Cell(1, 1).Value = "Tableur de collecte — Bilan Carbone®";
         feuille.Cell(1, 1).Style.Font.SetBold().Font.SetFontSize(16).Font.SetFontColor(Vert);
@@ -65,15 +82,30 @@ public static class TableurCollecteGenerator
         feuille.Cell(3, 1).Value = $"Généré le {dateGeneration.ToLocalTime():dd/MM/yyyy} par Challenges Factory";
         feuille.Cell(3, 1).Style.Font.SetItalic();
 
+        var ligne = 5;
+
+        if (!string.IsNullOrWhiteSpace(lienEspaceClient))
+        {
+            var celluleLien = feuille.Cell(ligne, 1);
+            celluleLien.Value = "➜ Suivre ma collecte et retrouver ce fichier en ligne : mon Espace Client Bilan Carbone®";
+            celluleLien.SetHyperlink(new XLHyperlink(lienEspaceClient));
+            celluleLien.Style.Font.SetFontColor(XLColor.FromHtml("#1A73E8")).Font.SetUnderline().Font.SetBold();
+            ligne += 2;
+        }
+
         string[] lignes =
         [
-            "Comment remplir ce tableur",
-            "1. Chaque onglet correspond à un poste du Bilan Carbone® (nomenclature de l'Association pour la transition Bas Carbone).",
+            "Pourquoi ce tableur ?",
+            "Un Bilan Carbone® mesure les émissions de gaz à effet de serre de votre activité, poste par poste, pour identifier où agir en priorité - c'est la première étape avant tout plan de décarbonation crédible.",
+            "",
+            "Comment le remplir",
+            "1. Chaque onglet correspond à un poste du Bilan Carbone® (nomenclature de l'Association pour la transition Bas Carbone) - un court texte en tête d'onglet explique l'enjeu de ce poste, avec un exemple concret.",
             "2. Pour chaque ligne, renseignez la Valeur et l'Unité, puis indiquez d'où vient le chiffre (colonne Source) et vos éventuelles hypothèses.",
             "3. Colonne Type : Physique (relevé, facture en kWh, kg…), Comptable (montant en k€ HT), Extrapolée (calculée à partir d'un échantillon), Statistique (moyenne sectorielle), Approchée (estimation).",
-            "4. Les lignes déjà remplies proviennent de votre pré-diagnostic : merci de les vérifier et de les corriger si besoin.",
+            "4. Les lignes déjà remplies (en vert) proviennent de votre pré-diagnostic ou de vos réponses au questionnaire : merci de les vérifier et de les corriger si besoin plutôt que de les ressaisir.",
             "5. Vous pouvez ajouter des lignes (par exemple une ligne par site ou par fournisseur) en recopiant une ligne existante.",
-            "6. Joignez les pièces justificatives indiquées dans votre espace client ou par email à votre consultant.",
+            "6. Joignez les pièces justificatives indiquées (colonne \"Pièce justificative\") depuis votre espace client, ou envoyez-les par email à votre consultant.",
+            "7. La colonne \"Pourquoi cette donnée\" rappelle ce qui a déclenché la demande (une réponse au questionnaire, une donnée du pré-diagnostic) - utile si vous avez un doute sur une ligne.",
             "",
             "Unités : les montants sont attendus en k€ HT (milliers d'euros hors taxe), comme dans le tableur Bilan Carbone® officiel.",
             "Confidentialité : ces données ne servent qu'à la réalisation de votre Bilan Carbone®.",
@@ -81,10 +113,11 @@ public static class TableurCollecteGenerator
 
         for (var i = 0; i < lignes.Length; i++)
         {
-            feuille.Cell(5 + i, 1).Value = lignes[i];
+            feuille.Cell(ligne + i, 1).Value = lignes[i];
         }
 
-        feuille.Cell(5, 1).Style.Font.SetBold().Font.SetFontColor(Orange);
+        feuille.Cell(ligne, 1).Style.Font.SetBold().Font.SetFontColor(Orange);
+        feuille.Cell(ligne + 3, 1).Style.Font.SetBold().Font.SetFontColor(Orange);
         feuille.Column(1).Width = 140;
         feuille.Column(1).Style.Alignment.WrapText = true;
     }
@@ -93,6 +126,15 @@ public static class TableurCollecteGenerator
     {
         feuille.Cell(1, 1).Value = QuestionnaireCollecteCatalogue.LibellePoste(poste);
         feuille.Cell(1, 1).Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(Vert);
+
+        if (NotesPedagogiques.TryGetValue(poste, out var note))
+        {
+            var celluleNote = feuille.Range(2, 1, 2, Entetes.Length).Merge().FirstCell();
+            celluleNote.Value = note;
+            celluleNote.Style.Font.SetItalic().Font.SetFontColor(XLColor.FromHtml("#5A5650"));
+            celluleNote.Style.Alignment.WrapText = true;
+            feuille.Row(2).Height = 32;
+        }
 
         const int ligneEntete = 3;
         for (var c = 0; c < Entetes.Length; c++)

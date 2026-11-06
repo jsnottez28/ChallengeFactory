@@ -58,7 +58,7 @@ public class CollecteCarboneServiceTests
     private static (CollecteCarboneService Service, FakeEmailService Emails) CreerService(ApplicationDbContext dbContext)
     {
         var emails = new FakeEmailService();
-        return (new CollecteCarboneService(dbContext, TestUserManagerFactory.Create(dbContext), emails), emails);
+        return (new CollecteCarboneService(dbContext, TestUserManagerFactory.Create(dbContext), emails, new FakePreuveFichierStockageService()), emails);
     }
 
     private static Dictionary<string, string> ReponsesCompletes(string valeurOuiNon) =>
@@ -311,5 +311,80 @@ public class CollecteCarboneServiceTests
         var ligneElec = energie.RowsUsed().First(r => r.Cell(4).TryGetValue<double>(out var v) && v == 20_000);
         Assert.Equal("Approchée", ligneElec.Cell(6).GetString());
         Assert.Equal("Reçu", ligneElec.Cell(11).GetString());
+    }
+
+    [Fact]
+    public async Task DeposerTableurRempliAsync_MetAJourLAvancementEtRemplaceLAncienDepot()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+
+        var tableur = await service.GenererTableurAsync(preBilan.Id);
+        var (premierDepot, erreur1) = await service.DeposerTableurRempliAsync(clientId, new MemoryStream(tableur!.Value.Contenu), "rempli-v1.xlsx", collecteDeclareeTerminee: false);
+        Assert.True(premierDepot, erreur1);
+
+        var dossierApres1 = await service.GetDossierClientAsync(clientId);
+        Assert.NotNull(dossierApres1!.TableurDeposeLe);
+        Assert.NotNull(dossierApres1.TableurDeposeAvancementPourcent);
+        Assert.True(dossierApres1.TableurDeposeAvancementPourcent is > 0 and < 100);
+        Assert.False(dossierApres1.CollecteDeclareeTerminee);
+        Assert.Equal("rempli-v1.xlsx", dossierApres1.TableurDeposeNomFichier);
+
+        // Second depot : remplace le precedent (un seul conserve), peut declarer termine.
+        var (secondDepot, erreur2) = await service.DeposerTableurRempliAsync(clientId, new MemoryStream(tableur.Value.Contenu), "rempli-v2.xlsx", collecteDeclareeTerminee: true);
+        Assert.True(secondDepot, erreur2);
+
+        var dossierApres2 = await service.GetDossierClientAsync(clientId);
+        Assert.Equal("rempli-v2.xlsx", dossierApres2!.TableurDeposeNomFichier);
+        Assert.True(dossierApres2.CollecteDeclareeTerminee);
+    }
+
+    [Fact]
+    public async Task DeposerTableurRempliAsync_Refuse_FichierInvalide()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+
+        var (success, erreur) = await service.DeposerTableurRempliAsync(clientId, new MemoryStream("pas un xlsx"u8.ToArray()), "rempli.xlsx", collecteDeclareeTerminee: false);
+
+        Assert.False(success);
+        Assert.NotNull(erreur);
+        Assert.Null((await service.GetDossierClientAsync(clientId))!.TableurDeposeLe);
+    }
+
+    [Fact]
+    public async Task TelechargerDernierTableurDeposeAsync_RenvoieNull_SiAucunDepot()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+
+        Assert.Null(await service.TelechargerDernierTableurDeposeAsync(preBilan.Id));
+    }
+
+    [Fact]
+    public async Task TelechargerDernierTableurDeposeAsync_RenvoieLeDernierFichierDepose()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var tableur = await service.GenererTableurAsync(preBilan.Id);
+        await service.DeposerTableurRempliAsync(clientId, new MemoryStream(tableur!.Value.Contenu), "rempli.xlsx", collecteDeclareeTerminee: false);
+
+        var depot = await service.TelechargerDernierTableurDeposeAsync(preBilan.Id);
+
+        Assert.NotNull(depot);
+        Assert.Equal("rempli.xlsx", depot!.Value.NomFichier);
+        using var classeur = new XLWorkbook(depot.Value.Contenu);
+        Assert.Contains("Lisez-moi", classeur.Worksheets.Select(f => f.Name));
     }
 }

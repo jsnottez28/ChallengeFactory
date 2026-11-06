@@ -102,7 +102,23 @@ public class PreDiagnosticsCarboneController(
     [Authorize(Policy = "Droit:PREBILAN.CONSULTER")]
     public async Task<IActionResult> TableurCollecte(int id)
     {
-        var tableur = await collecteService.GenererTableurAsync(id);
+        var lienEspaceClient = Url.Page("/EspaceClient/Index", null, null, Request.Scheme);
+        var tableur = await collecteService.GenererTableurAsync(id, lienEspaceClient);
+        if (tableur is null)
+        {
+            return NotFound();
+        }
+
+        return File(tableur.Value.Contenu, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", tableur.Value.NomFichier);
+    }
+
+    // Le dernier tableur depose PAR LE CLIENT (fichier tel quel, pas regenere) - distinct
+    // de TableurCollecte ci-dessus qui genere toujours la version pre-remplie a jour.
+    [HttpGet("{id:int}/TableurDepose")]
+    [Authorize(Policy = "Droit:PREBILAN.CONSULTER")]
+    public async Task<IActionResult> TableurDepose(int id)
+    {
+        var tableur = await collecteService.TelechargerDernierTableurDeposeAsync(id);
         if (tableur is null)
         {
             return NotFound();

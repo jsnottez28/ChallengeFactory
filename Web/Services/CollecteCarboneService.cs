@@ -10,7 +10,8 @@ namespace Web.Services;
 public sealed class CollecteCarboneService(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
-    IEmailService emailService) : ICollecteCarboneService
+    IEmailService emailService,
+    IPreuveFichierStockageService stockageService) : ICollecteCarboneService
 {
     public async Task<DossierCarboneInfo?> GetDossierParPreBilanAsync(int preBilanId)
     {
@@ -241,7 +242,7 @@ public sealed class CollecteCarboneService(
         return ChecklistCollecteBuilder.Construire(dossier.PreBilanCarbone, LireReponses(dossier.Questionnaire));
     }
 
-    public async Task<(byte[] Contenu, string NomFichier)?> GenererTableurAsync(int preBilanId)
+    public async Task<(byte[] Contenu, string NomFichier)?> GenererTableurAsync(int preBilanId, string? lienEspaceClient = null)
     {
         var dossier = await RequeteDossiers().FirstOrDefaultAsync(d => d.PreBilanCarboneId == preBilanId);
 
@@ -272,12 +273,68 @@ public sealed class CollecteCarboneService(
         }
 
         var elements = ChecklistCollecteBuilder.Construire(preBilan, reponses);
-        var contenu = TableurCollecteGenerator.Generer(raisonSociale, DateTime.UtcNow, elements);
+        var contenu = TableurCollecteGenerator.Generer(raisonSociale, DateTime.UtcNow, elements, lienEspaceClient);
 
         var nomSur = new string(raisonSociale.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray()).Trim('_');
         var nomFichier = $"Collecte_Bilan_Carbone_{(nomSur.Length > 0 ? nomSur : "client")}_{DateTime.Now:yyyyMMdd}.xlsx";
 
         return (contenu, nomFichier);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> DeposerTableurRempliAsync(string clientUtilisateurId, Stream contenu, string nomFichier, bool collecteDeclareeTerminee)
+    {
+        var dossier = await dbContext.DossiersCarbone
+            .Where(d => d.ClientUtilisateurId == clientUtilisateurId)
+            .OrderByDescending(d => d.OuvertLe)
+            .FirstOrDefaultAsync();
+        if (dossier is null)
+        {
+            return (false, "Aucun espace client Bilan Carbone® ne vous est associé.");
+        }
+
+        // Tamponne une seule fois : un flux sert a la validation/au calcul de l'avancement
+        // (lecture XLWorkbook), l'autre au stockage brut - XLWorkbook consomme le flux
+        // qu'on lui passe, impossible de le reutiliser tel quel pour les deux usages.
+        await using var tampon = new MemoryStream();
+        await contenu.CopyToAsync(tampon);
+        var octets = tampon.ToArray();
+
+        var avancement = TableurCollecteAvancementCalculator.Calculer(new MemoryStream(octets));
+        if (avancement is null)
+        {
+            return (false, "Ce fichier n'a pas pu être lu comme un classeur Excel valide (.xlsx). Vérifiez qu'il s'agit bien du tableur de collecte téléchargé depuis votre espace, non modifié dans sa structure.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(dossier.TableurDeposeCheminStockage))
+        {
+            // Un seul depot conserve : supprime l'ancien fichier avant d'enregistrer le
+            // nouveau, pour ne pas accumuler des fichiers orphelins sur le stockage.
+            await stockageService.SupprimerAsync(dossier.TableurDeposeCheminStockage);
+        }
+
+        var cheminStockage = await stockageService.EnregistrerAsync(new MemoryStream(octets), nomFichier);
+
+        dossier.TableurDeposeCheminStockage = cheminStockage;
+        dossier.TableurDeposeNomFichier = nomFichier;
+        dossier.TableurDeposeLe = DateTime.UtcNow;
+        dossier.TableurDeposeAvancementPourcent = avancement;
+        dossier.CollecteDeclareeTerminee = collecteDeclareeTerminee;
+
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(Stream Contenu, string NomFichier)?> TelechargerDernierTableurDeposeAsync(int preBilanId)
+    {
+        var dossier = await dbContext.DossiersCarbone.FirstOrDefaultAsync(d => d.PreBilanCarboneId == preBilanId);
+        if (dossier?.TableurDeposeCheminStockage is null)
+        {
+            return null;
+        }
+
+        var flux = await stockageService.TelechargerAsync(dossier.TableurDeposeCheminStockage);
+        return flux is null ? null : (flux, dossier.TableurDeposeNomFichier ?? "tableur-collecte.xlsx");
     }
 
     private IQueryable<DossierCarbone> RequeteDossiers() => dbContext.DossiersCarbone
@@ -339,5 +396,9 @@ public sealed class CollecteCarboneService(
         QuestionnaireEnvoyeLe = dossier.Questionnaire?.EnvoyeLe,
         QuestionnaireSoumisLe = dossier.Questionnaire?.SoumisLe,
         Reponses = LireReponses(dossier.Questionnaire),
+        TableurDeposeNomFichier = dossier.TableurDeposeNomFichier,
+        TableurDeposeLe = dossier.TableurDeposeLe,
+        TableurDeposeAvancementPourcent = dossier.TableurDeposeAvancementPourcent,
+        CollecteDeclareeTerminee = dossier.CollecteDeclareeTerminee,
     };
 }

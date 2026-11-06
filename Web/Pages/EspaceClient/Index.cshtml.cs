@@ -16,6 +16,8 @@ namespace Web.Pages.EspaceClient;
 [Authorize]
 public class IndexModel(ICollecteCarboneService collecteService, UserManager<ApplicationUser> userManager) : PageModel
 {
+    private const long TailleMaxTableurOctets = 10 * 1024 * 1024; // 10 Mo
+
     public DossierCarboneInfo? Dossier { get; private set; }
     public List<ElementCollecteInfo> Checklist { get; private set; } = [];
 
@@ -59,12 +61,52 @@ public class IndexModel(ICollecteCarboneService collecteService, UserManager<App
             return RedirectToPage("/Dashboard/Index");
         }
 
-        var tableur = await collecteService.GenererTableurAsync(dossier.PreBilanCarboneId);
+        var lienEspaceClient = Url.Page("/EspaceClient/Index", null, null, Request.Scheme);
+        var tableur = await collecteService.GenererTableurAsync(dossier.PreBilanCarboneId, lienEspaceClient);
         if (tableur is null)
         {
             return NotFound();
         }
 
         return File(tableur.Value.Contenu, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", tableur.Value.NomFichier);
+    }
+
+    // Self-service : le client depose son tableur rempli (remplace le depot precedent -
+    // un seul conserve). La "jauge" affichee ensuite est recalculee a partir de CE
+    // fichier, pas saisie a la main par le client.
+    public async Task<IActionResult> OnPostDeposerTableurAsync(IFormFile? fichier, bool collecteTerminee)
+    {
+        var utilisateur = await userManager.GetUserAsync(User);
+        if (utilisateur is null)
+        {
+            return Challenge();
+        }
+
+        if (fichier is null || fichier.Length == 0)
+        {
+            TempData["ErreurDepotTableur"] = "Merci de choisir un fichier avant de le déposer.";
+            return RedirectToPage();
+        }
+
+        if (!string.Equals(Path.GetExtension(fichier.FileName), ".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["ErreurDepotTableur"] = "Seuls les fichiers .xlsx sont acceptés.";
+            return RedirectToPage();
+        }
+
+        if (fichier.Length > TailleMaxTableurOctets)
+        {
+            TempData["ErreurDepotTableur"] = $"Ce fichier dépasse la taille maximale autorisée ({TailleMaxTableurOctets / (1024 * 1024)} Mo).";
+            return RedirectToPage();
+        }
+
+        await using var flux = fichier.OpenReadStream();
+        var (success, errorMessage) = await collecteService.DeposerTableurRempliAsync(utilisateur.Id, flux, fichier.FileName, collecteTerminee);
+
+        TempData[success ? "StatusMessage" : "ErreurDepotTableur"] = success
+            ? "Votre tableur a bien été déposé. L'avancement estimé a été mis à jour."
+            : errorMessage;
+
+        return RedirectToPage();
     }
 }
