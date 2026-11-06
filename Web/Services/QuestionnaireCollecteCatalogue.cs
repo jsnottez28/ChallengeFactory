@@ -18,6 +18,11 @@ public sealed record QuestionCollecte(
     string? Unite = null,
     string[]? Choix = null);
 
+// Une colonne du tableur de collecte .xlsx (cf. TableurCollecteGenerator.EcrirePoste) et son
+// explication - source unique reutilisee a la fois en commentaire Excel sur chaque en-tete
+// de colonne, et dans la legende affichee sur l'Espace Client (Web/Pages/EspaceClient/Index).
+public sealed record ColonneTableur(string Nom, string Explication);
+
 // Catalogue des questions de filtrage du questionnaire de collecte. Chaque question
 // active (ou non) des postes/sous-postes du tableur Bilan Carbone(R) V9.0 qui ne peuvent
 // PAS etre detectes par le Pre-diagnostic (approche monetaire) : fluides frigorigenes,
@@ -100,6 +105,24 @@ public static class QuestionnaireCollecteCatalogue
 
     public static readonly IReadOnlyDictionary<string, QuestionCollecte> ParCode =
         Questions.ToDictionary(q => q.Code);
+
+    // Ordre = ordre des colonnes dans le tableur .xlsx (cf. TableurCollecteGenerator).
+    public static readonly IReadOnlyList<ColonneTableur> ColonnesTableur =
+    [
+        new("Sous-poste", "Sous-catégorie du poste (ex. Électricité, Déplacements domicile-travail) - ne pas modifier, sert à classer la donnée."),
+        new("Donnée à collecter", "Ce qui est précisément attendu sur cette ligne - voir aussi la check-list de votre Espace Client pour le détail et la pièce justificative associée."),
+        new("Libellé personnalisé", "Facultatif : précisez un détail propre à votre cas (nom du site, du fournisseur...) si vous dédoublez cette ligne pour plusieurs éléments."),
+        new("Valeur", "Le chiffre que vous renseignez - toujours un nombre, jamais de texte ni d'unité ici (l'unité est dans la colonne suivante)."),
+        new("Unité", "Unité de la colonne Valeur (kWh, k€ HT, km...) - déjà pré-remplie ; à adapter seulement si vous changez d'unité de mesure."),
+        new("Type", "Comment la valeur a été obtenue : Physique (relevé/compteur), Comptable (montant en €), Extrapolée (calculée à partir d'un échantillon), Statistique (moyenne/ratio sectoriel), Approchée (estimation)."),
+        new("Source", "D'où vient le chiffre (ex. « Facture EDF janvier-décembre 2026 », « Export FEC compte 606100 ») - essentiel pour la traçabilité du Bilan Carbone®."),
+        new("Hypothèses", "Toute hypothèse ou approximation faite pour obtenir ce chiffre (ex. « consommation extrapolée sur 3 mois »)."),
+        new("Pièce justificative", "Le document qui prouve ce chiffre - à conserver de votre côté, votre consultant peut vous le demander."),
+        new("Référent", "La personne ou le service, en interne, qui détient cette information."),
+        new("Statut", "Où en est la collecte de cette ligne : À demander, Demandé, En attente, Reçu, Validé - c'est cette colonne qui sert à calculer votre avancement."),
+        new("Commentaire", "Libre, pour toute remarque utile à votre consultant."),
+        new("Pourquoi cette donnée", "Rappelle ce qui a déclenché la demande (réponse au questionnaire, donnée du pré-diagnostic) - informatif, ne pas modifier."),
+    ];
 
     public static string LibellePoste(PosteCollecte poste) => poste switch
     {

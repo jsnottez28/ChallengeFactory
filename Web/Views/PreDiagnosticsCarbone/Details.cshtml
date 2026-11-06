@@ -244,17 +244,21 @@
 
         @if (checklist is not null && checklist.Count > 0)
         {
+            var nombreCoches = checklist.Count(e => e.EstCoche);
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-header bg-white border-bottom p-4">
-                    <h2 class="h5 mb-0">Check-list de collecte (@checklist.Count données)</h2>
+                    <h2 class="h5 mb-1">Check-list de collecte (@checklist.Count données)</h2>
+                    <p class="text-muted small mb-0">
+                        <span class="badge bg-success-subtle text-success-emphasis">✅ @nombreCoches cochée@(nombreCoches > 1 ? "s" : "") par le client</span>
+                        sur @checklist.Count — déclaratif, indépendant de l'avancement calculé depuis le fichier déposé ci-dessus.
+                    </p>
                 </div>
                 <div class="card-body p-4">
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th scope="col"></th>
-                                    <th scope="col">Poste</th>
+                                    <th scope="col" style="width: 2.5rem;"></th>
                                     <th scope="col">Donnée</th>
                                     <th scope="col">Pièce justificative</th>
                                     <th scope="col">Référent</th>
@@ -262,22 +266,27 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var element in checklist)
+                                @foreach (var groupe in checklist.GroupBy(e => e.Poste))
                                 {
-                                    <tr>
-                                        <td class="text-center" title="@(element.EstCoche ? "Cochée comme saisie par le client" : "Pas encore cochée par le client")">@(element.EstCoche ? "✅" : "⬜")</td>
-                                        <td class="text-nowrap">@Web.Services.QuestionnaireCollecteCatalogue.LibellePoste(element.Poste)</td>
-                                        <td>
-                                            @element.Donnee
-                                            @if (element.Valeur.HasValue)
-                                            {
-                                                <span class="badge bg-success-subtle text-success-emphasis ms-1">@element.Valeur.Value.ToString("N2") @element.Unite</span>
-                                            }
-                                        </td>
-                                        <td class="small">@element.PieceJustificative</td>
-                                        <td class="small">@element.Referent</td>
-                                        <td class="small text-muted">@element.Declencheur</td>
+                                    <tr class="table-light">
+                                        <td colspan="5" class="fw-semibold text-success py-2">@Web.Services.QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</td>
                                     </tr>
+                                    @foreach (var element in groupe)
+                                    {
+                                        <tr>
+                                            <td class="text-center" title="@(element.EstCoche ? "Cochée comme saisie par le client" : "Pas encore cochée par le client")">@(element.EstCoche ? "✅" : "⬜")</td>
+                                            <td>
+                                                @element.Donnee
+                                                @if (element.Valeur.HasValue)
+                                                {
+                                                    <span class="badge bg-success-subtle text-success-emphasis ms-1">@element.Valeur.Value.ToString("N2") @element.Unite</span>
+                                                }
+                                            </td>
+                                            <td class="small">@element.PieceJustificative</td>
+                                            <td class="small">@element.Referent</td>
+                                            <td class="small text-muted">@element.Declencheur</td>
+                                        </tr>
+                                    }
                                 }
                             </tbody>
                         </table>

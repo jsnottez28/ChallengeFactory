@@ -15,31 +15,9 @@ public static class TableurCollecteGenerator
     private static readonly string[] TypesDonnee = ["Physique", "Comptable", "Extrapolée", "Statistique", "Approchée"];
     private static readonly string[] StatutsCollecte = ["À demander", "Demandé", "En attente", "Reçu", "Validé"];
 
-    private static readonly string[] Entetes =
-    [
-        "Sous-poste", "Donnée à collecter", "Libellé personnalisé", "Valeur", "Unité", "Type",
-        "Source", "Hypothèses", "Pièce justificative", "Référent", "Statut", "Commentaire", "Pourquoi cette donnée",
-    ];
-
-    // Une explication par colonne (meme ordre que Entetes), affichee en commentaire Excel
-    // sur chaque cellule d'en-tete (survol de la petite marque rouge) - pour ne pas avoir a
-    // revenir sans cesse sur la feuille Lisez-moi pendant la saisie.
-    private static readonly string[] ExplicationsColonnes =
-    [
-        "Sous-catégorie du poste (ex. Électricité, Déplacements domicile-travail) - ne pas modifier, sert à classer la donnée.",
-        "Ce qui est précisément attendu sur cette ligne - voir aussi la check-list de votre Espace Client pour le détail et la pièce justificative associée.",
-        "Facultatif : précisez un détail propre à votre cas (nom du site, du fournisseur...) si vous dédoublez cette ligne pour plusieurs éléments.",
-        "Le chiffre que vous renseignez - toujours un nombre, jamais de texte ni d'unité ici (l'unité est dans la colonne suivante).",
-        "Unité de la colonne Valeur (kWh, k€ HT, km...) - déjà pré-remplie ; à adapter seulement si vous changez d'unité de mesure.",
-        "Comment la valeur a été obtenue : Physique (relevé/compteur), Comptable (montant en €), Extrapolée (calculée à partir d'un échantillon), Statistique (moyenne/ratio sectoriel), Approchée (estimation).",
-        "D'où vient le chiffre (ex. \"Facture EDF janvier-décembre 2026\", \"Export FEC compte 606100\") - essentiel pour la traçabilité du Bilan Carbone®.",
-        "Toute hypothèse ou approximation faite pour obtenir ce chiffre (ex. \"consommation extrapolée sur 3 mois\").",
-        "Le document qui prouve ce chiffre - à conserver de votre côté, votre consultant peut vous le demander.",
-        "La personne ou le service, en interne, qui détient cette information.",
-        "Où en est la collecte de cette ligne : À demander, Demandé, En attente, Reçu, Validé - c'est cette colonne qui sert à calculer votre avancement.",
-        "Libre, pour toute remarque utile à votre consultant.",
-        "Rappelle ce qui a déclenché la demande (réponse au questionnaire, donnée du pré-diagnostic) - informatif, ne pas modifier.",
-    ];
+    // Noms et explications des colonnes : source unique QuestionnaireCollecteCatalogue.ColonnesTableur
+    // (aussi affichee en legende sur l'Espace Client).
+    private static readonly string[] Entetes = QuestionnaireCollecteCatalogue.ColonnesTableur.Select(c => c.Nom).ToArray();
 
     private static readonly XLColor Vert = XLColor.FromHtml("#2E7D32");
     private static readonly XLColor VertClair = XLColor.FromHtml("#E8F5E9");
@@ -149,7 +127,7 @@ public static class TableurCollecteGenerator
             cellule.Style.Font.SetBold().Font.SetFontColor(XLColor.White);
             cellule.Style.Fill.SetBackgroundColor(Vert);
             cellule.Style.Alignment.WrapText = true;
-            cellule.CreateComment().AddText(ExplicationsColonnes[c]);
+            cellule.CreateComment().AddText(QuestionnaireCollecteCatalogue.ColonnesTableur[c].Explication);
         }
 
         var ligne = ligneEntete + 1;
