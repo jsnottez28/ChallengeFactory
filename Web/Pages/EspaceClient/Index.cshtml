@@ -91,7 +91,13 @@
                                     }
                                 </p>
                             }
-                            <a class="btn btn-outline-success btn-sm" asp-page="/EspaceClient/Index" asp-page-handler="Tableur">⬇️ Télécharger mon tableur de collecte (.xlsx)</a>
+                            <a class="btn btn-outline-success btn-sm" asp-page="/EspaceClient/Index" asp-page-handler="Tableur">
+                                ⬇️ @(Model.Dossier.TableurDeposeLe is not null ? "Reprendre mon tableur là où je l'ai laissé (.xlsx)" : "Télécharger mon tableur de collecte (.xlsx)")
+                            </a>
+                            @if (Model.Dossier.TableurDeposeLe is not null)
+                            {
+                                <p class="text-muted small mt-1 mb-0">Ce téléchargement reprend votre dernier fichier déposé, avec vos saisies déjà faites.</p>
+                            }
                         </div>
                     </div>
                 </div>
@@ -137,17 +143,21 @@
                     <div class="card-body p-4">
                         <form method="post" asp-page-handler="CocherElements">
                             @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-success btn-sm mb-3">💾 Enregistrer mes cases cochées</button>
                             @foreach (var groupe in Model.Checklist.GroupBy(e => e.Poste))
                             {
-                                <h3 class="h6 mt-3 text-success">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</h3>
+                                var onglet = TableurCollecteGenerator.NomOnglet(groupe.Key);
+                                <h3 class="h6 mt-3 text-success">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key) <span class="badge bg-success-subtle text-success-emphasis fw-normal">Onglet « @onglet » du tableur</span></h3>
                                 var note = QuestionnaireCollecteCatalogue.NotePedagogique(groupe.Key);
                                 @if (!string.IsNullOrWhiteSpace(note))
                                 {
                                     <p class="text-muted small fst-italic mb-2">💡 @note</p>
                                 }
                                 <ul class="list-unstyled mb-0">
+                                    @{ var ligneExcel = 3; }
                                     @foreach (var element in groupe)
                                     {
+                                        ligneExcel++;
                                         var idCase = $"coche-{element.Cle.GetHashCode()}";
                                         <li class="border-bottom py-2">
                                             <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
@@ -161,14 +171,14 @@
                                                         }
                                                     </label>
                                                 </div>
-                                                <span class="text-muted small">@element.Referent</span>
+                                                <span class="text-muted small text-nowrap">📍 Onglet « @onglet », ligne @ligneExcel</span>
                                             </div>
-                                            <div class="small text-muted ps-4">📄 @element.PieceJustificative</div>
+                                            <div class="small text-muted ps-4">📄 @element.PieceJustificative · <span class="fst-italic">Référent : @element.Referent</span></div>
                                         </li>
                                     }
                                 </ul>
                             }
-                            <button type="submit" class="btn btn-outline-success mt-3">Enregistrer mes cases cochées</button>
+                            <button type="submit" class="btn btn-outline-success mt-3">💾 Enregistrer mes cases cochées</button>
                         </form>
                     </div>
                 </div>

@@ -47,6 +47,10 @@ public class IndexModel(ICollecteCarboneService collecteService, UserManager<App
     // attendre que le Gestionnaire le lui transmette manuellement. L'Id du Pre-diagnostic
     // vient toujours du dossier retrouve via l'utilisateur connecte, jamais d'une valeur
     // fournie par le client - meme principe que le reste de l'Espace Client.
+    //
+    // S'il a deja depose un fichier, on lui renvoie CE fichier (ses propres saisies en
+    // cours), jamais une version fraichement regeneree - sinon retelecharger pour
+    // completer au fur et a mesure lui ferait perdre tout ce qu'il a deja rempli.
     public async Task<IActionResult> OnGetTableurAsync()
     {
         var utilisateur = await userManager.GetUserAsync(User);
@@ -59,6 +63,15 @@ public class IndexModel(ICollecteCarboneService collecteService, UserManager<App
         if (dossier is null)
         {
             return RedirectToPage("/Dashboard/Index");
+        }
+
+        if (dossier.TableurDeposeLe is not null)
+        {
+            var depot = await collecteService.TelechargerDernierTableurDeposeAsync(dossier.PreBilanCarboneId);
+            if (depot is not null)
+            {
+                return File(depot.Value.Contenu, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", depot.Value.NomFichier);
+            }
         }
 
         var lienEspaceClient = Url.Page("/EspaceClient/Index", null, null, Request.Scheme);
