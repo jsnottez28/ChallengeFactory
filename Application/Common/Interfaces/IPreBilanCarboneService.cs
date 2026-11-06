@@ -27,6 +27,7 @@ public sealed class PreBilanCarboneInput
     public string? SecteurActivite { get; set; }
     public int? EffectifEtp { get; set; }
     public decimal? ChiffreAffairesKEuros { get; set; }
+    public int? AnneeReference { get; set; }
     public Dictionary<string, decimal> ValeursParCodeFacteur { get; set; } = [];
 }
 
@@ -52,6 +53,7 @@ public sealed class PreBilanResultatInfo
     public List<PreBilanPosteResultatInfo> ParPoste { get; set; } = [];
     public List<PreBilanLigneResultatInfo> Lignes { get; set; } = [];
     public DateTime DeposeLe { get; set; }
+    public int? AnneeReference { get; set; }
 }
 
 // Vue CRM (Gestionnaire) d'un Pre-diagnostic depose.
@@ -68,6 +70,7 @@ public sealed class PreBilanCarboneInfo
     public decimal? ChiffreAffairesKEuros { get; set; }
     public decimal TotalEmissionsKgCO2e { get; set; }
     public DateTime DeposeLe { get; set; }
+    public int? AnneeReference { get; set; }
     public StatutPreBilanCrm StatutCrm { get; set; }
 }
 

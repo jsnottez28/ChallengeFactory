@@ -6,6 +6,7 @@
     ViewData["MetaDescription"] = "Estimez rapidement les émissions de votre entreprise en approche monétaire (ratios ADEME Base Carbone), gratuitement et en quelques minutes.";
     var facteurs = (ViewData["Facteurs"] as List<FacteurEmissionInfo>) ?? [];
     var parPoste = facteurs.GroupBy(f => f.Poste).ToDictionary(g => g.Key, g => g.ToList());
+    var estConnecte = ViewData["EstConnecte"] is true;
 
     string LibellePoste(PosteEmission poste) => poste switch
     {
@@ -76,28 +77,47 @@
 
                     <div class="cf-card mb-4">
                         <h3 class="cf-h3 mb-1">Vos coordonnées</h3>
-                        <p class="text-muted small mb-3">Pour vous envoyer le résultat détaillé.</p>
+                        @if (estConnecte)
+                        {
+                            <p class="text-muted small mb-3">Reprises de votre compte (@Model.Email) - pas besoin de les ressaisir.</p>
+                            <input asp-for="Email" type="hidden" />
+                            <input asp-for="Nom" type="hidden" />
+                            <input asp-for="Prenom" type="hidden" />
+                            <input asp-for="Telephone" type="hidden" />
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-3">Pour vous envoyer le résultat détaillé.</p>
+                        }
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label asp-for="Email" class="form-label"></label>
-                                <input asp-for="Email" class="form-control" />
-                                <span asp-validation-for="Email" class="text-danger small"></span>
-                            </div>
+                            @if (!estConnecte)
+                            {
+                                <div class="col-md-6">
+                                    <label asp-for="Email" class="form-label"></label>
+                                    <input asp-for="Email" class="form-control" />
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Prenom" class="form-label"></label>
+                                    <input asp-for="Prenom" class="form-control" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Nom" class="form-label"></label>
+                                    <input asp-for="Nom" class="form-control" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Telephone" class="form-label"></label>
+                                    <input asp-for="Telephone" class="form-control" />
+                                </div>
+                            }
                             <div class="col-md-6">
                                 <label asp-for="Societe" class="form-label"></label>
                                 <input asp-for="Societe" class="form-control" />
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="Prenom" class="form-label"></label>
-                                <input asp-for="Prenom" class="form-control" />
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="Nom" class="form-label"></label>
-                                <input asp-for="Nom" class="form-control" />
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="Telephone" class="form-label"></label>
-                                <input asp-for="Telephone" class="form-control" />
+                                <label asp-for="AnneeReference" class="form-label"></label>
+                                <input asp-for="AnneeReference" class="form-control" type="number" />
+                                <span asp-validation-for="AnneeReference" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="SecteurActivite" class="form-label"></label>
@@ -113,13 +133,16 @@
                             </div>
                         </div>
 
-                        <div class="form-check mt-4">
-                            <input asp-for="ConsentementRgpd" class="form-check-input" />
-                            <label asp-for="ConsentementRgpd" class="form-check-label small">
-                                J'accepte que Challenges Factory conserve mes coordonnées et me recontacte au sujet de ce pré-diagnostic.
-                            </label>
-                            <div><span asp-validation-for="ConsentementRgpd" class="text-danger small"></span></div>
-                        </div>
+                        @if (!estConnecte)
+                        {
+                            <div class="form-check mt-4">
+                                <input asp-for="ConsentementRgpd" class="form-check-input" />
+                                <label asp-for="ConsentementRgpd" class="form-check-label small">
+                                    J'accepte que Challenges Factory conserve mes coordonnées et me recontacte au sujet de ce pré-diagnostic.
+                                </label>
+                                <div><span asp-validation-for="ConsentementRgpd" class="text-danger small"></span></div>
+                            </div>
+                        }
                     </div>
 
                     <button type="submit" class="cf-btn cf-btn-primary">Calculer mon estimation</button>

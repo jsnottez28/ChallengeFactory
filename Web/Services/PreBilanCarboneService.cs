@@ -60,6 +60,7 @@ public sealed class PreBilanCarboneService(ApplicationDbContext dbContext, IEmai
             SecteurActivite = ValeurOuNull(input.SecteurActivite),
             EffectifEtp = input.EffectifEtp,
             ChiffreAffairesKEuros = input.ChiffreAffairesKEuros,
+            AnneeReference = input.AnneeReference,
             TotalEmissionsKgCO2e = lignes.Sum(l => l.EmissionsKgCO2e),
             Lignes = lignes,
         };
@@ -124,6 +125,7 @@ public sealed class PreBilanCarboneService(ApplicationDbContext dbContext, IEmai
         Id = preBilan.Id,
         TotalEmissionsKgCO2e = preBilan.TotalEmissionsKgCO2e,
         DeposeLe = preBilan.DeposeLe,
+        AnneeReference = preBilan.AnneeReference,
         ParPoste = lignes
             .GroupBy(l => l.FacteurEmission.Poste)
             .Select(g => new PreBilanPosteResultatInfo { Poste = g.Key, EmissionsTotalesKgCO2e = g.Sum(l => l.EmissionsKgCO2e) })
@@ -155,6 +157,7 @@ public sealed class PreBilanCarboneService(ApplicationDbContext dbContext, IEmai
         ChiffreAffairesKEuros = p.ChiffreAffairesKEuros,
         TotalEmissionsKgCO2e = p.TotalEmissionsKgCO2e,
         DeposeLe = p.DeposeLe,
+        AnneeReference = p.AnneeReference,
         StatutCrm = p.StatutCrm,
     };
 }

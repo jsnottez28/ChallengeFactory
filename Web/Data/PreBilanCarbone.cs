@@ -26,6 +26,12 @@ public class PreBilanCarbone
 
     public decimal TotalEmissionsKgCO2e { get; set; }
 
+    // Annee sur laquelle portent les donnees saisies (ex. l'exercice comptable 2025) -
+    // distincte de DeposeLe (la date de depot). Permet de rapprocher plusieurs
+    // Pre-diagnostics d'une meme societe pour suivre son evolution d'une annee sur
+    // l'autre. Nullable : les depots anterieurs a ce champ n'en ont pas.
+    public int? AnneeReference { get; set; }
+
     public DateTime DeposeLe { get; set; } = DateTime.UtcNow;
 
     // Suivi commercial - jamais visible du prospect, cote Gestionnaire uniquement.

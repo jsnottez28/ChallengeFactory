@@ -40,7 +40,13 @@
             <div>
                 <p class="text-muted mb-1">Administration — CRM</p>
                 <h1 class="h3 mb-0">@($"{infoCrm?.Prenom} {infoCrm?.Nom}".Trim())</h1>
-                <p class="text-muted mb-0">Déposé le @Model.DeposeLe.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                <p class="text-muted mb-0">
+                    Déposé le @Model.DeposeLe.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    @if (Model.AnneeReference is int annee)
+                    {
+                        <text>· Exercice de référence : <strong>@annee</strong></text>
+                    }
+                </p>
             </div>
         </div>
 

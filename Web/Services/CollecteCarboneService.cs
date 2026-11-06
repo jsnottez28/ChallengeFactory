@@ -18,7 +18,16 @@ public sealed class CollecteCarboneService(
         return dossier is null ? null : await VersInfoAsync(dossier);
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientAsync(int preBilanId, string gestionnaireId, Func<string, string> construireLienActivation)
+    public Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientAsync(int preBilanId, string gestionnaireId, Func<string, string> construireLienActivation) =>
+        OuvrirCompteClientInterneAsync(preBilanId, gestionnaireId, construireLienActivation);
+
+    // Self-service : le prospect ouvre lui-meme son espace juste apres avoir depose son
+    // Pre-diagnostic, sans attendre un Gestionnaire. OuvertParId reste null (aucun
+    // Gestionnaire n'est a l'origine de l'ouverture) - cf. DossierCarbone.OuvertParId.
+    public Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientSelfServiceAsync(int preBilanId, Func<string, string> construireLienActivation) =>
+        OuvrirCompteClientInterneAsync(preBilanId, ouvertParId: null, construireLienActivation);
+
+    private async Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientInterneAsync(int preBilanId, string? ouvertParId, Func<string, string> construireLienActivation)
     {
         var preBilan = await dbContext.PreBilansCarbone.FirstOrDefaultAsync(p => p.Id == preBilanId);
         if (preBilan is null)
@@ -54,9 +63,9 @@ public sealed class CollecteCarboneService(
                 Telephone = preBilan.Telephone,
                 Mode = ModePlateforme.BtoB,
                 TypeCompte = TypeCompte.ClientCarbone,
-                // Confirme d'office : c'est le Gestionnaire qui ouvre le compte a partir
-                // d'un email deja fourni par le prospect (meme principe que l'import de
-                // Cohorte, cf. CohorteService).
+                // Confirme d'office : c'est le Gestionnaire (ou le prospect lui-meme en
+                // self-service) qui ouvre le compte a partir d'un email deja fourni par le
+                // prospect (meme principe que l'import de Cohorte, cf. CohorteService).
                 EmailConfirmed = true,
             };
 
@@ -75,7 +84,7 @@ public sealed class CollecteCarboneService(
             ClientUtilisateurId = utilisateur.Id,
             RaisonSociale = string.IsNullOrWhiteSpace(preBilan.Societe) ? email : preBilan.Societe.Trim(),
             OuvertLe = DateTime.UtcNow,
-            OuvertParId = gestionnaireId,
+            OuvertParId = ouvertParId,
         };
         dbContext.DossiersCarbone.Add(dossier);
 

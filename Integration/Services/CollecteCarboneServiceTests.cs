@@ -99,6 +99,24 @@ public class CollecteCarboneServiceTests
     }
 
     [Fact]
+    public async Task OuvrirCompteClientSelfServiceAsync_CreeUnCompteClientSansGestionnaire()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, emails) = CreerService(dbContext);
+
+        var (success, erreur) = await service.OuvrirCompteClientSelfServiceAsync(preBilan.Id, token => $"{Lien}?token={token}");
+
+        Assert.True(success, erreur);
+        var utilisateur = await dbContext.Users.SingleAsync(u => u.Email == "client@test.local");
+        Assert.Equal(TypeCompte.ClientCarbone, utilisateur.TypeCompte);
+
+        var dossier = await dbContext.DossiersCarbone.SingleAsync();
+        Assert.Null(dossier.OuvertParId);
+        Assert.Single(emails.Envois);
+    }
+
+    [Fact]
     public async Task OuvrirCompteClientAsync_Refuse_SiUnCompteParticipantUtiliseDejaLEmail()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();

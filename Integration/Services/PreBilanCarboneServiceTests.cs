@@ -106,6 +106,25 @@ public class PreBilanCarboneServiceTests
     }
 
     [Fact]
+    public async Task DeposerAsync_EnregistreLAnneeDeReference()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        await SemerFacteursAsync(dbContext);
+        var service = new PreBilanCarboneService(dbContext, new FakeEmailService());
+
+        var (success, errorMessage, resultat) = await service.DeposerAsync(new PreBilanCarboneInput
+        {
+            Email = "prospect@test.local",
+            AnneeReference = 2025,
+            ValeursParCodeFacteur = new Dictionary<string, decimal> { ["ACHAT_IT"] = 10_000m },
+        });
+
+        Assert.True(success, errorMessage);
+        Assert.Equal(2025, resultat!.AnneeReference);
+        Assert.Equal(2025, (await dbContext.PreBilansCarbone.SingleAsync()).AnneeReference);
+    }
+
+    [Fact]
     public async Task DeposerAsync_IgnoreLesValeursNullesOuNegatives()
     {
         await using var dbContext = InMemoryDbContextFactory.Create();

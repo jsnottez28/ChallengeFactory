@@ -3,6 +3,9 @@
 @{
     ViewData["Title"] = "Votre pré-diagnostic carbone";
     var totalTonnes = Model.TotalEmissionsKgCO2e / 1000m;
+    var espaceClientMessage = ViewData["EspaceClientMessage"] as string;
+    var espaceClientErreur = ViewData["EspaceClientErreur"] as string;
+    var proposerCreationCompte = User.Identity?.IsAuthenticated != true && espaceClientMessage is null;
 
     string LibellePoste(PosteEmission poste) => poste switch
     {
@@ -23,7 +26,13 @@
     <div class="container">
         <span class="cf-badge">Résultat</span>
         <h1 class="cf-h1 mb-1" style="font-size:clamp(26px,4vw,38px);">Votre estimation carbone</h1>
-        <p class="text-muted mb-0" style="max-width:620px;">Le détail vient également de vous être envoyé par email.</p>
+        <p class="text-muted mb-0" style="max-width:620px;">
+            Le détail vient également de vous être envoyé par email.
+            @if (Model.AnneeReference is int annee)
+            {
+                <text>Données pour l'exercice <strong>@annee</strong>.</text>
+            }
+        </p>
     </div>
 </section>
 
@@ -71,6 +80,25 @@
                     Estimation en approche monétaire (ratios ADEME Base Carbone, données publiques), à titre
                     indicatif. Elle ne remplace pas un Bilan Carbone® complet réalisé par un praticien certifié.
                 </p>
+
+                @if (espaceClientMessage is not null)
+                {
+                    <div class="alert alert-success text-center" role="alert">@espaceClientMessage</div>
+                }
+                @if (espaceClientErreur is not null)
+                {
+                    <div class="alert alert-warning text-center" role="alert">@espaceClientErreur</div>
+                }
+                @if (proposerCreationCompte)
+                {
+                    <div class="cf-card text-center mb-3" style="height:auto;">
+                        <p class="mb-2">Créez votre espace pour retrouver ce résultat à tout moment et suivre la suite de votre Bilan Carbone®.</p>
+                        <form method="post" asp-controller="PreDiagnosticCarbone" asp-action="CreerMonEspace" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="cf-btn cf-btn-primary">Créer mon espace</button>
+                        </form>
+                    </div>
+                }
 
                 <div class="d-flex flex-wrap gap-2 justify-content-center">
                     <a class="cf-btn cf-btn-primary" href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo" target="_blank" rel="noopener">📅 Échanger avec un expert</a>

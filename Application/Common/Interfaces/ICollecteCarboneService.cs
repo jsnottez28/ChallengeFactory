@@ -66,6 +66,13 @@ public interface ICollecteCarboneService
     // Participant existe deja avec cet email : les deux usages restent separes.
     Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientAsync(int preBilanId, string gestionnaireId, Func<string, string> construireLienActivation);
 
+    // Meme mecanique, mais declenchee par le prospect lui-meme juste apres son depot (pas
+    // de Gestionnaire a l'origine - cf. DossierCarbone.OuvertParId qui reste null).
+    // L'appelant doit s'assurer que preBilanId correspond bien au Pre-diagnostic que ce
+    // visiteur vient de deposer (ex. via TempData), jamais a un Id fourni librement par le
+    // client dans l'URL/le formulaire.
+    Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientSelfServiceAsync(int preBilanId, Func<string, string> construireLienActivation);
+
     // Invalide l'ancienne invitation et en renvoie une nouvelle (lien expire, email perdu).
     Task<(bool Success, string? ErrorMessage)> RenvoyerInvitationAsync(int preBilanId, Func<string, string> construireLienActivation);
 

@@ -1792,6 +1792,9 @@ namespace Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AnneeReference")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("ChiffreAffairesKEuros")
                         .HasPrecision(14, 2)
                         .HasColumnType("decimal(14,2)");
