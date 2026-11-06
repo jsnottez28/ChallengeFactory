@@ -8,9 +8,10 @@ using Web.Data;
 
 namespace Web.Pages.EspaceClient;
 
-// Questionnaire de collecte (questions de filtrage du Bilan Carbone(R)), rempli par le
-// compte ClientCarbone depuis le lien recu par email. Le dossier est toujours retrouve a
-// partir de l'utilisateur connecte, jamais d'un Id passe dans l'URL.
+// Questionnaire de collecte (questions de filtrage du Bilan Carbone(R)), rempli depuis le
+// lien recu par email par le compte qui a acces a l'Espace Client Carbone (Participant ou
+// ClientCarbone - les acces se cumulent). Le dossier est toujours retrouve a partir de
+// l'utilisateur connecte, jamais d'un Id passe dans l'URL.
 [Authorize]
 public class QuestionnaireModel(ICollecteCarboneService collecteService, UserManager<ApplicationUser> userManager) : PageModel
 {
@@ -68,11 +69,8 @@ public class QuestionnaireModel(ICollecteCarboneService collecteService, UserMan
             return (null, Challenge());
         }
 
-        if (utilisateur.TypeCompte != TypeCompte.ClientCarbone)
-        {
-            return (utilisateur, RedirectToPage("/Dashboard/Index"));
-        }
-
+        // Pas de filtre sur TypeCompte : les acces se cumulent (cf. Index.cshtml.cs) - la
+        // presence d'un dossier avec un questionnaire a remplir suffit a autoriser l'acces.
         Dossier = await collecteService.GetDossierClientAsync(utilisateur.Id);
         if (Dossier?.StatutQuestionnaire is null or StatutQuestionnaireCollecte.Soumis)
         {

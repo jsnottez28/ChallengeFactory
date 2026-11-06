@@ -117,8 +117,11 @@ public class CollecteCarboneServiceTests
     }
 
     [Fact]
-    public async Task OuvrirCompteClientAsync_Refuse_SiUnCompteParticipantUtiliseDejaLEmail()
+    public async Task OuvrirCompteClientAsync_CumuleAvecUnCompteParticipantExistant_SansChangerSonTypeCompte()
     {
+        // Les acces se cumulent : un compte Participant qui utilise deja cet email recoit
+        // en plus l'acces a l'Espace Client Carbone, sans que son TypeCompte ne change
+        // (cf. Domain.Entities.TypeCompte).
         await using var dbContext = InMemoryDbContextFactory.Create();
         var preBilan = await SemerPreBilanAsync(dbContext);
         var userManager = TestUserManagerFactory.Create(dbContext);
@@ -127,10 +130,13 @@ public class CollecteCarboneServiceTests
 
         var (success, erreur) = await service.OuvrirCompteClientAsync(preBilan.Id, "gestionnaire-1", _ => Lien);
 
-        Assert.False(success);
-        Assert.Contains("participant", erreur);
-        Assert.Empty(await dbContext.DossiersCarbone.ToListAsync());
-        Assert.Empty(emails.Envois);
+        Assert.True(success, erreur);
+        var utilisateur = await dbContext.Users.SingleAsync(u => u.Email == "client@test.local");
+        Assert.Equal(TypeCompte.Participant, utilisateur.TypeCompte);
+
+        var dossier = await dbContext.DossiersCarbone.SingleAsync();
+        Assert.Equal(utilisateur.Id, dossier.ClientUtilisateurId);
+        Assert.Single(emails.Envois);
     }
 
     [Fact]

@@ -23,21 +23,28 @@
     // s'afficher, pas juste un lien isole.
     bool APermission(string code) => estSuperAdministrateur || User.HasClaim(DroitsClaimsTransformation.ClaimType, code);
 
-    // Compte client Bilan Carbone(R) : menu "Mon espace" reduit a l'espace client (pas de
-    // parcours, cartes, points ni tests - cf. Domain.Entities.TypeCompte).
-    var estClientCarbone = false;
+    // Acces a l'Espace Client Bilan Carbone(R) : additif, jamais exclusif (cf.
+    // Domain.Entities.TypeCompte) - un compte Participant peut tres bien avoir EN PLUS un
+    // DossierCarbone. La seule source de verite pour afficher les liens de l'Espace Client
+    // dans le menu est la presence de ce dossier, jamais TypeCompte seul.
+    var aAccesEspaceCarbone = false;
     var sansScope = false;
     var documentsEnAttente = new List<Domain.Entities.TypeDocumentLegal>();
     if (SignInManager.IsSignedIn(User))
     {
         var currentUserId = UserManager.GetUserId(User);
-        estClientCarbone = currentUserId is not null && await DbContext.Users
-            .AnyAsync(u => u.Id == currentUserId && u.TypeCompte == Domain.Entities.TypeCompte.ClientCarbone);
+        aAccesEspaceCarbone = currentUserId is not null && await DbContext.DossiersCarbone
+            .AnyAsync(d => d.ClientUtilisateurId == currentUserId);
 
-        // Un compte ClientCarbone n'a jamais de Scope (ce n'est pas un Gestionnaire) : sans
-        // cette exclusion, le badge "Toutes les organisations" ci-dessous - pense pour
-        // signaler une visibilite elargie - s'affiche a tort sur l'espace client.
-        sansScope = !estClientCarbone && !await DbContext.Scopes.AnyAsync(scope => scope.ApplicationUserId == currentUserId && scope.EstActif);
+        // Un compte purement ClientCarbone (jamais un Participant, meme avec un acces
+        // Carbone en plus) n'a jamais de Scope (ce n'est pas un Gestionnaire) : sans cette
+        // exclusion, le badge "Toutes les organisations" ci-dessous - pense pour signaler
+        // une visibilite elargie - s'affiche a tort sur l'espace client. Verifie TypeCompte
+        // ici (pas aAccesEspaceCarbone) : un Participant qui a EN PLUS un acces Carbone
+        // reste soumis a la meme regle que n'importe quel autre Participant.
+        var estPurementClientCarbone = currentUserId is not null && await DbContext.Users
+            .AnyAsync(u => u.Id == currentUserId && u.TypeCompte == Domain.Entities.TypeCompte.ClientCarbone);
+        sansScope = !estPurementClientCarbone && !await DbContext.Scopes.AnyAsync(scope => scope.ApplicationUserId == currentUserId && scope.EstActif);
 
         // Si un type bloquant restait ici, le middleware aurait deja redirige avant d'atteindre
         // ce layout : ce qui subsiste est necessairement du "non bloquant" (cf. RG-51).
@@ -121,22 +128,21 @@
                         <i class="fi fi-rr-house-blank me-1"></i> Mon espace
                     </a>
                     <ul class="dropdown-menu shadow-sm">
-                        @if (estClientCarbone)
-                        {
-                        <li><a class="dropdown-item" asp-page="/EspaceClient/Index">Mon espace client</a></li>
-                        <li><a class="dropdown-item" asp-page="/EspaceClient/Questionnaire">Questionnaire Bilan Carbone®</a></li>
-                        <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Mes informations</a></li>
-                        }
-                        else
-                        {
+                        @* Additif, jamais exclusif : les liens Carbone s'ajoutent au menu
+                           Participant habituel plutot que de le remplacer (cf. aAccesEspaceCarbone
+                           plus haut) - un meme compte peut avoir les deux. *@
                         <li><a class="dropdown-item" asp-page="/Dashboard/Index">Tableau de bord</a></li>
+                        @if (aAccesEspaceCarbone)
+                        {
+                        <li><a class="dropdown-item" asp-page="/EspaceClient/Index">Mon espace client Bilan Carbone®</a></li>
+                        <li><a class="dropdown-item" asp-page="/EspaceClient/Questionnaire">Questionnaire Bilan Carbone®</a></li>
+                        }
                         <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Mes informations</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/Inscriptions">Mes inscriptions</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/MonParcours">Mon parcours en cours</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/Cartes">Mes cartes de compétences</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/MesPoints">Mes points et badges</a></li>
                         <li><a class="dropdown-item" asp-page="/Dashboard/MesTests">Mes tests</a></li>
-                        }
                     </ul>
                 </li>
 

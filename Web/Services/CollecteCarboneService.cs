@@ -44,14 +44,12 @@ public sealed class CollecteCarboneService(
         var utilisateur = await userManager.FindByEmailAsync(email);
         var compteCree = false;
 
-        if (utilisateur is not null && utilisateur.TypeCompte != TypeCompte.ClientCarbone)
-        {
-            // Volontairement bloquant : un compte client et un compte de parcours ne se
-            // melangent pas (deux espaces, deux usages) - le Gestionnaire doit utiliser
-            // une autre adresse pour le compte client.
-            return (false, $"L'adresse {email} est déjà utilisée par un compte participant (parcours). Le compte client doit utiliser une autre adresse email : modifiez-la avant d'ouvrir l'espace.");
-        }
-
+        // Les acces se cumulent : un compte Participant existant peut tout a fait recevoir
+        // en plus un Espace Client Carbone, sans que son TypeCompte change (cf.
+        // Domain.Entities.TypeCompte - ce champ ne reflete que la nature du compte a sa
+        // creation, pas la liste de ce a quoi il a acces). La seule source de verite pour
+        // "cette personne a acces a l'Espace Client Carbone" est la presence d'un
+        // DossierCarbone qui lui est rattache, jamais TypeCompte.
         if (utilisateur is null)
         {
             utilisateur = new ApplicationUser
