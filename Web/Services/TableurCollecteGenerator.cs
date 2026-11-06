@@ -21,6 +21,26 @@ public static class TableurCollecteGenerator
         "Source", "Hypothèses", "Pièce justificative", "Référent", "Statut", "Commentaire", "Pourquoi cette donnée",
     ];
 
+    // Une explication par colonne (meme ordre que Entetes), affichee en commentaire Excel
+    // sur chaque cellule d'en-tete (survol de la petite marque rouge) - pour ne pas avoir a
+    // revenir sans cesse sur la feuille Lisez-moi pendant la saisie.
+    private static readonly string[] ExplicationsColonnes =
+    [
+        "Sous-catégorie du poste (ex. Électricité, Déplacements domicile-travail) - ne pas modifier, sert à classer la donnée.",
+        "Ce qui est précisément attendu sur cette ligne - voir aussi la check-list de votre Espace Client pour le détail et la pièce justificative associée.",
+        "Facultatif : précisez un détail propre à votre cas (nom du site, du fournisseur...) si vous dédoublez cette ligne pour plusieurs éléments.",
+        "Le chiffre que vous renseignez - toujours un nombre, jamais de texte ni d'unité ici (l'unité est dans la colonne suivante).",
+        "Unité de la colonne Valeur (kWh, k€ HT, km...) - déjà pré-remplie ; à adapter seulement si vous changez d'unité de mesure.",
+        "Comment la valeur a été obtenue : Physique (relevé/compteur), Comptable (montant en €), Extrapolée (calculée à partir d'un échantillon), Statistique (moyenne/ratio sectoriel), Approchée (estimation).",
+        "D'où vient le chiffre (ex. \"Facture EDF janvier-décembre 2026\", \"Export FEC compte 606100\") - essentiel pour la traçabilité du Bilan Carbone®.",
+        "Toute hypothèse ou approximation faite pour obtenir ce chiffre (ex. \"consommation extrapolée sur 3 mois\").",
+        "Le document qui prouve ce chiffre - à conserver de votre côté, votre consultant peut vous le demander.",
+        "La personne ou le service, en interne, qui détient cette information.",
+        "Où en est la collecte de cette ligne : À demander, Demandé, En attente, Reçu, Validé - c'est cette colonne qui sert à calculer votre avancement.",
+        "Libre, pour toute remarque utile à votre consultant.",
+        "Rappelle ce qui a déclenché la demande (réponse au questionnaire, donnée du pré-diagnostic) - informatif, ne pas modifier.",
+    ];
+
     private static readonly XLColor Vert = XLColor.FromHtml("#2E7D32");
     private static readonly XLColor VertClair = XLColor.FromHtml("#E8F5E9");
     private static readonly XLColor Orange = XLColor.FromHtml("#F28C28");
@@ -111,13 +131,14 @@ public static class TableurCollecteGenerator
         feuille.Cell(1, 1).Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(Vert);
 
         var note = QuestionnaireCollecteCatalogue.NotePedagogique(poste);
-        if (!string.IsNullOrWhiteSpace(note))
+        var noteComplete = $"{note} Vous pouvez ajouter des lignes supplémentaires (une par site, fournisseur ou sous-catégorie) en copiant la mise en forme d'une ligne existante - survolez un en-tête de colonne (petite marque rouge) pour son explication détaillée.".Trim();
+        if (!string.IsNullOrWhiteSpace(noteComplete))
         {
             var celluleNote = feuille.Range(2, 1, 2, Entetes.Length).Merge().FirstCell();
-            celluleNote.Value = note;
+            celluleNote.Value = noteComplete;
             celluleNote.Style.Font.SetItalic().Font.SetFontColor(XLColor.FromHtml("#5A5650"));
             celluleNote.Style.Alignment.WrapText = true;
-            feuille.Row(2).Height = 32;
+            feuille.Row(2).Height = 46;
         }
 
         const int ligneEntete = 3;
@@ -128,6 +149,7 @@ public static class TableurCollecteGenerator
             cellule.Style.Font.SetBold().Font.SetFontColor(XLColor.White);
             cellule.Style.Fill.SetBackgroundColor(Vert);
             cellule.Style.Alignment.WrapText = true;
+            cellule.CreateComment().AddText(ExplicationsColonnes[c]);
         }
 
         var ligne = ligneEntete + 1;
