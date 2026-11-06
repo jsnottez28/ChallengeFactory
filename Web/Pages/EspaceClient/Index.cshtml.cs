@@ -40,4 +40,31 @@ public class IndexModel(ICollecteCarboneService collecteService, UserManager<App
 
         return Page();
     }
+
+    // Self-service : le client telecharge directement son tableur de collecte, sans
+    // attendre que le Gestionnaire le lui transmette manuellement. L'Id du Pre-diagnostic
+    // vient toujours du dossier retrouve via l'utilisateur connecte, jamais d'une valeur
+    // fournie par le client - meme principe que le reste de l'Espace Client.
+    public async Task<IActionResult> OnGetTableurAsync()
+    {
+        var utilisateur = await userManager.GetUserAsync(User);
+        if (utilisateur is null)
+        {
+            return Challenge();
+        }
+
+        var dossier = await collecteService.GetDossierClientAsync(utilisateur.Id);
+        if (dossier is null)
+        {
+            return RedirectToPage("/Dashboard/Index");
+        }
+
+        var tableur = await collecteService.GenererTableurAsync(dossier.PreBilanCarboneId);
+        if (tableur is null)
+        {
+            return NotFound();
+        }
+
+        return File(tableur.Value.Contenu, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", tableur.Value.NomFichier);
+    }
 }

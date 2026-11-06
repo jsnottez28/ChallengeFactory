@@ -58,7 +58,8 @@
                         <div class="card-body p-4">
                             <p class="text-muted small mb-1">Étape 2</p>
                             <h2 class="h5">Collecte des données</h2>
-                            <p class="mb-0">@(Model.Checklist.Count > 0 ? $"{Model.Checklist.Count} données à rassembler — voir la liste ci-dessous." : "La liste des documents à rassembler s'affichera ici après l'envoi du questionnaire.")</p>
+                            <p class="mb-2">@(Model.Checklist.Count > 0 ? $"{Model.Checklist.Count} données à rassembler — voir la liste ci-dessous." : "La liste des documents à rassembler s'affichera ici après l'envoi du questionnaire.")</p>
+                            <a class="btn btn-outline-success btn-sm" asp-page="/EspaceClient/Index" asp-page-handler="Tableur">⬇️ Télécharger mon tableur de collecte (.xlsx)</a>
                         </div>
                     </div>
                 </div>
@@ -78,7 +79,7 @@
                 <div class="card border-0 shadow-sm mt-4">
                     <div class="card-header bg-white border-bottom p-4">
                         <h2 class="h5 mb-1">Documents et données à rassembler</h2>
-                        <p class="text-muted small mb-0">Votre consultant vous transmettra le tableur de collecte correspondant. Les valeurs déjà connues viennent de votre pré-diagnostic : il suffira de les confirmer.</p>
+                        <p class="text-muted small mb-0">Téléchargez le tableur de collecte correspondant ci-dessus. Les valeurs déjà connues viennent de votre pré-diagnostic : il suffira de les confirmer.</p>
                     </div>
                     <div class="card-body p-4">
                         @foreach (var groupe in Model.Checklist.GroupBy(e => e.Poste))
