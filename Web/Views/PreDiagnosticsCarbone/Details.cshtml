@@ -48,16 +48,19 @@
                     }
                 </p>
             </div>
+            <div class="text-lg-end">
+                <p class="text-muted small mb-0">Total estimé</p>
+                <p class="h4 mb-0">@((Model.TotalEmissionsKgCO2e / 1000m).ToString("N1")) t CO2e / an</p>
+            </div>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-4 align-items-start">
             <div class="col-12 col-lg-7">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom p-4">
-                        <h2 class="h5 mb-0">Résultat</h2>
+                        <h2 class="h5 mb-0">Résultat par poste</h2>
                     </div>
                     <div class="card-body p-4">
-                        <p class="mb-3"><strong>@((Model.TotalEmissionsKgCO2e / 1000m).ToString("N1")) t CO2e / an</strong></p>
                         <ul class="list-unstyled mb-0">
                             @foreach (var poste in Model.ParPoste)
                             {
@@ -103,7 +106,7 @@
             <div class="col-12 col-lg-5">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom p-4">
-                        <h2 class="h5 mb-0">Coordonnées</h2>
+                        <h2 class="h5 mb-0">Coordonnées &amp; suivi commercial</h2>
                     </div>
                     <div class="card-body p-4">
                         <p class="mb-1"><strong>Email :</strong> <a href="mailto:@infoCrm?.Email">@infoCrm?.Email</a></p>
@@ -112,15 +115,9 @@
                         @if (!string.IsNullOrWhiteSpace(infoCrm?.SecteurActivite)) { <p class="mb-1"><strong>Secteur :</strong> @infoCrm.SecteurActivite</p> }
                         @if (infoCrm?.EffectifEtp is not null) { <p class="mb-1"><strong>Effectif :</strong> @infoCrm.EffectifEtp ETP</p> }
                         @if (infoCrm?.ChiffreAffairesKEuros is not null) { <p class="mb-0"><strong>CA :</strong> @infoCrm.ChiffreAffairesKEuros.Value.ToString("N0") k€</p> }
-                    </div>
-                </div>
 
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-bottom p-4">
-                        <h2 class="h5 mb-0">Suivi commercial</h2>
-                    </div>
-                    <div class="card-body p-4">
                         <droit-visible code="PREBILAN.MODIFIER">
+                            <hr />
                             <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="ChangerStatut" asp-route-id="@Model.Id" class="d-flex gap-2">
                                 @Html.AntiForgeryToken()
                                 <select name="statut" class="form-select">
@@ -129,15 +126,19 @@
                                         <option value="@statut" selected="@(statut == infoCrm?.StatutCrm)">@statut</option>
                                     }
                                 </select>
-                                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                                <button type="submit" class="btn btn-primary text-nowrap">Mettre à jour</button>
                             </form>
                         </droit-visible>
+                        @if (infoCrm?.StatutCrm is not null)
+                        {
+                            <p class="text-muted small mt-2 mb-0">Statut actuel : <strong>@infoCrm.StatutCrm</strong></p>
+                        }
                     </div>
                 </div>
 
                 @* Dossier client Bilan Carbone(R) : compte ClientCarbone distinct des comptes de
                    parcours, puis questionnaire de collecte (cf. ICollecteCarboneService). *@
-                <div class="card border-0 shadow-sm mt-4">
+                <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom p-4">
                         <h2 class="h5 mb-0">Espace client Bilan Carbone®</h2>
                     </div>
@@ -155,40 +156,47 @@
                         else
                         {
                             <p class="mb-1"><strong>Compte :</strong> @dossier.ClientEmail</p>
-                            <p class="mb-1"><strong>Ouvert le :</strong> @dossier.OuvertLe.ToLocalTime().ToString("dd/MM/yyyy")</p>
-                            <p class="mb-3">
-                                <strong>Activation :</strong>
+                            <p class="mb-3"><strong>Ouvert le :</strong> @dossier.OuvertLe.ToLocalTime().ToString("dd/MM/yyyy")</p>
+
+                            <div class="d-flex flex-wrap gap-2 mb-3">
                                 @if (dossier.CompteActive)
                                 {
                                     <span class="badge bg-success">Mot de passe défini</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-warning text-dark">En attente</span>
+                                    <span class="badge bg-warning text-dark">Activation en attente</span>
                                 }
-                            </p>
-
-                            <p class="mb-3">
-                                <strong>Questionnaire :</strong>
                                 @switch (dossier.StatutQuestionnaire)
                                 {
                                     case null:
-                                        <span class="badge bg-secondary">Non envoyé</span>
+                                        <span class="badge bg-secondary">Questionnaire non envoyé</span>
                                         break;
                                     case StatutQuestionnaireCollecte.Envoye:
-                                        <span class="badge bg-info text-dark">Envoyé le @dossier.QuestionnaireEnvoyeLe?.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                        <span class="badge bg-info text-dark">Questionnaire envoyé le @dossier.QuestionnaireEnvoyeLe?.ToLocalTime().ToString("dd/MM/yyyy")</span>
                                         break;
                                     case StatutQuestionnaireCollecte.EnCours:
-                                        <span class="badge bg-warning text-dark">En cours de saisie</span>
+                                        <span class="badge bg-warning text-dark">Questionnaire en cours de saisie</span>
                                         break;
                                     case StatutQuestionnaireCollecte.Soumis:
-                                        <span class="badge bg-success">Complété le @dossier.QuestionnaireSoumisLe?.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                        <span class="badge bg-success">Questionnaire complété le @dossier.QuestionnaireSoumisLe?.ToLocalTime().ToString("dd/MM/yyyy")</span>
                                         break;
                                 }
-                            </p>
+                                @if (dossier.TableurDeposeLe is not null)
+                                {
+                                    @if (dossier.CollecteDeclareeTerminee == true)
+                                    {
+                                        <span class="badge bg-success">Collecte déclarée terminée</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">Collecte en cours</span>
+                                    }
+                                }
+                            </div>
 
                             <droit-visible code="PREBILAN.MODIFIER">
-                                <div class="d-grid gap-2">
+                                <div class="d-grid gap-2 mb-3">
                                     <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="EnvoyerQuestionnaire" asp-route-id="@Model.Id">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn btn-primary w-100">
@@ -223,16 +231,6 @@
                                 </div>
                                 <p class="text-muted small mb-2">Avancement estimé : <strong>@avancement %</strong> des lignes au statut Reçu/Validé.</p>
                             }
-                            <p class="mb-3">
-                                @if (dossier.CollecteDeclareeTerminee == true)
-                                {
-                                    <span class="badge bg-success">Collecte déclarée terminée par le client</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning text-dark">Collecte en cours (déclarée non terminée)</span>
-                                }
-                            </p>
                             <a class="btn btn-outline-primary w-100" asp-controller="PreDiagnosticsCarbone" asp-action="TableurDepose" asp-route-id="@Model.Id">
                                 Télécharger le fichier déposé par le client
                             </a>
@@ -245,6 +243,7 @@
         @if (checklist is not null && checklist.Count > 0)
         {
             var nombreCoches = checklist.Count(e => e.EstCoche);
+            var groupes = checklist.GroupBy(e => e.Poste).ToList();
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-header bg-white border-bottom p-4">
                     <h2 class="h5 mb-1">Check-list de collecte (@checklist.Count données)</h2>
@@ -253,43 +252,57 @@
                         sur @checklist.Count — déclaratif, indépendant de l'avancement calculé depuis le fichier déposé ci-dessus.
                     </p>
                 </div>
-                <div class="card-body p-4">
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col" style="width: 2.5rem;"></th>
-                                    <th scope="col">Donnée</th>
-                                    <th scope="col">Pièce justificative</th>
-                                    <th scope="col">Référent</th>
-                                    <th scope="col">Pourquoi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var groupe in checklist.GroupBy(e => e.Poste))
-                                {
-                                    <tr class="table-light">
-                                        <td colspan="5" class="fw-semibold text-success py-2">@Web.Services.QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</td>
-                                    </tr>
-                                    @foreach (var element in groupe)
-                                    {
-                                        <tr>
-                                            <td class="text-center" title="@(element.EstCoche ? "Cochée comme saisie par le client" : "Pas encore cochée par le client")">@(element.EstCoche ? "✅" : "⬜")</td>
-                                            <td>
-                                                @element.Donnee
-                                                @if (element.Valeur.HasValue)
-                                                {
-                                                    <span class="badge bg-success-subtle text-success-emphasis ms-1">@element.Valeur.Value.ToString("N2") @element.Unite</span>
-                                                }
-                                            </td>
-                                            <td class="small">@element.PieceJustificative</td>
-                                            <td class="small">@element.Referent</td>
-                                            <td class="small text-muted">@element.Declencheur</td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
+                <div class="card-body p-0">
+                    <div class="accordion accordion-flush" id="accordionChecklist">
+                        @for (var i = 0; i < groupes.Count; i++)
+                        {
+                            var groupe = groupes[i];
+                            var cochesGroupe = groupe.Count(e => e.EstCoche);
+                            var idPanneau = $"checklistPoste{i}";
+                            <div class="accordion-item">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@idPanneau">
+                                        <span class="flex-grow-1">@Web.Services.QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</span>
+                                        <span class="badge bg-success-subtle text-success-emphasis me-3">@cochesGroupe / @groupe.Count()</span>
+                                    </button>
+                                </h3>
+                                <div id="@idPanneau" class="accordion-collapse collapse @(i == 0 ? "show" : "")">
+                                    <div class="accordion-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm align-middle mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col" style="width: 2.5rem;"></th>
+                                                        <th scope="col">Donnée</th>
+                                                        <th scope="col">Pièce justificative</th>
+                                                        <th scope="col">Référent</th>
+                                                        <th scope="col">Pourquoi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var element in groupe)
+                                                    {
+                                                        <tr>
+                                                            <td class="text-center" title="@(element.EstCoche ? "Cochée comme saisie par le client" : "Pas encore cochée par le client")">@(element.EstCoche ? "✅" : "⬜")</td>
+                                                            <td>
+                                                                @element.Donnee
+                                                                @if (element.Valeur.HasValue)
+                                                                {
+                                                                    <span class="badge bg-success-subtle text-success-emphasis ms-1">@element.Valeur.Value.ToString("N2") @element.Unite</span>
+                                                                }
+                                                            </td>
+                                                            <td class="small">@element.PieceJustificative</td>
+                                                            <td class="small">@element.Referent</td>
+                                                            <td class="small text-muted">@element.Declencheur</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
