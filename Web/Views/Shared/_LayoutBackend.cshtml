@@ -33,7 +33,11 @@
         var currentUserId = UserManager.GetUserId(User);
         estClientCarbone = currentUserId is not null && await DbContext.Users
             .AnyAsync(u => u.Id == currentUserId && u.TypeCompte == Domain.Entities.TypeCompte.ClientCarbone);
-        sansScope = !await DbContext.Scopes.AnyAsync(scope => scope.ApplicationUserId == currentUserId && scope.EstActif);
+
+        // Un compte ClientCarbone n'a jamais de Scope (ce n'est pas un Gestionnaire) : sans
+        // cette exclusion, le badge "Toutes les organisations" ci-dessous - pense pour
+        // signaler une visibilite elargie - s'affiche a tort sur l'espace client.
+        sansScope = !estClientCarbone && !await DbContext.Scopes.AnyAsync(scope => scope.ApplicationUserId == currentUserId && scope.EstActif);
 
         // Si un type bloquant restait ici, le middleware aurait deja redirige avant d'atteindre
         // ce layout : ce qui subsiste est necessairement du "non bloquant" (cf. RG-51).

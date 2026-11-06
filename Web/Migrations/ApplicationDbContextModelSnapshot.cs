@@ -836,6 +836,9 @@ namespace Web.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
+                    b.Property<int>("TypeCompte")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -1292,6 +1295,42 @@ namespace Web.Migrations
                     b.HasIndex("UtilisateurId");
 
                     b.ToTable("DiscResultats");
+                });
+
+            modelBuilder.Entity("Web.Data.DossierCarbone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClientUtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("OuvertLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OuvertParId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PreBilanCarboneId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RaisonSociale")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientUtilisateurId");
+
+                    b.HasIndex("PreBilanCarboneId")
+                        .IsUnique();
+
+                    b.ToTable("DossiersCarbone");
                 });
 
             modelBuilder.Entity("Web.Data.Emargement", b =>
@@ -1964,6 +2003,41 @@ namespace Web.Migrations
                         .IsUnique();
 
                     b.ToTable("PreuveValidationsPairs");
+                });
+
+            modelBuilder.Entity("Web.Data.QuestionnaireCollecte", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DossierCarboneId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EnvoyeLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ModifieLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReponsesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("SoumisLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Statut")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DossierCarboneId")
+                        .IsUnique();
+
+                    b.ToTable("QuestionnairesCollecte");
                 });
 
             modelBuilder.Entity("Web.Data.QuestionnaireMiParcoursReponse", b =>
@@ -2722,6 +2796,25 @@ namespace Web.Migrations
                     b.Navigation("Utilisateur");
                 });
 
+            modelBuilder.Entity("Web.Data.DossierCarbone", b =>
+                {
+                    b.HasOne("Web.Data.ApplicationUser", "ClientUtilisateur")
+                        .WithMany()
+                        .HasForeignKey("ClientUtilisateurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.PreBilanCarbone", "PreBilanCarbone")
+                        .WithMany()
+                        .HasForeignKey("PreBilanCarboneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ClientUtilisateur");
+
+                    b.Navigation("PreBilanCarbone");
+                });
+
             modelBuilder.Entity("Web.Data.Emargement", b =>
                 {
                     b.HasOne("Web.Data.CarteAttribution", "CarteAttribution")
@@ -2969,6 +3062,17 @@ namespace Web.Migrations
                     b.Navigation("Valideur");
                 });
 
+            modelBuilder.Entity("Web.Data.QuestionnaireCollecte", b =>
+                {
+                    b.HasOne("Web.Data.DossierCarbone", "DossierCarbone")
+                        .WithOne("Questionnaire")
+                        .HasForeignKey("Web.Data.QuestionnaireCollecte", "DossierCarboneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DossierCarbone");
+                });
+
             modelBuilder.Entity("Web.Data.QuestionnaireMiParcoursReponse", b =>
                 {
                     b.HasOne("Web.Data.Cohorte", "Cohorte")
@@ -3203,6 +3307,11 @@ namespace Web.Migrations
             modelBuilder.Entity("Web.Data.Cohorte", b =>
                 {
                     b.Navigation("Membres");
+                });
+
+            modelBuilder.Entity("Web.Data.DossierCarbone", b =>
+                {
+                    b.Navigation("Questionnaire");
                 });
 
             modelBuilder.Entity("Web.Data.Entities.Organisation", b =>
