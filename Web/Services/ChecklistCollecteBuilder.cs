@@ -45,6 +45,7 @@ public static class ChecklistCollecteBuilder
                 CodeFacteur = codeFacteur,
                 Info = new ElementCollecteInfo
                 {
+                    Cle = $"{(int)poste}|{sousPoste}|{donnee}",
                     Poste = poste,
                     SousPoste = sousPoste,
                     Donnee = donnee,
@@ -262,6 +263,7 @@ public static class ChecklistCollecteBuilder
                 CodeFacteur = facteur.Code,
                 Info = new ElementCollecteInfo
                 {
+                    Cle = $"{(int)poste}|{sousPoste}|{facteur.Nom}",
                     Poste = poste,
                     SousPoste = sousPoste,
                     Donnee = facteur.Nom,

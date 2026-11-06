@@ -1312,6 +1312,10 @@ namespace Web.Migrations
                     b.Property<bool?>("CollecteDeclareeTerminee")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ElementsCochesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("OuvertLe")
                         .HasColumnType("datetime2");
 

@@ -10,6 +10,13 @@ namespace Application.Common.Interfaces;
 // Pre-diagnostic).
 public sealed class ElementCollecteInfo
 {
+    // Cle stable (Poste+SousPoste+Donnee), generee par ChecklistCollecteBuilder - sert a
+    // retrouver quelles lignes le client a cochees comme "saisies" (cf.
+    // DossierCarbone.ElementsCochesJson), jamais un index de liste (qui changerait si
+    // l'ordre ou le nombre de lignes evolue).
+    public string Cle { get; set; } = string.Empty;
+    public bool EstCoche { get; set; }
+
     public PosteCollecte Poste { get; set; }
     public string SousPoste { get; set; } = string.Empty;
     public string Donnee { get; set; } = string.Empty;
@@ -91,8 +98,14 @@ public interface ICollecteCarboneService
     Task<(bool Success, string? ErrorMessage)> EnregistrerReponsesAsync(string clientUtilisateurId, Dictionary<string, string> reponses, bool soumettre);
 
     // Check-list des elements a collecter, deduite du Pre-diagnostic et des reponses au
-    // questionnaire (si deja remplies).
+    // questionnaire (si deja remplies). ElementCollecteInfo.EstCoche reflete les cases
+    // cochees par le client (cf. EnregistrerElementsCochesAsync).
     Task<List<ElementCollecteInfo>> GetChecklistAsync(int dossierId);
+
+    // Enregistre les cles (ElementCollecteInfo.Cle) des lignes que le client declare avoir
+    // deja saisies dans son fichier - remplace integralement la selection precedente (pas
+    // un ajout cumulatif), meme principe que EnregistrerReponsesAsync.
+    Task<(bool Success, string? ErrorMessage)> EnregistrerElementsCochesAsync(string clientUtilisateurId, IReadOnlyCollection<string> elementsCoches);
 
     // Tableur de collecte .xlsx (colonnes de la Matrice de collecte ABC, pre-rempli).
     // lienEspaceClient (optionnel) : affiche dans la feuille "Lisez-moi" un lien de retour

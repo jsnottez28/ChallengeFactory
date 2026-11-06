@@ -38,6 +38,18 @@
         }
         else
         {
+            <div class="card border-0 shadow-sm mb-4" style="max-width: 920px;">
+                <div class="card-body p-4">
+                    <h2 class="h6 mb-2">Comment ça marche, en 4 étapes</h2>
+                    <ol class="mb-0 ps-3 small">
+                        <li class="mb-1"><strong>Répondez au questionnaire</strong> (étape 1 ci-dessous) : il détermine précisément quelles données vous concernent.</li>
+                        <li class="mb-1"><strong>Téléchargez votre tableur de collecte</strong> (étape 2) : un onglet par poste d'émission, avec un petit guide et un exemple sur chaque onglet.</li>
+                        <li class="mb-1"><strong>Remplissez-le</strong> : pour chaque ligne de la check-list ci-dessous, récupérez la pièce justificative indiquée, reportez la valeur dans le tableur (colonnes Valeur/Source), passez son Statut à « Reçu », puis cochez-la ici pour suivre votre avancement.</li>
+                        <li class="mb-0"><strong>Déposez le fichier mis à jour</strong> régulièrement (pas besoin d'avoir fini) : votre avancement estimé et votre consultant se mettent à jour automatiquement.</li>
+                    </ol>
+                </div>
+            </div>
+
             <div class="row g-4">
                 <div class="col-12 col-lg-4">
                     <div class="card border-0 shadow-sm h-100">
@@ -72,7 +84,7 @@
                                     <div class="progress-bar bg-success" style="width: @(avancement)%;"></div>
                                 </div>
                                 <p class="text-muted small mb-2">
-                                    Avancement estimé : <strong>@avancement %</strong>
+                                    Avancement estimé (d'après votre fichier) : <strong>@avancement %</strong>
                                     @if (Model.Dossier.TableurDeposeLe is DateTime deposeLe)
                                     {
                                         <text> (dernier dépôt le @deposeLe.ToLocalTime().ToString("dd/MM/yyyy"))</text>
@@ -97,7 +109,7 @@
             <div class="card border-0 shadow-sm mt-4" style="max-width: 720px;">
                 <div class="card-header bg-white border-bottom p-4">
                     <h2 class="h5 mb-1">Déposer mon tableur rempli</h2>
-                    <p class="text-muted small mb-0">Une fois vos données saisies dans le tableur téléchargé ci-dessus, déposez-le ici pour mettre à jour votre avancement et le transmettre à votre consultant.</p>
+                    <p class="text-muted small mb-0">Une fois vos données saisies dans le tableur téléchargé ci-dessus, déposez-le ici pour mettre à jour votre avancement et le transmettre à votre consultant. Vous pouvez déposer plusieurs fois : seul le dernier fichier est conservé.</p>
                 </div>
                 <div class="card-body p-4">
                     <form method="post" asp-page-handler="DeposerTableur" enctype="multipart/form-data">
@@ -119,32 +131,45 @@
             {
                 <div class="card border-0 shadow-sm mt-4">
                     <div class="card-header bg-white border-bottom p-4">
-                        <h2 class="h5 mb-1">Documents et données à rassembler</h2>
-                        <p class="text-muted small mb-0">Téléchargez le tableur de collecte correspondant ci-dessus. Les valeurs déjà connues viennent de votre pré-diagnostic : il suffira de les confirmer.</p>
+                        <h2 class="h5 mb-1">Documents et données à rassembler — votre guide étape par étape</h2>
+                        <p class="text-muted small mb-0">Pour chaque ligne : récupérez la pièce justificative indiquée auprès du référent mentionné, reportez la valeur dans le tableur téléchargé plus haut (colonnes Valeur, Unité, Source), puis cochez-la ici une fois faite. Les valeurs « Déjà connu » viennent de votre pré-diagnostic : il suffira de les confirmer dans le tableur.</p>
                     </div>
                     <div class="card-body p-4">
-                        @foreach (var groupe in Model.Checklist.GroupBy(e => e.Poste))
-                        {
-                            <h3 class="h6 mt-3 text-success">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</h3>
-                            <ul class="list-unstyled mb-0">
-                                @foreach (var element in groupe)
+                        <form method="post" asp-page-handler="CocherElements">
+                            @Html.AntiForgeryToken()
+                            @foreach (var groupe in Model.Checklist.GroupBy(e => e.Poste))
+                            {
+                                <h3 class="h6 mt-3 text-success">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</h3>
+                                var note = QuestionnaireCollecteCatalogue.NotePedagogique(groupe.Key);
+                                @if (!string.IsNullOrWhiteSpace(note))
                                 {
-                                    <li class="border-bottom py-2">
-                                        <div class="d-flex flex-wrap justify-content-between gap-2">
-                                            <span>
-                                                @element.Donnee
-                                                @if (element.Valeur.HasValue)
-                                                {
-                                                    <span class="badge bg-success-subtle text-success-emphasis ms-1">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span>
-                                                }
-                                            </span>
-                                            <span class="text-muted small">@element.Referent</span>
-                                        </div>
-                                        <div class="small text-muted">📄 @element.PieceJustificative</div>
-                                    </li>
+                                    <p class="text-muted small fst-italic mb-2">💡 @note</p>
                                 }
-                            </ul>
-                        }
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var element in groupe)
+                                    {
+                                        var idCase = $"coche-{element.Cle.GetHashCode()}";
+                                        <li class="border-bottom py-2">
+                                            <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="@idCase" name="elementsCoches" value="@element.Cle" checked="@element.EstCoche">
+                                                    <label class="form-check-label @(element.EstCoche ? "text-decoration-line-through text-muted" : "")" for="@idCase">
+                                                        @element.Donnee
+                                                        @if (element.Valeur.HasValue)
+                                                        {
+                                                            <span class="badge bg-success-subtle text-success-emphasis ms-1">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span>
+                                                        }
+                                                    </label>
+                                                </div>
+                                                <span class="text-muted small">@element.Referent</span>
+                                            </div>
+                                            <div class="small text-muted ps-4">📄 @element.PieceJustificative</div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            <button type="submit" class="btn btn-outline-success mt-3">Enregistrer mes cases cochées</button>
+                        </form>
                     </div>
                 </div>
             }

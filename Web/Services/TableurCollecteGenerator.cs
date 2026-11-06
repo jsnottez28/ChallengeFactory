@@ -25,23 +25,6 @@ public static class TableurCollecteGenerator
     private static readonly XLColor VertClair = XLColor.FromHtml("#E8F5E9");
     private static readonly XLColor Orange = XLColor.FromHtml("#F28C28");
 
-    // Un mot sur l'enjeu de chaque poste + un exemple concret, affiche en tete de chaque
-    // onglet - pour que remplir le tableur ait du sens plutot que de cocher des cases.
-    private static readonly IReadOnlyDictionary<PosteCollecte, string> NotesPedagogiques = new Dictionary<PosteCollecte, string>
-    {
-        [PosteCollecte.Descriptif] = "Ces informations cadrent le périmètre de votre Bilan Carbone® (taille, activité, année de référence) : elles ne génèrent pas d'émissions mais permettent de comparer vos résultats dans le temps et à des entreprises similaires.",
-        [PosteCollecte.Energie] = "L'énergie de vos sites (électricité, gaz, fioul…) est souvent le poste le plus facile à mesurer précisément grâce à vos factures. Exemple : 20 000 kWh d'électricité par an représentent environ 1,2 t CO2e.",
-        [PosteCollecte.AutresEmissionsDirectes] = "Les fuites de fluides frigorigènes (climatisation, chambres froides) sont un poste invisible en comptabilité mais souvent très impactant : quelques kg de gaz R410a peuvent représenter plusieurs tonnes de CO2e.",
-        [PosteCollecte.DechetsDirects] = "Le traitement de vos déchets (collecte, incinération, enfouissement) émet du CO2 selon le mode de traitement choisi : le recyclage émet généralement moins que l'enfouissement.",
-        [PosteCollecte.Immobilisations] = "Vos bâtiments, véhicules et équipements ont nécessité de l'énergie et des matières pour être fabriqués : cet impact est amorti sur leur durée de vie, comme en comptabilité.",
-        [PosteCollecte.IntrantsBiensEtMatieres] = "Les matières premières et produits physiques que vous achetez (métaux, plastiques, papier…) ont une empreinte carbone liée à leur fabrication, calculée au poids.",
-        [PosteCollecte.IntrantsServices] = "Vos dépenses de services (conseil, informatique, assurances…) sont estimées via un ratio €→CO2e par secteur d'activité, à partir de votre comptabilité (export FEC).",
-        [PosteCollecte.Fret] = "Le transport de marchandises (vos achats livrés, vos produits expédiés) émet du CO2 selon le mode utilisé (route, rail, mer, air) et la distance parcourue.",
-        [PosteCollecte.Deplacements] = "Les trajets domicile-travail et professionnels comptent parmi les postes les plus variables d'une entreprise à l'autre : un trajet en covoiturage ou à vélo pèse bien moins qu'une voiture seule.",
-        [PosteCollecte.Utilisation] = "Si vos produits consomment de l'énergie une fois chez le client (appareil électrique, véhicule…), cette consommation sur toute leur durée de vie fait partie de votre empreinte.",
-        [PosteCollecte.FinDeVie] = "Le devenir de vos produits et emballages une fois jetés (recyclage, incinération) complète le cycle de vie de ce que vous mettez sur le marché.",
-    };
-
     public static byte[] Generer(string raisonSociale, DateTime dateGeneration, IReadOnlyList<ElementCollecteInfo> elements, string? lienEspaceClient = null)
     {
         using var classeur = new XLWorkbook();
@@ -127,7 +110,8 @@ public static class TableurCollecteGenerator
         feuille.Cell(1, 1).Value = QuestionnaireCollecteCatalogue.LibellePoste(poste);
         feuille.Cell(1, 1).Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(Vert);
 
-        if (NotesPedagogiques.TryGetValue(poste, out var note))
+        var note = QuestionnaireCollecteCatalogue.NotePedagogique(poste);
+        if (!string.IsNullOrWhiteSpace(note))
         {
             var celluleNote = feuille.Range(2, 1, 2, Entetes.Length).Merge().FirstCell();
             celluleNote.Value = note;

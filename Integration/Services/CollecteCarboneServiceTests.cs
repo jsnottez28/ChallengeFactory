@@ -387,4 +387,44 @@ public class CollecteCarboneServiceTests
         using var classeur = new XLWorkbook(depot.Value.Contenu);
         Assert.Contains("Lisez-moi", classeur.Worksheets.Select(f => f.Name));
     }
+
+    [Fact]
+    public async Task GetChecklistAsync_MarqueEstCoche_SelonLesElementsEnregistres()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+        var premiereChecklist = await service.GetChecklistAsync(dossier!.Id);
+        Assert.All(premiereChecklist, e => Assert.False(e.EstCoche));
+        var cleACocher = premiereChecklist[0].Cle;
+
+        await service.EnregistrerElementsCochesAsync(clientId, [cleACocher]);
+        var checklistApres = await service.GetChecklistAsync(dossier.Id);
+
+        Assert.True(checklistApres.Single(e => e.Cle == cleACocher).EstCoche);
+        Assert.All(checklistApres.Where(e => e.Cle != cleACocher), e => Assert.False(e.EstCoche));
+    }
+
+    [Fact]
+    public async Task EnregistrerElementsCochesAsync_RemplaceLaSelectionPrecedente()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+        var checklist = await service.GetChecklistAsync(dossier!.Id);
+        var (cle1, cle2) = (checklist[0].Cle, checklist[1].Cle);
+
+        await service.EnregistrerElementsCochesAsync(clientId, [cle1, cle2]);
+        await service.EnregistrerElementsCochesAsync(clientId, [cle2]);
+        var checklistFinale = await service.GetChecklistAsync(dossier.Id);
+
+        Assert.False(checklistFinale.Single(e => e.Cle == cle1).EstCoche);
+        Assert.True(checklistFinale.Single(e => e.Cle == cle2).EstCoche);
+    }
 }

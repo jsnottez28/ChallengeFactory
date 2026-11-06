@@ -253,6 +253,7 @@
                         <table class="table table-sm align-middle mb-0">
                             <thead>
                                 <tr>
+                                    <th scope="col"></th>
                                     <th scope="col">Poste</th>
                                     <th scope="col">Donnée</th>
                                     <th scope="col">Pièce justificative</th>
@@ -264,6 +265,7 @@
                                 @foreach (var element in checklist)
                                 {
                                     <tr>
+                                        <td class="text-center" title="@(element.EstCoche ? "Cochée comme saisie par le client" : "Pas encore cochée par le client")">@(element.EstCoche ? "✅" : "⬜")</td>
                                         <td class="text-nowrap">@Web.Services.QuestionnaireCollecteCatalogue.LibellePoste(element.Poste)</td>
                                         <td>
                                             @element.Donnee

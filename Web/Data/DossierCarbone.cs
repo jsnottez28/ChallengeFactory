@@ -43,6 +43,12 @@ public class DossierCarbone
     // Declaration du client au moment du depot ("j'ai termine la collecte") - purement
     // informatif pour le Gestionnaire, ne bloque jamais un depot ulterieur.
     public bool? CollecteDeclareeTerminee { get; set; }
+
+    // Cles (ElementCollecteInfo.Cle) des lignes de la check-list que le client a cochees
+    // comme "deja saisies dans le fichier" - purement declaratif cote client, independant
+    // de l'avancement estimatif calcule depuis le fichier depose (les deux se completent :
+    // l'un est ce que le client affirme, l'autre ce qu'on peut verifier dans son fichier).
+    public string ElementsCochesJson { get; set; } = "[]";
 }
 
 // Questionnaire de collecte (questions de filtrage du Bilan Carbone(R)) rempli par le client

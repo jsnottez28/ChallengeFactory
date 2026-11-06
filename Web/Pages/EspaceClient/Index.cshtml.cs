@@ -109,4 +109,21 @@ public class IndexModel(ICollecteCarboneService collecteService, UserManager<App
 
         return RedirectToPage();
     }
+
+    // Case a cocher par ligne de la check-list ("je l'ai déjà saisie dans mon fichier") -
+    // purement declaratif, independant de la jauge calculee depuis le fichier depose.
+    // elementsCoches : uniquement les cles des cases QUI SONT cochees (une case
+    // decochee ne poste rien, comportement HTML standard) - remplace toute la selection.
+    public async Task<IActionResult> OnPostCocherElementsAsync(List<string>? elementsCoches)
+    {
+        var utilisateur = await userManager.GetUserAsync(User);
+        if (utilisateur is null)
+        {
+            return Challenge();
+        }
+
+        await collecteService.EnregistrerElementsCochesAsync(utilisateur.Id, elementsCoches ?? []);
+
+        return RedirectToPage();
+    }
 }

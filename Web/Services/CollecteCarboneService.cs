@@ -239,7 +239,34 @@ public sealed class CollecteCarboneService(
             return [];
         }
 
-        return ChecklistCollecteBuilder.Construire(dossier.PreBilanCarbone, LireReponses(dossier.Questionnaire));
+        var elements = ChecklistCollecteBuilder.Construire(dossier.PreBilanCarbone, LireReponses(dossier.Questionnaire));
+        var coches = LireElementsCoches(dossier.ElementsCochesJson);
+        foreach (var element in elements)
+        {
+            element.EstCoche = coches.Contains(element.Cle);
+        }
+
+        return elements;
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> EnregistrerElementsCochesAsync(string clientUtilisateurId, IReadOnlyCollection<string> elementsCoches)
+    {
+        var dossier = await dbContext.DossiersCarbone
+            .Where(d => d.ClientUtilisateurId == clientUtilisateurId)
+            .OrderByDescending(d => d.OuvertLe)
+            .FirstOrDefaultAsync();
+        if (dossier is null)
+        {
+            return (false, "Aucun espace client Bilan Carbone® ne vous est associé.");
+        }
+
+        // Aucune verification que chaque cle correspond a un ElementCollecteInfo existant :
+        // une cle "perimee" (poste/question retire du catalogue depuis) reste stockee sans
+        // effet, comme pour QuestionnaireCollecte.ReponsesJson - jamais bloquant.
+        dossier.ElementsCochesJson = JsonSerializer.Serialize(elementsCoches.Distinct());
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
     }
 
     public async Task<(byte[] Contenu, string NomFichier)?> GenererTableurAsync(int preBilanId, string? lienEspaceClient = null)
@@ -375,6 +402,23 @@ public sealed class CollecteCarboneService(
         try
         {
             return JsonSerializer.Deserialize<Dictionary<string, string>>(questionnaire.ReponsesJson) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static HashSet<string> LireElementsCoches(string elementsCochesJson)
+    {
+        if (string.IsNullOrWhiteSpace(elementsCochesJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<HashSet<string>>(elementsCochesJson) ?? [];
         }
         catch (JsonException)
         {
