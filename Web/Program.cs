@@ -49,7 +49,7 @@ builder.Services.AddScoped<IEmailService>(sp =>
         return new ConsoleEmailService();
     }
 
-    return new SmtpEmailService(Options.Create(settings));
+    return new SmtpEmailService(Options.Create(settings), sp.GetRequiredService<ILogger<SmtpEmailService>>());
 });
 
 builder.Services.AddTransient<IEmailSender, IdentityEmailSender>();
