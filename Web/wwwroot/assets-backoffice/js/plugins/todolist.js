@@ -78,11 +78,13 @@ $(document).ready(function () {
 		updateTodoStyles($(this));
 	});
 	
-	todoListSortable = document.getElementById('todoList'),
-	new Sortable(todoListSortable, {
-		handle: '.sortable-handle',
-		animation: 150
-	});
+	todoListSortable = document.getElementById('todoList');
+	if (todoListSortable) {
+		new Sortable(todoListSortable, {
+			handle: '.sortable-handle',
+			animation: 150
+		});
+	}
 	
 	$('#todoList').on('click', '.item-delete', function(){
 		$(this).parent().remove();
