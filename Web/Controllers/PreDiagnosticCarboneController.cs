@@ -134,11 +134,11 @@ public class PreDiagnosticCarboneController(
             return RedirectToAction(nameof(Index));
         }
 
-        var (success, errorMessage) = await collecteService.OuvrirCompteClientSelfServiceAsync(preBilanId, LienActivation);
+        var (success, errorMessage) = await collecteService.OuvrirCompteClientSelfServiceAsync(preBilanId, LienActivation, LienConnexion());
 
         if (success)
         {
-            ViewData["EspaceClientMessage"] = "Votre espace est créé : vous allez recevoir un email avec votre identifiant et un lien pour définir votre mot de passe.";
+            ViewData["EspaceClientMessage"] = "Votre espace est créé : un email vous a été envoyé pour y accéder.";
             TempData.Remove(CleTempDataDernierPreBilan);
         }
         else
@@ -154,6 +154,9 @@ public class PreDiagnosticCarboneController(
 
     private string LienActivation(string token) =>
         Url.Page("/Compte/DefinirMotDePasse", null, new { token }, Request.Scheme) ?? $"/Compte/DefinirMotDePasse?token={token}";
+
+    private string LienConnexion() =>
+        Url.Page("/Account/Login", null, new { area = "Identity" }, Request.Scheme) ?? "/Identity/Account/Login";
 
     public class PreDiagnosticCarboneFormModel
     {

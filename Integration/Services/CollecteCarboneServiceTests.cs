@@ -78,7 +78,7 @@ public class CollecteCarboneServiceTests
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, emails) = CreerService(dbContext);
 
-        var (success, erreur) = await service.OuvrirCompteClientAsync(preBilan.Id, "gestionnaire-1", token => $"{Lien}?token={token}");
+        var (success, erreur) = await service.OuvrirCompteClientAsync(preBilan.Id, "gestionnaire-1", token => $"{Lien}?token={token}", Lien);
 
         Assert.True(success, erreur);
         var utilisateur = await dbContext.Users.SingleAsync(u => u.Email == "client@test.local");
@@ -105,7 +105,7 @@ public class CollecteCarboneServiceTests
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, emails) = CreerService(dbContext);
 
-        var (success, erreur) = await service.OuvrirCompteClientSelfServiceAsync(preBilan.Id, token => $"{Lien}?token={token}");
+        var (success, erreur) = await service.OuvrirCompteClientSelfServiceAsync(preBilan.Id, token => $"{Lien}?token={token}", Lien);
 
         Assert.True(success, erreur);
         var utilisateur = await dbContext.Users.SingleAsync(u => u.Email == "client@test.local");
@@ -128,7 +128,7 @@ public class CollecteCarboneServiceTests
         await userManager.CreateAsync(new ApplicationUser { UserName = "client@test.local", Email = "client@test.local" });
         var (service, emails) = CreerService(dbContext);
 
-        var (success, erreur) = await service.OuvrirCompteClientAsync(preBilan.Id, "gestionnaire-1", _ => Lien);
+        var (success, erreur) = await service.OuvrirCompteClientAsync(preBilan.Id, "gestionnaire-1", _ => Lien, Lien);
 
         Assert.True(success, erreur);
         var utilisateur = await dbContext.Users.SingleAsync(u => u.Email == "client@test.local");
@@ -139,6 +139,27 @@ public class CollecteCarboneServiceTests
         Assert.Single(emails.Envois);
     }
 
+    // Reproduit le bug observe en production : le compte existe deja ET a deja un mot de
+    // passe defini (ex. deja Participant actif). Avant correctif, aucun email n'etait
+    // envoye dans ce cas - le client n'etait jamais prevenu que son espace etait ouvert.
+    [Fact]
+    public async Task OuvrirCompteClientAsync_CompteExistantAvecMotDePasse_EnvoieLaNotificationDEspaceOuvert()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var userManager = TestUserManagerFactory.Create(dbContext);
+        await userManager.CreateAsync(new ApplicationUser { UserName = "client@test.local", Email = "client@test.local" }, "MotDePasse!1");
+        var (service, emails) = CreerService(dbContext);
+
+        var (success, erreur) = await service.OuvrirCompteClientAsync(preBilan.Id, "gestionnaire-1", _ => Lien, "https://test.local/connexion");
+
+        Assert.True(success, erreur);
+        Assert.Empty(await dbContext.InvitationsComptes.ToListAsync());
+        var envoi = Assert.Single(emails.Envois);
+        Assert.Equal("client@test.local", envoi.Destinataire);
+        Assert.Contains("https://test.local/connexion", envoi.CorpsHtml);
+    }
+
     [Fact]
     public async Task OuvrirCompteClientAsync_Refuse_UnSecondDossierPourLeMemePreDiagnostic()
     {
@@ -146,8 +167,8 @@ public class CollecteCarboneServiceTests
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, _) = CreerService(dbContext);
 
-        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
-        var (success, _) = await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var (success, _) = await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
 
         Assert.False(success);
         Assert.Single(await dbContext.DossiersCarbone.ToListAsync());
@@ -172,7 +193,7 @@ public class CollecteCarboneServiceTests
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, emails) = CreerService(dbContext);
 
-        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
         var (envoye, erreurEnvoi) = await service.EnvoyerQuestionnaireAsync(preBilan.Id, "https://test.local/EspaceClient/Questionnaire");
         Assert.True(envoye, erreurEnvoi);
         Assert.Equal(2, emails.Envois.Count);
@@ -221,8 +242,8 @@ public class CollecteCarboneServiceTests
         var preBilanA = await SemerPreBilanAsync(dbContext, "a@test.local");
         var preBilanB = await SemerPreBilanAsync(dbContext, "b@test.local");
         var (service, _) = CreerService(dbContext);
-        await service.OuvrirCompteClientAsync(preBilanA.Id, "g", _ => Lien);
-        await service.OuvrirCompteClientAsync(preBilanB.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilanA.Id, "g", _ => Lien, Lien);
+        await service.OuvrirCompteClientAsync(preBilanB.Id, "g", _ => Lien, Lien);
 
         var clientA = await dbContext.Users.SingleAsync(u => u.Email == "a@test.local");
         var dossier = await service.GetDossierClientAsync(clientA.Id);
@@ -319,7 +340,7 @@ public class CollecteCarboneServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, _) = CreerService(dbContext);
-        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
         var clientId = (await dbContext.Users.SingleAsync()).Id;
 
         var tableur = await service.GenererTableurAsync(preBilan.Id);
@@ -348,7 +369,7 @@ public class CollecteCarboneServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, _) = CreerService(dbContext);
-        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
         var clientId = (await dbContext.Users.SingleAsync()).Id;
 
         var (success, erreur) = await service.DeposerTableurRempliAsync(clientId, new MemoryStream("pas un xlsx"u8.ToArray()), "rempli.xlsx", collecteDeclareeTerminee: false);
@@ -364,7 +385,7 @@ public class CollecteCarboneServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, _) = CreerService(dbContext);
-        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
 
         Assert.Null(await service.TelechargerDernierTableurDeposeAsync(preBilan.Id));
     }
@@ -375,7 +396,7 @@ public class CollecteCarboneServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, _) = CreerService(dbContext);
-        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
         var clientId = (await dbContext.Users.SingleAsync()).Id;
         var tableur = await service.GenererTableurAsync(preBilan.Id);
         await service.DeposerTableurRempliAsync(clientId, new MemoryStream(tableur!.Value.Contenu), "rempli.xlsx", collecteDeclareeTerminee: false);
@@ -394,7 +415,7 @@ public class CollecteCarboneServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, _) = CreerService(dbContext);
-        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
         var clientId = (await dbContext.Users.SingleAsync()).Id;
         var dossier = await service.GetDossierClientAsync(clientId);
         var premiereChecklist = await service.GetChecklistAsync(dossier!.Id);
@@ -414,7 +435,7 @@ public class CollecteCarboneServiceTests
         await using var dbContext = InMemoryDbContextFactory.Create();
         var preBilan = await SemerPreBilanAsync(dbContext);
         var (service, _) = CreerService(dbContext);
-        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
         var clientId = (await dbContext.Users.SingleAsync()).Id;
         var dossier = await service.GetDossierClientAsync(clientId);
         var checklist = await service.GetChecklistAsync(dossier!.Id);

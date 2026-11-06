@@ -203,13 +203,12 @@
                                             @(dossier.StatutQuestionnaire is null ? "Envoyer le questionnaire" : dossier.StatutQuestionnaire == StatutQuestionnaireCollecte.Soumis ? "Rouvrir et renvoyer le questionnaire" : "Renvoyer le questionnaire")
                                         </button>
                                     </form>
-                                    @if (!dossier.CompteActive)
-                                    {
-                                        <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="RenvoyerInvitationClient" asp-route-id="@Model.Id">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-secondary w-100">Renvoyer l'invitation (mot de passe)</button>
-                                        </form>
-                                    }
+                                    <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="RenvoyerEmailOuverture" asp-route-id="@Model.Id">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-secondary w-100">
+                                            Renvoyer l'email d'ouverture d'espace
+                                        </button>
+                                    </form>
                                 </div>
                             </droit-visible>
                         }

@@ -73,20 +73,33 @@ public interface ICollecteCarboneService
 {
     Task<DossierCarboneInfo?> GetDossierParPreBilanAsync(int preBilanId);
 
-    // Cree le compte ClientCarbone (sans mot de passe) et le dossier, puis envoie l'email
-    // de bienvenue (identifiant + lien pour definir le mot de passe). Refuse si un compte
-    // Participant existe deja avec cet email : les deux usages restent separes.
-    Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientAsync(int preBilanId, string gestionnaireId, Func<string, string> construireLienActivation);
+    // Cree le compte ClientCarbone (sans mot de passe) et le dossier, puis envoie l'email de
+    // bienvenue (identifiant + lien pour definir le mot de passe). Les acces se cumulent : si
+    // un compte existe deja avec cet email (ex. Participant), le dossier est rattache a ce
+    // compte - EnvoyerInvitationAsync n'est alors declenche que si ce compte n'a pas encore
+    // de mot de passe ; sinon l'email de notification "espace pret, connectez-vous avec vos
+    // identifiants" (lienConnexion) est envoye a la place, pour que le client soit quand meme
+    // prevenu que son espace a ete ouvert.
+    Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientAsync(int preBilanId, string gestionnaireId, Func<string, string> construireLienActivation, string lienConnexion);
 
     // Meme mecanique, mais declenchee par le prospect lui-meme juste apres son depot (pas
     // de Gestionnaire a l'origine - cf. DossierCarbone.OuvertParId qui reste null).
     // L'appelant doit s'assurer que preBilanId correspond bien au Pre-diagnostic que ce
     // visiteur vient de deposer (ex. via TempData), jamais a un Id fourni librement par le
     // client dans l'URL/le formulaire.
-    Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientSelfServiceAsync(int preBilanId, Func<string, string> construireLienActivation);
+    Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientSelfServiceAsync(int preBilanId, Func<string, string> construireLienActivation, string lienConnexion);
 
     // Invalide l'ancienne invitation et en renvoie une nouvelle (lien expire, email perdu).
+    // Ne fonctionne que si le compte n'a pas encore de mot de passe - sinon utiliser
+    // RenvoyerEmailOuvertureAsync ci-dessous.
     Task<(bool Success, string? ErrorMessage)> RenvoyerInvitationAsync(int preBilanId, Func<string, string> construireLienActivation);
+
+    // Renvoie l'email d'ouverture d'espace (premier envoi perdu, atterri en spam, etc.),
+    // quel que soit l'etat du compte : l'invitation avec lien d'activation si le mot de
+    // passe n'est pas encore defini, sinon la simple notification "connectez-vous avec vos
+    // identifiants existants" - cf. OuvrirCompteClientInterneAsync qui envoie la meme chose
+    // au premier passage.
+    Task<(bool Success, string? ErrorMessage)> RenvoyerEmailOuvertureAsync(int preBilanId, Func<string, string> construireLienActivation, string lienConnexion);
 
     // Cree (ou rouvre, s'il etait deja soumis) le questionnaire de collecte et envoie au
     // client l'email contenant le lien vers son espace.

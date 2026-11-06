@@ -70,7 +70,7 @@ public class PreDiagnosticsCarboneController(
     public async Task<IActionResult> OuvrirCompteClient(int id)
     {
         var gestionnaireId = userManager.GetUserId(User) ?? string.Empty;
-        var (success, errorMessage) = await collecteService.OuvrirCompteClientAsync(id, gestionnaireId, LienActivation);
+        var (success, errorMessage) = await collecteService.OuvrirCompteClientAsync(id, gestionnaireId, LienActivation, LienConnexion());
         TempData["StatusMessage"] = success
             ? "Espace client ouvert : le client a reçu son identifiant et le lien pour définir son mot de passe."
             : errorMessage;
@@ -84,6 +84,16 @@ public class PreDiagnosticsCarboneController(
     {
         var (success, errorMessage) = await collecteService.RenvoyerInvitationAsync(id, LienActivation);
         TempData["StatusMessage"] = success ? "Nouvelle invitation envoyée au client." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/RenvoyerEmailOuverture")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RenvoyerEmailOuverture(int id)
+    {
+        var (success, errorMessage) = await collecteService.RenvoyerEmailOuvertureAsync(id, LienActivation, LienConnexion());
+        TempData["StatusMessage"] = success ? "Email d'ouverture d'espace renvoyé au client." : errorMessage;
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -129,4 +139,7 @@ public class PreDiagnosticsCarboneController(
 
     private string LienActivation(string token) =>
         Url.Page("/Compte/DefinirMotDePasse", null, new { token }, Request.Scheme) ?? $"/Compte/DefinirMotDePasse?token={token}";
+
+    private string LienConnexion() =>
+        Url.Page("/Account/Login", null, new { area = "Identity" }, Request.Scheme) ?? "/Identity/Account/Login";
 }

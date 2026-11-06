@@ -19,16 +19,16 @@ public sealed class CollecteCarboneService(
         return dossier is null ? null : await VersInfoAsync(dossier);
     }
 
-    public Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientAsync(int preBilanId, string gestionnaireId, Func<string, string> construireLienActivation) =>
-        OuvrirCompteClientInterneAsync(preBilanId, gestionnaireId, construireLienActivation);
+    public Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientAsync(int preBilanId, string gestionnaireId, Func<string, string> construireLienActivation, string lienConnexion) =>
+        OuvrirCompteClientInterneAsync(preBilanId, gestionnaireId, construireLienActivation, lienConnexion);
 
     // Self-service : le prospect ouvre lui-meme son espace juste apres avoir depose son
     // Pre-diagnostic, sans attendre un Gestionnaire. OuvertParId reste null (aucun
     // Gestionnaire n'est a l'origine de l'ouverture) - cf. DossierCarbone.OuvertParId.
-    public Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientSelfServiceAsync(int preBilanId, Func<string, string> construireLienActivation) =>
-        OuvrirCompteClientInterneAsync(preBilanId, ouvertParId: null, construireLienActivation);
+    public Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientSelfServiceAsync(int preBilanId, Func<string, string> construireLienActivation, string lienConnexion) =>
+        OuvrirCompteClientInterneAsync(preBilanId, ouvertParId: null, construireLienActivation, lienConnexion);
 
-    private async Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientInterneAsync(int preBilanId, string? ouvertParId, Func<string, string> construireLienActivation)
+    private async Task<(bool Success, string? ErrorMessage)> OuvrirCompteClientInterneAsync(int preBilanId, string? ouvertParId, Func<string, string> construireLienActivation, string lienConnexion)
     {
         var preBilan = await dbContext.PreBilansCarbone.FirstOrDefaultAsync(p => p.Id == preBilanId);
         if (preBilan is null)
@@ -94,11 +94,17 @@ public sealed class CollecteCarboneService(
 
         await dbContext.SaveChangesAsync();
 
-        // Compte client deja existant (autre dossier, mot de passe deja defini) : pas de
-        // nouvelle invitation, l'email de bienvenue renvoie simplement vers la connexion.
+        // Compte client deja existant (autre dossier, ou compte Participant, avec mot de
+        // passe deja defini) : pas de nouvelle invitation (le client a deja ses identifiants),
+        // mais on le previent quand meme que son espace Bilan Carbone(R) est pret, sinon il
+        // n'en sait jamais rien.
         if (compteCree || !await userManager.HasPasswordAsync(utilisateur))
         {
             await EnvoyerInvitationAsync(utilisateur, dossier.RaisonSociale, construireLienActivation);
+        }
+        else
+        {
+            await EnvoyerNotificationEspaceOuvertAsync(utilisateur, dossier.RaisonSociale, lienConnexion);
         }
 
         return (true, null);
@@ -128,6 +134,23 @@ public sealed class CollecteCarboneService(
         await dbContext.SaveChangesAsync();
         await EnvoyerInvitationAsync(dossier.ClientUtilisateur, dossier.RaisonSociale, construireLienActivation);
 
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> RenvoyerEmailOuvertureAsync(int preBilanId, Func<string, string> construireLienActivation, string lienConnexion)
+    {
+        var dossier = await RequeteDossiers().FirstOrDefaultAsync(d => d.PreBilanCarboneId == preBilanId);
+        if (dossier is null)
+        {
+            return (false, "Aucun espace client n'est ouvert pour ce pré-diagnostic.");
+        }
+
+        if (!await userManager.HasPasswordAsync(dossier.ClientUtilisateur))
+        {
+            return await RenvoyerInvitationAsync(preBilanId, construireLienActivation);
+        }
+
+        await EnvoyerNotificationEspaceOuvertAsync(dossier.ClientUtilisateur, dossier.RaisonSociale, lienConnexion);
         return (true, null);
     }
 
@@ -389,6 +412,17 @@ public sealed class CollecteCarboneService(
 
         var (sujet, corps) = ChallengeEmailTemplates.BienvenueEspaceClientCarbone(
             utilisateur.Prenom, utilisateur.Email, raisonSociale, construireLienActivation(invitation.Token));
+        await emailService.EnvoyerAsync(utilisateur.Email, sujet, corps);
+    }
+
+    private async Task EnvoyerNotificationEspaceOuvertAsync(ApplicationUser utilisateur, string raisonSociale, string lienConnexion)
+    {
+        if (string.IsNullOrWhiteSpace(utilisateur.Email))
+        {
+            return;
+        }
+
+        var (sujet, corps) = ChallengeEmailTemplates.EspaceClientCarboneOuvertCompteExistant(utilisateur.Prenom, raisonSociale, lienConnexion);
         await emailService.EnvoyerAsync(utilisateur.Email, sujet, corps);
     }
 

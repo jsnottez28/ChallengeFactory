@@ -474,6 +474,27 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // Meme ouverture d'espace, mais le compte existait deja avec un mot de passe deja defini
+    // (ex. deja Participant sur un parcours) : pas de lien d'activation a renvoyer, juste
+    // prevenir le client que son espace Bilan Carbone(R) est pret et qu'il se connecte avec
+    // ses identifiants existants - cf. CollecteCarboneService.OuvrirCompteClientInterneAsync.
+    public static (string Sujet, string CorpsHtml) EspaceClientCarboneOuvertCompteExistant(string? prenom, string raisonSociale, string lienConnexion)
+    {
+        const string sujet = "Votre espace client Bilan Carbone® — Challenges Factory";
+
+        var salutation = string.IsNullOrWhiteSpace(prenom) ? "Bonjour," : $"Bonjour {WebUtility.HtmlEncode(prenom)},";
+
+        var corps = $"""
+            <p>{salutation}</p>
+            <p>Suite à votre pré-diagnostic carbone, nous avons ouvert l'espace client de <strong>{WebUtility.HtmlEncode(raisonSociale)}</strong> sur Challenges Factory. C'est depuis cet espace que nous préparerons ensemble votre Bilan Carbone®, puis votre plan d'action de décarbonation.</p>
+            <p>Vous avez déjà un compte Challenges Factory avec cette adresse email : connectez-vous avec votre identifiant et votre mot de passe habituels, votre nouvel espace y est maintenant accessible.</p>
+            <p><a href="{lienConnexion}">Me connecter</a></p>
+            <p>Vous recevrez ensuite un second email vous invitant à compléter le questionnaire de préparation de votre Bilan Carbone®.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) QuestionnaireCollecteCarbone(string? prenom, string raisonSociale, string lienQuestionnaire)
     {
         const string sujet = "Préparez votre Bilan Carbone® : votre questionnaire est disponible";
