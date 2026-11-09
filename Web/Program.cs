@@ -25,8 +25,16 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, relo
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+// EnableRetryOnFailure : au demarrage (migration auto ci-dessous) comme en cours de vie,
+// une indisponibilite SQL Server transitoire (reboot du serveur, service pas encore
+// demarre...) ne doit pas faire planter tout le process - vecu en prod (voir logs du
+// 2026-11-08 15h01 : SqlException "Could not open a connection to SQL Server" non geree,
+// process termine) alors qu'un simple reessai quelques secondes plus tard aurait suffi.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure(
+        maxRetryCount: 6,
+        maxRetryDelay: TimeSpan.FromSeconds(10),
+        errorNumbersToAdd: null)));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
