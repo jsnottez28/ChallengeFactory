@@ -249,7 +249,46 @@
                     <p class="text-muted small mb-0">
                         <span class="badge bg-success-subtle text-success-emphasis">✅ @nombreCoches cochée@(nombreCoches > 1 ? "s" : "") par le client</span>
                         sur @checklist.Count — déclaratif, indépendant de l'avancement calculé depuis le fichier déposé ci-dessus.
+                        @if (dossier?.LignesSupplementaires.Count > 0)
+                        {
+                            <span class="badge bg-warning text-dark ms-1">+ @dossier.LignesSupplementaires.Count ligne@(dossier.LignesSupplementaires.Count > 1 ? "s" : "") complémentaire@(dossier.LignesSupplementaires.Count > 1 ? "s" : "") ajoutée@(dossier.LignesSupplementaires.Count > 1 ? "s" : "") par le client — à traiter</span>
+                        }
                     </p>
+                    @if (dossier?.LignesSupplementaires.Count > 0)
+                    {
+                        <details class="mt-2">
+                            <summary class="small text-warning-emphasis" style="cursor: pointer;">Voir les lignes complémentaires ajoutées par le client</summary>
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm small mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Onglet</th>
+                                            <th scope="col">Sous-poste</th>
+                                            <th scope="col">Donnée</th>
+                                            <th scope="col">Valeur</th>
+                                            <th scope="col">Source</th>
+                                            <th scope="col">Statut</th>
+                                            <th scope="col">Commentaire</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var ligne in dossier.LignesSupplementaires)
+                                        {
+                                            <tr>
+                                                <td>@ligne.Onglet</td>
+                                                <td>@ligne.SousPoste</td>
+                                                <td>@ligne.Donnee</td>
+                                                <td>@ligne.Valeur @ligne.Unite</td>
+                                                <td>@ligne.Source</td>
+                                                <td>@ligne.Statut</td>
+                                                <td>@ligne.Commentaire</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                    }
                 </div>
                 <div class="card-body p-0">
                     <div class="accordion accordion-flush" id="accordionChecklist">
@@ -287,7 +326,18 @@
                                                                 @element.Donnee
                                                                 @if (element.Valeur.HasValue)
                                                                 {
-                                                                    <span class="badge bg-success-subtle text-success-emphasis ms-1">@element.Valeur.Value.ToString("N2") @element.Unite</span>
+                                                                    <span class="badge bg-success-subtle text-success-emphasis ms-1">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span>
+                                                                }
+                                                                @if (element.ValeurFichier is { } vf)
+                                                                {
+                                                                    <div class="small text-success-emphasis mt-1">
+                                                                        📥 Saisi dans le fichier (@vf.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy"))
+                                                                        @if (vf.Valeur is not null) { <text> — <strong>@vf.Valeur @vf.Unite</strong></text> }
+                                                                        @if (vf.Statut is not null) { <span class="badge bg-success-subtle text-success-emphasis ms-1">@vf.Statut</span> }
+                                                                        @if (vf.Source is not null) { <text> · Source : @vf.Source</text> }
+                                                                        @if (vf.Hypotheses is not null) { <text> · Hypothèses : @vf.Hypotheses</text> }
+                                                                        @if (vf.Commentaire is not null) { <text> · Commentaire : @vf.Commentaire</text> }
+                                                                    </div>
                                                                 }
                                                             </td>
                                                             <td class="small">@element.PieceJustificative</td>

@@ -184,6 +184,17 @@
                                                 <span class="text-muted small text-nowrap">📍 Onglet « @onglet », ligne @ligneExcel</span>
                                             </div>
                                             <div class="small text-muted ps-4">📄 @element.PieceJustificative · <span class="fst-italic">Référent : @element.Referent</span></div>
+                                            @if (element.ValeurFichier is { } vf)
+                                            {
+                                                <div class="small text-success-emphasis ps-4 mt-1">
+                                                    📥 Saisi dans votre tableur (@vf.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy"))
+                                                    @if (vf.Valeur is not null) { <text> — <strong>@vf.Valeur @vf.Unite</strong></text> }
+                                                    @if (vf.Statut is not null) { <span class="badge bg-success-subtle text-success-emphasis ms-1">@vf.Statut</span> }
+                                                    @if (vf.Source is not null) { <text> · Source : @vf.Source</text> }
+                                                    @if (vf.Hypotheses is not null) { <text> · Hypothèses : @vf.Hypotheses</text> }
+                                                    @if (vf.Commentaire is not null) { <text> · Commentaire : @vf.Commentaire</text> }
+                                                </div>
+                                            }
                                         </li>
                                     }
                                 </ul>

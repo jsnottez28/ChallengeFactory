@@ -49,6 +49,19 @@ public class DossierCarbone
     // de l'avancement estimatif calcule depuis le fichier depose (les deux se completent :
     // l'un est ce que le client affirme, l'autre ce qu'on peut verifier dans son fichier).
     public string ElementsCochesJson { get; set; } = "[]";
+
+    // Valeurs reellement extraites du dernier tableur depose : dictionnaire Cle ->
+    // ValeurSaisieFichier (JSON), fusionne de maniere incrementale a chaque depot (cf.
+    // CollecteCarboneService.FusionnerValeurs) - une cellule vide dans un nouveau depot ne
+    // efface jamais une valeur deja enregistree, elle est simplement ignoree.
+    public string ValeursSaisiesJson { get; set; } = "{}";
+
+    // Lignes presentes dans le dernier tableur depose mais non reconnues (cle sans
+    // correspondance dans le catalogue - ex. ligne complementaire ajoutee par le client pour
+    // un second site/fournisseur) : capturees telles quelles pour traitement ulterieur par
+    // le Gestionnaire, jamais integrees a la check-list structuree. Remplacees en bloc (pas
+    // cumulatif) a chaque nouveau depot - reflete toujours le dernier fichier.
+    public string LignesSupplementairesJson { get; set; } = "[]";
 }
 
 // Questionnaire de collecte (questions de filtrage du Bilan Carbone(R)) rempli par le client

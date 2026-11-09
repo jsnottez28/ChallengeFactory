@@ -448,4 +448,103 @@ public class CollecteCarboneServiceTests
         Assert.False(checklistFinale.Single(e => e.Cle == cle1).EstCoche);
         Assert.True(checklistFinale.Single(e => e.Cle == cle2).EstCoche);
     }
+
+    [Fact]
+    public async Task DeposerTableurRempliAsync_ExtraitEtExposeLesValeursSaisiesDansLaChecklist()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+        var elementEnergie = (await service.GetChecklistAsync(dossier!.Id)).First(e => e.Poste == PosteCollecte.Energie);
+
+        var tableur = await service.GenererTableurAsync(preBilan.Id);
+        var rempli = SaisirCellule(tableur!.Value.Contenu, "Énergie", elementEnergie.Donnee, colonne: 7, "Facture EDF janvier 2026");
+        rempli = SaisirCellule(rempli, "Énergie", elementEnergie.Donnee, colonne: 12, "À vérifier avec le comptable");
+
+        var (success, erreur) = await service.DeposerTableurRempliAsync(clientId, new MemoryStream(rempli), "rempli.xlsx", collecteDeclareeTerminee: false);
+
+        Assert.True(success, erreur);
+        var valeurFichier = (await service.GetChecklistAsync(dossier.Id)).Single(e => e.Cle == elementEnergie.Cle).ValeurFichier;
+        Assert.NotNull(valeurFichier);
+        Assert.Equal("Facture EDF janvier 2026", valeurFichier!.Source);
+        Assert.Equal("À vérifier avec le comptable", valeurFichier.Commentaire);
+    }
+
+    [Fact]
+    public async Task DeposerTableurRempliAsync_ConserveLAncienneValeur_SiLaCelluleEstVideAuDepotSuivant()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+        var elementEnergie = (await service.GetChecklistAsync(dossier!.Id)).First(e => e.Poste == PosteCollecte.Energie);
+        var tableur = await service.GenererTableurAsync(preBilan.Id);
+
+        var premierFichier = SaisirCellule(tableur!.Value.Contenu, "Énergie", elementEnergie.Donnee, colonne: 7, "Facture EDF janvier 2026");
+        await service.DeposerTableurRempliAsync(clientId, new MemoryStream(premierFichier), "v1.xlsx", collecteDeclareeTerminee: false);
+
+        // Second depot : colonne Source explicitement videe (elle etait pre-remplie par le
+        // generateur, donc vider le fichier d'origine ne suffit pas a simuler une cellule
+        // laissee vide - il faut l'effacer). Commentaire rempli cette fois - la Source deja
+        // enregistree au premier depot doit survivre malgre la cellule vide.
+        var secondFichier = SaisirCellule(tableur.Value.Contenu, "Énergie", elementEnergie.Donnee, colonne: 7, "");
+        secondFichier = SaisirCellule(secondFichier, "Énergie", elementEnergie.Donnee, colonne: 12, "Nouveau commentaire");
+        await service.DeposerTableurRempliAsync(clientId, new MemoryStream(secondFichier), "v2.xlsx", collecteDeclareeTerminee: false);
+
+        var valeurFichier = (await service.GetChecklistAsync(dossier.Id)).Single(e => e.Cle == elementEnergie.Cle).ValeurFichier;
+        Assert.NotNull(valeurFichier);
+        Assert.Equal("Facture EDF janvier 2026", valeurFichier!.Source);
+        Assert.Equal("Nouveau commentaire", valeurFichier.Commentaire);
+    }
+
+    [Fact]
+    public async Task DeposerTableurRempliAsync_EnregistreLesLignesSupplementaires()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var tableur = await service.GenererTableurAsync(preBilan.Id);
+        var rempli = AjouterLigneSupplementaire(tableur!.Value.Contenu, "Énergie", sousPoste: "Solaire", donnee: "Production solaire autoconsommée", valeur: "300");
+
+        await service.DeposerTableurRempliAsync(clientId, new MemoryStream(rempli), "rempli.xlsx", collecteDeclareeTerminee: false);
+
+        var dossierApres = await service.GetDossierClientAsync(clientId);
+        var ligne = Assert.Single(dossierApres!.LignesSupplementaires);
+        Assert.Equal("Solaire", ligne.SousPoste);
+        Assert.Equal("Production solaire autoconsommée", ligne.Donnee);
+        Assert.Equal("300", ligne.Valeur);
+    }
+
+    private static byte[] SaisirCellule(byte[] contenu, string onglet, string donnee, int colonne, string valeur)
+    {
+        using var classeur = new XLWorkbook(new MemoryStream(contenu));
+        var feuille = classeur.Worksheet(onglet);
+        var ligne = feuille.RowsUsed().First(r => r.Cell(2).GetString() == donnee);
+        ligne.Cell(colonne).Value = valeur;
+
+        using var flux = new MemoryStream();
+        classeur.SaveAs(flux);
+        return flux.ToArray();
+    }
+
+    private static byte[] AjouterLigneSupplementaire(byte[] contenu, string onglet, string sousPoste, string donnee, string valeur)
+    {
+        using var classeur = new XLWorkbook(new MemoryStream(contenu));
+        var feuille = classeur.Worksheet(onglet);
+        var ligne = (feuille.LastRowUsed()?.RowNumber() ?? 3) + 1;
+        feuille.Cell(ligne, 1).Value = sousPoste;
+        feuille.Cell(ligne, 2).Value = donnee;
+        feuille.Cell(ligne, 4).Value = valeur;
+
+        using var flux = new MemoryStream();
+        classeur.SaveAs(flux);
+        return flux.ToArray();
+    }
 }

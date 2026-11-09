@@ -35,6 +35,51 @@ public sealed class ElementCollecteInfo
     // Comptable, Extrapolée, Statistique, Approchée.
     public string? TypeDonnee { get; set; }
     public string? Source { get; set; }
+
+    // Ce que le client a reellement saisi dans le dernier tableur depose pour cette ligne
+    // (cf. TableurCollecteValeursExtracteur) - null tant qu'aucun depot ne couvre cette
+    // cle, ou que la ligne n'a jamais ete renseignee. Distinct de Valeur/TypeDonnee/Source
+    // ci-dessus, qui viennent du Pre-diagnostic/questionnaire, jamais du fichier depose.
+    public ValeurSaisieFichier? ValeurFichier { get; set; }
+}
+
+// Ce qu'un client a reellement saisi, dans le dernier tableur depose, pour une ligne
+// reconnue de la check-list - fusionne de maniere incrementale au fil des depots (une
+// cellule laissee vide ne remplace jamais une valeur deja enregistree). Tous les champs
+// sont le texte brut de la cellule (pas de parsing numerique : affichage seulement).
+public sealed class ValeurSaisieFichier
+{
+    public string? LibellePersonnalise { get; set; }
+    public string? Valeur { get; set; }
+    public string? Unite { get; set; }
+    public string? Type { get; set; }
+    public string? Source { get; set; }
+    public string? Hypotheses { get; set; }
+    public string? Statut { get; set; }
+    public string? Commentaire { get; set; }
+    public DateTime MiseAJourLe { get; set; }
+}
+
+// Une ligne presente dans le tableur depose mais dont la cle (Poste+Sous-poste+Donnee) ne
+// correspond a aucun element connu du catalogue - typiquement une ligne que le client a
+// ajoutee pour un second site/fournisseur. Capturee telle quelle (toutes les colonnes) pour
+// que le Gestionnaire puisse la traiter manuellement ; jamais integree a la check-list
+// structuree puisque sa signification n'est pas connue du systeme.
+public sealed class LigneSupplementaireCollecte
+{
+    public string Onglet { get; set; } = string.Empty;
+    public string SousPoste { get; set; } = string.Empty;
+    public string Donnee { get; set; } = string.Empty;
+    public string? LibellePersonnalise { get; set; }
+    public string? Valeur { get; set; }
+    public string? Unite { get; set; }
+    public string? Type { get; set; }
+    public string? Source { get; set; }
+    public string? Hypotheses { get; set; }
+    public string? PieceJustificative { get; set; }
+    public string? Referent { get; set; }
+    public string? Statut { get; set; }
+    public string? Commentaire { get; set; }
 }
 
 public sealed class DossierCarboneInfo
@@ -61,6 +106,10 @@ public sealed class DossierCarboneInfo
     public DateTime? TableurDeposeLe { get; set; }
     public int? TableurDeposeAvancementPourcent { get; set; }
     public bool? CollecteDeclareeTerminee { get; set; }
+
+    // Lignes du dernier tableur depose non reconnues (cf. LigneSupplementaireCollecte) -
+    // affiche au Gestionnaire comme signal "a traiter", jamais integre a la check-list.
+    public List<LigneSupplementaireCollecte> LignesSupplementaires { get; set; } = [];
 }
 
 // Dossier client carbone : ouverture d'un compte ClientCarbone a partir d'un

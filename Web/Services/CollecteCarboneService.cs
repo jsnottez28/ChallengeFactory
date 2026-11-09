@@ -264,9 +264,14 @@ public sealed class CollecteCarboneService(
 
         var elements = ChecklistCollecteBuilder.Construire(dossier.PreBilanCarbone, LireReponses(dossier.Questionnaire));
         var coches = LireElementsCoches(dossier.ElementsCochesJson);
+        var valeursSaisies = LireValeursSaisies(dossier.ValeursSaisiesJson);
         foreach (var element in elements)
         {
             element.EstCoche = coches.Contains(element.Cle);
+            if (valeursSaisies.TryGetValue(element.Cle, out var valeurFichier))
+            {
+                element.ValeurFichier = valeurFichier;
+            }
         }
 
         return elements;
@@ -333,7 +338,10 @@ public sealed class CollecteCarboneService(
 
     public async Task<(bool Success, string? ErrorMessage)> DeposerTableurRempliAsync(string clientUtilisateurId, Stream contenu, string nomFichier, bool collecteDeclareeTerminee)
     {
-        var dossier = await dbContext.DossiersCarbone
+        // RequeteDossiers() (pas une requete DossiersCarbone nue) : il faut PreBilanCarbone
+        // + Questionnaire charges pour reconstruire la check-list (ChecklistCollecteBuilder)
+        // et donc les cles connues servant a extraire les valeurs saisies ci-dessous.
+        var dossier = await RequeteDossiers()
             .Where(d => d.ClientUtilisateurId == clientUtilisateurId)
             .OrderByDescending(d => d.OuvertLe)
             .FirstOrDefaultAsync();
@@ -369,6 +377,18 @@ public sealed class CollecteCarboneService(
         dossier.TableurDeposeLe = DateTime.UtcNow;
         dossier.TableurDeposeAvancementPourcent = avancement;
         dossier.CollecteDeclareeTerminee = collecteDeclareeTerminee;
+
+        // Extraction des valeurs reellement saisies (fusion incrementale avec le depot
+        // precedent) + des lignes non reconnues (toujours remplacees par le dernier depot,
+        // pas cumulatif - cf. DossierCarbone.LignesSupplementairesJson).
+        var clesConnues = ChecklistCollecteBuilder.Construire(dossier.PreBilanCarbone, LireReponses(dossier.Questionnaire)).Select(e => e.Cle).ToList();
+        var extraction = TableurCollecteValeursExtracteur.Extraire(new MemoryStream(octets), clesConnues, DateTime.UtcNow);
+        if (extraction is not null)
+        {
+            var valeursExistantes = LireValeursSaisies(dossier.ValeursSaisiesJson);
+            dossier.ValeursSaisiesJson = JsonSerializer.Serialize(FusionnerValeursSaisies(valeursExistantes, extraction.Valeurs));
+            dossier.LignesSupplementairesJson = JsonSerializer.Serialize(extraction.LignesSupplementaires);
+        }
 
         await dbContext.SaveChangesAsync();
 
@@ -478,5 +498,68 @@ public sealed class CollecteCarboneService(
         TableurDeposeLe = dossier.TableurDeposeLe,
         TableurDeposeAvancementPourcent = dossier.TableurDeposeAvancementPourcent,
         CollecteDeclareeTerminee = dossier.CollecteDeclareeTerminee,
+        LignesSupplementaires = LireLignesSupplementaires(dossier.LignesSupplementairesJson),
     };
+
+    private static Dictionary<string, ValeurSaisieFichier> LireValeursSaisies(string valeursSaisiesJson)
+    {
+        if (string.IsNullOrWhiteSpace(valeursSaisiesJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, ValeurSaisieFichier>>(valeursSaisiesJson) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static List<LigneSupplementaireCollecte> LireLignesSupplementaires(string lignesSupplementairesJson)
+    {
+        if (string.IsNullOrWhiteSpace(lignesSupplementairesJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<LigneSupplementaireCollecte>>(lignesSupplementairesJson) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    // Fusion champ par champ : une cellule vide dans le nouveau depot ne remplace jamais une
+    // valeur deja enregistree (cf. DossierCarbone.ValeursSaisiesJson) - seule une cellule
+    // effectivement renseignee ecrase l'ancienne valeur de CE champ precis.
+    private static Dictionary<string, ValeurSaisieFichier> FusionnerValeursSaisies(
+        Dictionary<string, ValeurSaisieFichier> existantes, Dictionary<string, ValeurSaisieFichier> nouvelles)
+    {
+        var resultat = new Dictionary<string, ValeurSaisieFichier>(existantes);
+        foreach (var (cle, nouvelle) in nouvelles)
+        {
+            resultat[cle] = existantes.TryGetValue(cle, out var ancienne)
+                ? new ValeurSaisieFichier
+                {
+                    LibellePersonnalise = nouvelle.LibellePersonnalise ?? ancienne.LibellePersonnalise,
+                    Valeur = nouvelle.Valeur ?? ancienne.Valeur,
+                    Unite = nouvelle.Unite ?? ancienne.Unite,
+                    Type = nouvelle.Type ?? ancienne.Type,
+                    Source = nouvelle.Source ?? ancienne.Source,
+                    Hypotheses = nouvelle.Hypotheses ?? ancienne.Hypotheses,
+                    Statut = nouvelle.Statut ?? ancienne.Statut,
+                    Commentaire = nouvelle.Commentaire ?? ancienne.Commentaire,
+                    MiseAJourLe = nouvelle.MiseAJourLe,
+                }
+                : nouvelle;
+        }
+
+        return resultat;
+    }
 }

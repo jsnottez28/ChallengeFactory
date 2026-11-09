@@ -1316,6 +1316,10 @@ namespace Web.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("LignesSupplementairesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("OuvertLe")
                         .HasColumnType("datetime2");
 
@@ -1340,6 +1344,10 @@ namespace Web.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("TableurDeposeNomFichier")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ValeursSaisiesJson")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
