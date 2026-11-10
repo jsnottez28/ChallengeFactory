@@ -140,8 +140,17 @@
                         <p class="text-muted small mb-0">Pour chaque ligne : récupérez la pièce justificative indiquée auprès du référent mentionné, puis renseignez la valeur et son statut. Les valeurs « Déjà connu » viennent de votre pré-diagnostic.</p>
                     </div>
                     <div class="card-body p-4">
-                        @{ ViewData["FormAction"] = Url.Page("/EspaceClient/Index", "EnregistrerValeurs"); }
-                        <partial name="_ChecklistCollecteFormulaire" model="Model.Checklist" view-data="ViewData" />
+                        @{
+                            var modeleFormulaire = new Web.Models.ChecklistCollecteFormulaireViewModel
+                            {
+                                Checklist = Model.Checklist,
+                                LignesLibres = Model.Dossier.LignesLibres,
+                                FormActionLigne = Url.Page("/EspaceClient/Index", "EnregistrerValeurs")!,
+                                FormActionLigneLibre = Url.Page("/EspaceClient/Index", "EnregistrerLigneLibre")!,
+                                FormActionSupprimerLigneLibre = Url.Page("/EspaceClient/Index", "SupprimerLigneLibre")!,
+                            };
+                        }
+                        <partial name="_ChecklistCollecteFormulaire" model="modeleFormulaire" />
                     </div>
                 </div>
             }

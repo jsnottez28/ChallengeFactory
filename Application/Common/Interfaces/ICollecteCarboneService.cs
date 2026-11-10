@@ -88,6 +88,27 @@ public sealed class LigneSupplementaireCollecte
     public string? Commentaire { get; set; }
 }
 
+// Une ligne ajoutee librement par un utilisateur (client, collaborateur ou consultant) pour
+// une donnee qui n'a pas de ligne dans le catalogue (ex. un second fournisseur d'energie),
+// au sein d'un poste donne - saisie 100% libre (pas de Sous-poste/Piece justificative/
+// Referent imposes, contrairement a ElementCollecteInfo). Id stable genere a la creation,
+// pour permettre l'edition/suppression individuelle (cf. EnregistrerLigneLibreAsync).
+public sealed class LigneLibreCollecte
+{
+    public string Id { get; set; } = string.Empty;
+    public PosteCollecte Poste { get; set; }
+    public string Donnee { get; set; } = string.Empty;
+    public string? Valeur { get; set; }
+    public string? Unite { get; set; }
+    public string? Type { get; set; }
+    public string? Source { get; set; }
+    public string? Hypotheses { get; set; }
+    public string? Statut { get; set; }
+    public string? Commentaire { get; set; }
+    public string? SaisiePar { get; set; }
+    public DateTime MiseAJourLe { get; set; }
+}
+
 public sealed class DossierCarboneInfo
 {
     public int Id { get; set; }
@@ -120,6 +141,9 @@ public sealed class DossierCarboneInfo
     // Collaborateurs (cf. DossierCarboneCollaborateur) ayant acces a ce dossier en plus du
     // contact principal (ClientUtilisateurId/ClientEmail ci-dessus).
     public List<CollaborateurInfo> Collaborateurs { get; set; } = [];
+
+    // Lignes ajoutees librement (hors catalogue) - cf. LigneLibreCollecte.
+    public List<LigneLibreCollecte> LignesLibres { get; set; } = [];
 }
 
 // Un collaborateur invite sur un DossierCarbone, en plus du contact principal.
@@ -201,6 +225,19 @@ public interface ICollecteCarboneService
     // autre canal (visite terrain, appel...) pour le compte du client. nomAffiche recoit la
     // mention "(consultant)" cote appelant, pour que le client comprenne la provenance.
     Task<(bool Success, string? ErrorMessage)> EnregistrerValeursFormulaireParGestionnaireAsync(int preBilanId, string gestionnaireNomAffiche, IReadOnlyList<(string Cle, ValeurSaisieFichier Valeur)> lignes);
+
+    // Ajoute ou met a jour une ligne "libre" (donnee hors catalogue, ex. un second
+    // fournisseur) pour un poste donne. ligne.Id vide => creation (un nouvel Id est genere
+    // et renvoye via le dossier rafraichi) ; ligne.Id renseigne => mise a jour de CETTE
+    // ligne precise. Toujours un remplacement direct (pas de fusion champ par champ,
+    // meme principe que EnregistrerValeursFormulaireAsync).
+    Task<(bool Success, string? ErrorMessage)> EnregistrerLigneLibreAsync(string utilisateurId, string nomAffiche, LigneLibreCollecte ligne);
+
+    Task<(bool Success, string? ErrorMessage)> EnregistrerLigneLibreParGestionnaireAsync(int preBilanId, string gestionnaireNomAffiche, LigneLibreCollecte ligne);
+
+    Task<(bool Success, string? ErrorMessage)> SupprimerLigneLibreAsync(string utilisateurId, string ligneId);
+
+    Task<(bool Success, string? ErrorMessage)> SupprimerLigneLibreParGestionnaireAsync(int preBilanId, string ligneId);
 
     // Invite un collaborateur (collegue du contact principal) a acceder a ce dossier, avec
     // les memes droits que le contact principal (pas de perimetre par poste). Reutilise le

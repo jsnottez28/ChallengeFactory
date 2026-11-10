@@ -65,6 +65,14 @@ public class DossierCarbone
     // cumulatif) a chaque nouveau depot - reflete toujours le dernier fichier.
     public string LignesSupplementairesJson { get; set; } = "[]";
 
+    // Lignes ajoutees librement par le client/un collaborateur/le consultant depuis le
+    // formulaire web, pour une donnee qui n'a pas de ligne dans le catalogue (ex. un second
+    // fournisseur d'energie) - dictionnaire Id -> LigneLibreCollecte (JSON), modifie de
+    // maniere incrementale (ajout/edition/suppression d'UNE ligne a la fois), jamais
+    // remplace en bloc. Distinct de LignesSupplementairesJson ci-dessus, qui lui reflete
+    // uniquement ce que l'extraction Excel a trouve de non reconnu dans le DERNIER depot.
+    public string LignesLibresJson { get; set; } = "{}";
+
     // Comptes supplementaires (collegues du contact principal ClientUtilisateur) qui peuvent
     // eux aussi consulter et completer ce dossier - une entreprise a souvent besoin de
     // plusieurs personnes (RH, facilities, comptabilite...) pour renseigner des postes

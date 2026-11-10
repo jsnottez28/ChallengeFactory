@@ -1316,6 +1316,10 @@ namespace Web.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("LignesLibresJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("LignesSupplementairesJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

@@ -202,6 +202,41 @@ public class PreDiagnosticsCarboneController(
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    [HttpPost("{id:int}/EnregistrerLigneLibre")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnregistrerLigneLibreGestionnaire(int id, LigneLibreForm ligne)
+    {
+        var gestionnaire = await userManager.GetUserAsync(User);
+        var nomAffiche = gestionnaire?.Prenom ?? gestionnaire?.Email ?? "Le consultant";
+
+        var (success, errorMessage) = await collecteService.EnregistrerLigneLibreParGestionnaireAsync(id, nomAffiche, new LigneLibreCollecte
+        {
+            Id = ligne.Id ?? string.Empty,
+            Poste = ligne.Poste,
+            Donnee = ligne.Donnee,
+            Valeur = ligne.Valeur,
+            Unite = ligne.Unite,
+            Type = ligne.Type,
+            Source = ligne.Source,
+            Hypotheses = ligne.Hypotheses,
+            Statut = ligne.Statut,
+            Commentaire = ligne.Commentaire,
+        });
+        TempData["StatusMessage"] = success ? "Ligne enregistrée." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/SupprimerLigneLibre")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SupprimerLigneLibreGestionnaire(int id, string ligneId)
+    {
+        var (success, errorMessage) = await collecteService.SupprimerLigneLibreParGestionnaireAsync(id, ligneId);
+        TempData["StatusMessage"] = success ? "Ligne supprimée." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
     [HttpPost("{id:int}/InviterCollaborateur")]
     [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
     [ValidateAntiForgeryToken]

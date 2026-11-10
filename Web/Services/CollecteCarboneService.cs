@@ -602,6 +602,95 @@ public sealed class CollecteCarboneService(
         return (true, null);
     }
 
+    public async Task<(bool Success, string? ErrorMessage)> EnregistrerLigneLibreAsync(string utilisateurId, string nomAffiche, LigneLibreCollecte ligne)
+    {
+        var dossier = await AccessiblePar(dbContext.DossiersCarbone, utilisateurId)
+            .OrderByDescending(d => d.OuvertLe)
+            .FirstOrDefaultAsync();
+
+        return await EnregistrerLigneLibreInterneAsync(dossier, nomAffiche, ligne, "Aucun espace client Bilan Carbone® ne vous est associé.");
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> EnregistrerLigneLibreParGestionnaireAsync(int preBilanId, string gestionnaireNomAffiche, LigneLibreCollecte ligne)
+    {
+        var dossier = await dbContext.DossiersCarbone.FirstOrDefaultAsync(d => d.PreBilanCarboneId == preBilanId);
+
+        return await EnregistrerLigneLibreInterneAsync(dossier, $"{gestionnaireNomAffiche} (consultant)", ligne, "Ouvrez d'abord l'espace client.");
+    }
+
+    private async Task<(bool Success, string? ErrorMessage)> EnregistrerLigneLibreInterneAsync(DossierCarbone? dossier, string nomAffiche, LigneLibreCollecte ligne, string messageDossierIntrouvable)
+    {
+        if (dossier is null)
+        {
+            return (false, messageDossierIntrouvable);
+        }
+
+        var donnee = Normaliser(ligne.Donnee);
+        if (donnee is null)
+        {
+            return (false, "Merci de préciser ce que représente cette ligne.");
+        }
+
+        var lignes = LireLignesLibres(dossier.LignesLibresJson);
+        var id = string.IsNullOrWhiteSpace(ligne.Id) ? Guid.NewGuid().ToString("N") : ligne.Id;
+
+        lignes[id] = new LigneLibreCollecte
+        {
+            Id = id,
+            Poste = ligne.Poste,
+            Donnee = donnee,
+            Valeur = Normaliser(ligne.Valeur),
+            Unite = Normaliser(ligne.Unite),
+            Type = Normaliser(ligne.Type),
+            Source = Normaliser(ligne.Source),
+            Hypotheses = Normaliser(ligne.Hypotheses),
+            Statut = Normaliser(ligne.Statut),
+            Commentaire = Normaliser(ligne.Commentaire),
+            SaisiePar = nomAffiche,
+            MiseAJourLe = DateTime.UtcNow,
+        };
+
+        dossier.LignesLibresJson = JsonSerializer.Serialize(lignes);
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> SupprimerLigneLibreAsync(string utilisateurId, string ligneId)
+    {
+        var dossier = await AccessiblePar(dbContext.DossiersCarbone, utilisateurId)
+            .OrderByDescending(d => d.OuvertLe)
+            .FirstOrDefaultAsync();
+
+        return await SupprimerLigneLibreInterneAsync(dossier, ligneId, "Aucun espace client Bilan Carbone® ne vous est associé.");
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> SupprimerLigneLibreParGestionnaireAsync(int preBilanId, string ligneId)
+    {
+        var dossier = await dbContext.DossiersCarbone.FirstOrDefaultAsync(d => d.PreBilanCarboneId == preBilanId);
+
+        return await SupprimerLigneLibreInterneAsync(dossier, ligneId, "Ouvrez d'abord l'espace client.");
+    }
+
+    private async Task<(bool Success, string? ErrorMessage)> SupprimerLigneLibreInterneAsync(DossierCarbone? dossier, string ligneId, string messageDossierIntrouvable)
+    {
+        if (dossier is null)
+        {
+            return (false, messageDossierIntrouvable);
+        }
+
+        var lignes = LireLignesLibres(dossier.LignesLibresJson);
+        if (!lignes.Remove(ligneId))
+        {
+            return (false, "Cette ligne n'existe plus.");
+        }
+
+        dossier.LignesLibresJson = JsonSerializer.Serialize(lignes);
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
     public async Task<(Stream Contenu, string NomFichier)?> TelechargerDernierTableurDeposeAsync(int preBilanId)
     {
         var dossier = await dbContext.DossiersCarbone.FirstOrDefaultAsync(d => d.PreBilanCarboneId == preBilanId);
@@ -716,6 +805,7 @@ public sealed class CollecteCarboneService(
         TableurDeposeAvancementPourcent = dossier.TableurDeposeAvancementPourcent,
         CollecteDeclareeTerminee = dossier.CollecteDeclareeTerminee,
         LignesSupplementaires = LireLignesSupplementaires(dossier.LignesSupplementairesJson),
+        LignesLibres = LireLignesLibres(dossier.LignesLibresJson).Values.OrderBy(l => l.MiseAJourLe).ToList(),
         Collaborateurs = dossier.Collaborateurs
             .OrderBy(c => c.InviteLe)
             .Select(c => new CollaborateurInfo
@@ -738,6 +828,23 @@ public sealed class CollecteCarboneService(
         try
         {
             return JsonSerializer.Deserialize<Dictionary<string, ValeurSaisieFichier>>(valeursSaisiesJson) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static Dictionary<string, LigneLibreCollecte> LireLignesLibres(string lignesLibresJson)
+    {
+        if (string.IsNullOrWhiteSpace(lignesLibresJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, LigneLibreCollecte>>(lignesLibresJson) ?? [];
         }
         catch (JsonException)
         {

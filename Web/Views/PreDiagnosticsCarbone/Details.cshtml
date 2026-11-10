@@ -351,8 +351,15 @@
                     @if (peutModifier)
                     {
                         <p class="small text-muted">Vous pouvez compléter ou corriger les données vous-même ci-dessous (ex. données recueillies par téléphone avec le client) - elles se fusionnent avec ce que le client et ses collaborateurs ont déjà saisi.</p>
-                        ViewData["FormAction"] = Url.Action("EnregistrerValeursGestionnaire", "PreDiagnosticsCarbone", new { id = Model.Id });
-                        <partial name="_ChecklistCollecteFormulaire" model="checklist" view-data="ViewData" />
+                        var modeleFormulaire = new Web.Models.ChecklistCollecteFormulaireViewModel
+                        {
+                            Checklist = checklist!,
+                            LignesLibres = dossier?.LignesLibres ?? [],
+                            FormActionLigne = Url.Action("EnregistrerValeursGestionnaire", "PreDiagnosticsCarbone", new { id = Model.Id })!,
+                            FormActionLigneLibre = Url.Action("EnregistrerLigneLibreGestionnaire", "PreDiagnosticsCarbone", new { id = Model.Id })!,
+                            FormActionSupprimerLigneLibre = Url.Action("SupprimerLigneLibreGestionnaire", "PreDiagnosticsCarbone", new { id = Model.Id })!,
+                        };
+                        <partial name="_ChecklistCollecteFormulaire" model="modeleFormulaire" />
                     }
                     else
                     {
@@ -411,6 +418,24 @@
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            @{ var libresPoste = (dossier?.LignesLibres ?? []).Where(l => l.Poste == groupe.Key).ToList(); }
+                                            @if (libresPoste.Count > 0)
+                                            {
+                                                <div class="p-3 border-top">
+                                                    <p class="small fw-semibold text-muted mb-1">Lignes ajoutées</p>
+                                                    <ul class="small mb-0 ps-3">
+                                                        @foreach (var libre in libresPoste)
+                                                        {
+                                                            <li>
+                                                                @libre.Donnee
+                                                                @if (libre.Valeur is not null) { <text> — <strong>@libre.Valeur @libre.Unite</strong></text> }
+                                                                @if (libre.Statut is not null) { <span class="badge bg-success-subtle text-success-emphasis ms-1">@libre.Statut</span> }
+                                                                <span class="text-muted"> (saisi par @(libre.SaisiePar ?? "?"))</span>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            }
                                         </div>
                                     </div>
                                 </div>

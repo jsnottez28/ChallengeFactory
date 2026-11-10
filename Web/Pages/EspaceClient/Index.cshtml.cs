@@ -171,6 +171,51 @@ public class IndexModel(ICollecteCarboneService collecteService, UserManager<App
         return RedirectToPage();
     }
 
+    // Ajoute ou met a jour une ligne "libre" (donnee hors catalogue) pour un poste donne -
+    // LigneLibreForm.Id vide = creation.
+    public async Task<IActionResult> OnPostEnregistrerLigneLibreAsync(LigneLibreForm ligne)
+    {
+        var utilisateur = await userManager.GetUserAsync(User);
+        if (utilisateur is null)
+        {
+            return Challenge();
+        }
+
+        var nomAffiche = utilisateur.Prenom ?? utilisateur.Email ?? "Vous";
+        var (success, errorMessage) = await collecteService.EnregistrerLigneLibreAsync(utilisateur.Id, nomAffiche, new LigneLibreCollecte
+        {
+            Id = ligne.Id ?? string.Empty,
+            Poste = ligne.Poste,
+            Donnee = ligne.Donnee,
+            Valeur = ligne.Valeur,
+            Unite = ligne.Unite,
+            Type = ligne.Type,
+            Source = ligne.Source,
+            Hypotheses = ligne.Hypotheses,
+            Statut = ligne.Statut,
+            Commentaire = ligne.Commentaire,
+        });
+
+        TempData[success ? "StatusMessage" : "ErreurDepotTableur"] = success ? "Ligne enregistrée." : errorMessage;
+
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostSupprimerLigneLibreAsync(string ligneId)
+    {
+        var utilisateur = await userManager.GetUserAsync(User);
+        if (utilisateur is null)
+        {
+            return Challenge();
+        }
+
+        var (success, errorMessage) = await collecteService.SupprimerLigneLibreAsync(utilisateur.Id, ligneId);
+
+        TempData[success ? "StatusMessage" : "ErreurDepotTableur"] = success ? "Ligne supprimée." : errorMessage;
+
+        return RedirectToPage();
+    }
+
     // Self-service : le contact principal invite un collegue a contribuer au meme dossier
     // (RH, facilities, comptabilite...). Acces complet, pas de perimetre par poste.
     public async Task<IActionResult> OnPostInviterCollaborateurAsync(string email)

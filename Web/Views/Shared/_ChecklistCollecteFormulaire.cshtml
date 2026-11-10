@@ -1,99 +1,223 @@
 @using Application.Common.Interfaces
+@using Domain.Entities
 @using Web.Services
-@model IEnumerable<ElementCollecteInfo>
+@model Web.Models.ChecklistCollecteFormulaireViewModel
 @{
-    var formAction = (string)ViewData["FormAction"]!;
-    var groupes = Model.GroupBy(e => e.Poste).ToList();
-    var index = 0;
+    var postes = Model.Checklist.Select(e => e.Poste)
+        .Concat(Model.LignesLibres.Select(l => l.Poste))
+        .Distinct()
+        .OrderBy(p => p)
+        .ToList();
 }
 
-<form method="post" action="@formAction">
-    @Html.AntiForgeryToken()
-    <button type="submit" class="btn btn-primary mb-3">💾 Enregistrer mes données</button>
+<div class="accordion accordion-flush" id="accordionFormulaireCollecte">
+    @for (var g = 0; g < postes.Count; g++)
+    {
+        var poste = postes[g];
+        var elementsPoste = Model.Checklist.Where(e => e.Poste == poste).ToList();
+        var libresPoste = Model.LignesLibres.Where(l => l.Poste == poste).ToList();
+        var idPanneau = $"formulaireCollectePoste{g}";
+        var compteRecu = elementsPoste.Count(e => e.ValeurFichier?.Statut is "Reçu" or "Validé");
 
-    <div class="accordion accordion-flush" id="accordionFormulaireCollecte">
-        @for (var g = 0; g < groupes.Count; g++)
-        {
-            var groupe = groupes[g];
-            var idPanneau = $"formulaireCollectePoste{g}";
-            var compteRecu = groupe.Count(e => e.ValeurFichier?.Statut is "Reçu" or "Validé");
-            <div class="accordion-item">
-                <h3 class="accordion-header">
-                    <button class="accordion-button @(g == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@idPanneau">
-                        <span class="flex-grow-1">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</span>
-                        <span class="badge bg-success-subtle text-success-emphasis me-3">@compteRecu / @groupe.Count()</span>
-                    </button>
-                </h3>
-                <div id="@idPanneau" class="accordion-collapse collapse @(g == 0 ? "show" : "")">
-                    <div class="accordion-body">
-                        @foreach (var element in groupe)
-                        {
-                            var vf = element.ValeurFichier;
-                            var i = index;
-                            index++;
-                            <div class="border-bottom py-3">
-                                <input type="hidden" name="Lignes[@i].Cle" value="@element.Cle" />
-                                <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-1">
-                                    <strong>@element.Donnee</strong>
-                                    @if (vf?.SaisiePar is not null)
-                                    {
-                                        <span class="text-muted small text-nowrap">Saisi par @vf.SaisiePar le @vf.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy")</span>
-                                    }
-                                </div>
-                                <div class="small text-muted mb-2">📄 @element.PieceJustificative · <span class="fst-italic">Référent : @element.Referent</span></div>
-                                @if (element.Valeur.HasValue)
+        var recapitulatif = elementsPoste
+            .Where(e => e.ValeurFichier is not null && (e.ValeurFichier.Valeur is not null || e.ValeurFichier.Statut is not null))
+            .Select(e => (Donnee: e.Donnee, Valeur: e.ValeurFichier!.Valeur, Unite: e.ValeurFichier.Unite, Statut: e.ValeurFichier.Statut))
+            .Concat(libresPoste
+                .Where(l => l.Valeur is not null || l.Statut is not null)
+                .Select(l => (l.Donnee, l.Valeur, l.Unite, l.Statut)))
+            .ToList();
+
+        <div class="accordion-item">
+            <h3 class="accordion-header">
+                <button class="accordion-button @(g == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@idPanneau">
+                    <span class="flex-grow-1">@QuestionnaireCollecteCatalogue.LibellePoste(poste)</span>
+                    <span class="badge bg-success-subtle text-success-emphasis me-3">@compteRecu / @elementsPoste.Count()</span>
+                </button>
+            </h3>
+            <div id="@idPanneau" class="accordion-collapse collapse @(g == 0 ? "show" : "")">
+                <div class="accordion-body">
+                    @if (recapitulatif.Count > 0)
+                    {
+                        <div class="mb-3">
+                            <p class="small fw-semibold text-muted mb-1">📋 Récapitulatif des données déjà collectées</p>
+                            <ul class="small mb-0 ps-3">
+                                @foreach (var r in recapitulatif)
                                 {
-                                    <p class="small mb-2"><span class="badge bg-success-subtle text-success-emphasis">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span></p>
+                                    <li>
+                                        @r.Donnee
+                                        @if (r.Valeur is not null) { <text> : <strong>@r.Valeur @r.Unite</strong></text> }
+                                        @if (r.Statut is not null) { <span class="badge bg-success-subtle text-success-emphasis ms-1">@r.Statut</span> }
+                                    </li>
                                 }
-                                <div class="row g-2">
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label small mb-0">Valeur</label>
-                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Valeur" value="@vf?.Valeur" />
-                                    </div>
-                                    <div class="col-6 col-md-2">
-                                        <label class="form-label small mb-0">Unité</label>
-                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Unite" value="@(vf?.Unite ?? (element.Unite.Length > 0 ? element.Unite : null))" />
-                                    </div>
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label small mb-0">Type</label>
-                                        <select class="form-select form-select-sm" name="Lignes[@i].Type">
-                                            <option value=""></option>
-                                            @foreach (var t in QuestionnaireCollecteCatalogue.TypesDonnee)
-                                            {
-                                                <option value="@t" selected="@(vf?.Type == t)">@t</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-6 col-md-4">
-                                        <label class="form-label small mb-0">Statut</label>
-                                        <select class="form-select form-select-sm" name="Lignes[@i].Statut">
-                                            <option value=""></option>
-                                            @foreach (var s in QuestionnaireCollecteCatalogue.StatutsCollecte)
-                                            {
-                                                <option value="@s" selected="@(vf?.Statut == s)">@s</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-12 col-md-6">
-                                        <label class="form-label small mb-0">Source</label>
-                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Source" value="@vf?.Source" placeholder="ex. Facture EDF janvier 2026" />
-                                    </div>
-                                    <div class="col-12 col-md-6">
-                                        <label class="form-label small mb-0">Hypothèses</label>
-                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Hypotheses" value="@vf?.Hypotheses" />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label small mb-0">Commentaire</label>
-                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Commentaire" value="@vf?.Commentaire" />
-                                    </div>
+                            </ul>
+                        </div>
+                        <hr />
+                    }
+
+                    @foreach (var element in elementsPoste)
+                    {
+                        var vf = element.ValeurFichier;
+                        <form method="post" action="@Model.FormActionLigne" class="border-bottom py-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Lignes[0].Cle" value="@element.Cle" />
+                            <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-1">
+                                <strong>@element.Donnee</strong>
+                                @if (vf?.SaisiePar is not null)
+                                {
+                                    <span class="text-muted small text-nowrap">Saisi par @vf.SaisiePar le @vf.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                }
+                            </div>
+                            <div class="small text-muted mb-2">📄 @element.PieceJustificative · <span class="fst-italic">Référent : @element.Referent</span></div>
+                            @if (element.Valeur.HasValue)
+                            {
+                                <p class="small mb-2"><span class="badge bg-success-subtle text-success-emphasis">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span></p>
+                            }
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label small mb-0">Valeur</label>
+                                    <input type="text" class="form-control form-control-sm" name="Lignes[0].Valeur" value="@vf?.Valeur" />
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <label class="form-label small mb-0">Unité</label>
+                                    <input type="text" class="form-control form-control-sm" name="Lignes[0].Unite" value="@(vf?.Unite ?? (element.Unite.Length > 0 ? element.Unite : null))" />
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label small mb-0">Type</label>
+                                    <select class="form-select form-select-sm" name="Lignes[0].Type">
+                                        <option value=""></option>
+                                        @foreach (var t in QuestionnaireCollecteCatalogue.TypesDonnee)
+                                        {
+                                            <option value="@t" selected="@(vf?.Type == t)">@t</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <label class="form-label small mb-0">Statut</label>
+                                    <select class="form-select form-select-sm" name="Lignes[0].Statut">
+                                        <option value=""></option>
+                                        @foreach (var s in QuestionnaireCollecteCatalogue.StatutsCollecte)
+                                        {
+                                            <option value="@s" selected="@(vf?.Statut == s)">@s</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label small mb-0">Source</label>
+                                    <input type="text" class="form-control form-control-sm" name="Lignes[0].Source" value="@vf?.Source" placeholder="ex. Facture EDF janvier 2026" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label small mb-0">Hypothèses</label>
+                                    <input type="text" class="form-control form-control-sm" name="Lignes[0].Hypotheses" value="@vf?.Hypotheses" />
+                                </div>
+                                <div class="col-12 col-md-9">
+                                    <label class="form-label small mb-0">Commentaire</label>
+                                    <input type="text" class="form-control form-control-sm" name="Lignes[0].Commentaire" value="@vf?.Commentaire" />
+                                </div>
+                                <div class="col-12 col-md-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-outline-success btn-sm w-100">💾 Enregistrer</button>
                                 </div>
                             </div>
+                        </form>
+                    }
+
+                    @if (libresPoste.Count > 0)
+                    {
+                        <p class="small fw-semibold text-muted mt-3 mb-1">Lignes ajoutées</p>
+                        @foreach (var libre in libresPoste)
+                        {
+                            <div class="border-bottom py-3">
+                                <form method="post" action="@Model.FormActionLigneLibre">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Id" value="@libre.Id" />
+                                    <input type="hidden" name="Poste" value="@((int)libre.Poste)" />
+                                    <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-2">
+                                        <span class="text-muted small text-nowrap">Saisi par @(libre.SaisiePar ?? "?") le @libre.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-12 col-md-5">
+                                            <label class="form-label small mb-0">Donnée</label>
+                                            <input type="text" class="form-control form-control-sm" name="Donnee" value="@libre.Donnee" required />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label small mb-0">Valeur</label>
+                                            <input type="text" class="form-control form-control-sm" name="Valeur" value="@libre.Valeur" />
+                                        </div>
+                                        <div class="col-6 col-md-2">
+                                            <label class="form-label small mb-0">Unité</label>
+                                            <input type="text" class="form-control form-control-sm" name="Unite" value="@libre.Unite" />
+                                        </div>
+                                        <div class="col-6 col-md-2">
+                                            <label class="form-label small mb-0">Statut</label>
+                                            <select class="form-select form-select-sm" name="Statut">
+                                                <option value=""></option>
+                                                @foreach (var s in QuestionnaireCollecteCatalogue.StatutsCollecte)
+                                                {
+                                                    <option value="@s" selected="@(libre.Statut == s)">@s</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small mb-0">Source</label>
+                                            <input type="text" class="form-control form-control-sm" name="Source" value="@libre.Source" />
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small mb-0">Commentaire</label>
+                                            <input type="text" class="form-control form-control-sm" name="Commentaire" value="@libre.Commentaire" />
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-success btn-sm mt-2">💾 Enregistrer</button>
+                                </form>
+                                <form method="post" action="@Model.FormActionSupprimerLigneLibre" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="ligneId" value="@libre.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm mt-2">Supprimer</button>
+                                </form>
+                            </div>
                         }
-                    </div>
+                    }
+
+                    <details class="mt-3">
+                        <summary class="small text-success" style="cursor: pointer;">➕ Ajouter une donnée complémentaire pour « @QuestionnaireCollecteCatalogue.LibellePoste(poste) »</summary>
+                        <form method="post" action="@Model.FormActionLigneLibre" class="mt-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Poste" value="@((int)poste)" />
+                            <div class="row g-2">
+                                <div class="col-12 col-md-5">
+                                    <label class="form-label small mb-0">Donnée (obligatoire)</label>
+                                    <input type="text" class="form-control form-control-sm" name="Donnee" placeholder="ex. Consommation du 2e site" required />
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label small mb-0">Valeur</label>
+                                    <input type="text" class="form-control form-control-sm" name="Valeur" />
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <label class="form-label small mb-0">Unité</label>
+                                    <input type="text" class="form-control form-control-sm" name="Unite" />
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <label class="form-label small mb-0">Statut</label>
+                                    <select class="form-select form-select-sm" name="Statut">
+                                        <option value=""></option>
+                                        @foreach (var s in QuestionnaireCollecteCatalogue.StatutsCollecte)
+                                        {
+                                            <option value="@s">@s</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label small mb-0">Source</label>
+                                    <input type="text" class="form-control form-control-sm" name="Source" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label small mb-0">Commentaire</label>
+                                    <input type="text" class="form-control form-control-sm" name="Commentaire" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-sm mt-2">➕ Ajouter cette ligne</button>
+                        </form>
+                    </details>
                 </div>
             </div>
-        }
-    </div>
-
-    <button type="submit" class="btn btn-primary mt-3">💾 Enregistrer mes données</button>
-</form>
+        </div>
+    }
+</div>

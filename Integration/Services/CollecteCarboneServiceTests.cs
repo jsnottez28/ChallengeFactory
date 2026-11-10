@@ -693,4 +693,97 @@ public class CollecteCarboneServiceTests
         Assert.True(success, erreur);
         Assert.Equal("depot-collegue.xlsx", (await service.GetDossierClientAsync(contact))!.TableurDeposeNomFichier);
     }
+
+    [Fact]
+    public async Task EnregistrerLigneLibreAsync_CreePuisMetAJourLaMemeLigne()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+
+        var (success, erreur) = await service.EnregistrerLigneLibreAsync(clientId, "Camille", new LigneLibreCollecte
+        {
+            Poste = PosteCollecte.Energie,
+            Donnee = "Consommation du site de Lyon",
+            Valeur = "500",
+            Unite = "kWh",
+        });
+        Assert.True(success, erreur);
+
+        var ligne = Assert.Single((await service.GetDossierClientAsync(clientId))!.LignesLibres);
+        Assert.Equal("Consommation du site de Lyon", ligne.Donnee);
+        Assert.Equal("500", ligne.Valeur);
+        Assert.Equal("Camille", ligne.SaisiePar);
+
+        // Second enregistrement avec le MEME Id : met a jour la ligne, n'en cree pas une 2e.
+        var (success2, erreur2) = await service.EnregistrerLigneLibreAsync(clientId, "Camille", new LigneLibreCollecte
+        {
+            Id = ligne.Id,
+            Poste = PosteCollecte.Energie,
+            Donnee = "Consommation du site de Lyon",
+            Valeur = "650",
+            Unite = "kWh",
+        });
+        Assert.True(success2, erreur2);
+
+        var ligneApres = Assert.Single((await service.GetDossierClientAsync(clientId))!.LignesLibres);
+        Assert.Equal(ligne.Id, ligneApres.Id);
+        Assert.Equal("650", ligneApres.Valeur);
+    }
+
+    [Fact]
+    public async Task EnregistrerLigneLibreAsync_Refuse_SiDonneeVide()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+
+        var (success, erreur) = await service.EnregistrerLigneLibreAsync(clientId, "Camille", new LigneLibreCollecte { Poste = PosteCollecte.Energie, Donnee = "   " });
+
+        Assert.False(success);
+        Assert.NotNull(erreur);
+    }
+
+    [Fact]
+    public async Task SupprimerLigneLibreAsync_SupprimeLaLigne()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        await service.EnregistrerLigneLibreAsync(clientId, "Camille", new LigneLibreCollecte { Poste = PosteCollecte.Energie, Donnee = "Site de Lyon" });
+        var ligneId = (await service.GetDossierClientAsync(clientId))!.LignesLibres[0].Id;
+
+        var (success, erreur) = await service.SupprimerLigneLibreAsync(clientId, ligneId);
+
+        Assert.True(success, erreur);
+        Assert.Empty((await service.GetDossierClientAsync(clientId))!.LignesLibres);
+    }
+
+    [Fact]
+    public async Task EnregistrerLigneLibreParGestionnaireAsync_MarqueLaProvenanceConsultant()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+
+        var (success, erreur) = await service.EnregistrerLigneLibreParGestionnaireAsync(preBilan.Id, "Jean Dupont", new LigneLibreCollecte
+        {
+            Poste = PosteCollecte.Energie,
+            Donnee = "Relevé compteur site B",
+            Valeur = "1200",
+        });
+
+        Assert.True(success, erreur);
+        var ligne = Assert.Single((await service.GetDossierClientAsync(clientId))!.LignesLibres);
+        Assert.Equal("Jean Dupont (consultant)", ligne.SaisiePar);
+    }
 }
