@@ -124,6 +124,12 @@ public static class QuestionnaireCollecteCatalogue
         new("Pourquoi cette donnée", "Rappelle ce qui a déclenché la demande (réponse au questionnaire, donnée du pré-diagnostic) - informatif, ne pas modifier."),
     ];
 
+    // Listes deroulantes "Type" et "Statut" de la Matrice de collecte ABC - source unique
+    // pour le tableur .xlsx (TableurCollecteGenerator, validation de donnees) et le
+    // formulaire web simple (_ChecklistCollecteFormulaire).
+    public static readonly IReadOnlyList<string> TypesDonnee = ["Physique", "Comptable", "Extrapolée", "Statistique", "Approchée"];
+    public static readonly IReadOnlyList<string> StatutsCollecte = ["À demander", "Demandé", "En attente", "Reçu", "Validé"];
+
     public static string LibellePoste(PosteCollecte poste) => poste switch
     {
         PosteCollecte.Descriptif => "Descriptif de l'entreprise",

@@ -40,12 +40,11 @@
         {
             <div class="card border-0 shadow-sm mb-4" style="max-width: 920px;">
                 <div class="card-body p-4">
-                    <h2 class="h6 mb-2">Comment ça marche, en 4 étapes</h2>
+                    <h2 class="h6 mb-2">Comment ça marche, en 3 étapes</h2>
                     <ol class="mb-0 ps-3 small">
                         <li class="mb-1"><strong>Répondez au questionnaire</strong> (étape 1 ci-dessous) : il détermine précisément quelles données vous concernent.</li>
-                        <li class="mb-1"><strong>Téléchargez votre tableur de collecte</strong> (étape 2) : un onglet par poste d'émission, avec un petit guide et un exemple sur chaque onglet.</li>
-                        <li class="mb-1"><strong>Remplissez-le</strong> : pour chaque ligne de la check-list ci-dessous, récupérez la pièce justificative indiquée, reportez la valeur dans le tableur (colonnes Valeur/Source), passez son Statut à « Reçu », puis cochez-la ici pour suivre votre avancement.</li>
-                        <li class="mb-0"><strong>Déposez le fichier mis à jour</strong> régulièrement (pas besoin d'avoir fini) : votre avancement estimé et votre consultant se mettent à jour automatiquement.</li>
+                        <li class="mb-1"><strong>Renseignez vos données</strong> (étape 2) directement en ligne, poste par poste : pour chaque ligne, récupérez la pièce justificative indiquée, saisissez la valeur et passez le statut à « Reçu ». Vous pouvez enregistrer à tout moment, revenir plus tard, et inviter un collègue à compléter certains postes.</li>
+                        <li class="mb-0"><strong>Votre consultant suit votre avancement</strong> en continu : pas besoin d'avoir fini pour qu'il voie ce qui est déjà saisi.</li>
                     </ol>
                 </div>
             </div>
@@ -76,27 +75,18 @@
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body p-4">
                             <p class="text-muted small mb-1">Étape 2</p>
-                            <h2 class="h5">Collecte des données</h2>
-                            <p class="mb-2">@(Model.Checklist.Count > 0 ? $"{Model.Checklist.Count} données à rassembler — voir la liste ci-dessous." : "La liste des documents à rassembler s'affichera ici après l'envoi du questionnaire.")</p>
+                            <h2 class="h5">Renseigner mes données</h2>
+                            <p class="mb-2">@(Model.Checklist.Count > 0 ? $"{Model.Checklist.Count} données à renseigner." : "La liste s'affichera ici après l'envoi du questionnaire.")</p>
                             @if (Model.Dossier.TableurDeposeAvancementPourcent is int avancement)
                             {
                                 <div class="progress mb-1" style="height: 8px;" role="progressbar" aria-valuenow="@avancement" aria-valuemin="0" aria-valuemax="100">
                                     <div class="progress-bar bg-success" style="width: @(avancement)%;"></div>
                                 </div>
-                                <p class="text-muted small mb-2">
-                                    Avancement estimé (d'après votre fichier) : <strong>@avancement %</strong>
-                                    @if (Model.Dossier.TableurDeposeLe is DateTime deposeLe)
-                                    {
-                                        <text> (dernier dépôt le @deposeLe.ToLocalTime().ToString("dd/MM/yyyy"))</text>
-                                    }
-                                </p>
+                                <p class="text-muted small mb-2">Avancement : <strong>@avancement %</strong></p>
                             }
-                            <a class="btn btn-outline-success btn-sm" asp-page="/EspaceClient/Index" asp-page-handler="Tableur">
-                                ⬇️ @(Model.Dossier.TableurDeposeLe is not null ? "Reprendre mon tableur là où je l'ai laissé (.xlsx)" : "Télécharger mon tableur de collecte (.xlsx)")
-                            </a>
-                            @if (Model.Dossier.TableurDeposeLe is not null)
+                            @if (Model.Checklist.Count > 0)
                             {
-                                <p class="text-muted small mt-1 mb-0">Ce téléchargement reprend votre dernier fichier déposé, avec vos saisies déjà faites.</p>
+                                <a class="btn btn-primary btn-sm" href="#formulaireCollecte">Renseigner mes données</a>
                             }
                         </div>
                     </div>
@@ -114,96 +104,74 @@
 
             <div class="card border-0 shadow-sm mt-4" style="max-width: 720px;">
                 <div class="card-header bg-white border-bottom p-4">
-                    <h2 class="h5 mb-1">Déposer mon tableur rempli</h2>
-                    <p class="text-muted small mb-0">Une fois vos données saisies dans le tableur téléchargé ci-dessus, déposez-le ici pour mettre à jour votre avancement et le transmettre à votre consultant. Vous pouvez déposer plusieurs fois : seul le dernier fichier est conservé.</p>
+                    <h2 class="h5 mb-1">Collaborateurs</h2>
+                    <p class="text-muted small mb-0">Invitez un ou plusieurs collègues (RH, facilities, comptabilité...) à renseigner eux-mêmes certaines données de ce dossier. Accès complet : chaque collaborateur voit et complète toute la liste, comme vous.</p>
                 </div>
                 <div class="card-body p-4">
-                    <form method="post" asp-page-handler="DeposerTableur" enctype="multipart/form-data">
+                    @if (Model.Dossier.Collaborateurs.Count > 0)
+                    {
+                        <ul class="list-unstyled mb-3">
+                            @foreach (var collaborateur in Model.Dossier.Collaborateurs)
+                            {
+                                <li class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                    <span>@(collaborateur.Prenom ?? collaborateur.Email) <span class="text-muted small">(@collaborateur.Email)</span></span>
+                                    <form method="post" asp-page-handler="RetirerCollaborateur" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="utilisateurId" value="@collaborateur.UtilisateurId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Retirer</button>
+                                    </form>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    <form method="post" asp-page-handler="InviterCollaborateur" class="d-flex gap-2">
                         @Html.AntiForgeryToken()
-                        <div class="mb-3">
-                            <label for="fichier" class="form-label">Fichier (.xlsx)</label>
-                            <input type="file" class="form-control" id="fichier" name="fichier" accept=".xlsx" required>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input type="checkbox" class="form-check-input" id="collecteTerminee" name="collecteTerminee" value="true">
-                            <label class="form-check-label" for="collecteTerminee">J'ai terminé la collecte de toutes les données</label>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Déposer ce fichier</button>
+                        <input type="email" name="email" class="form-control" placeholder="email@collegue.fr" required />
+                        <button type="submit" class="btn btn-outline-primary text-nowrap">Inviter</button>
                     </form>
                 </div>
             </div>
 
             @if (Model.Checklist.Count > 0)
             {
-                <div class="card border-0 shadow-sm mt-4">
+                <div class="card border-0 shadow-sm mt-4" id="formulaireCollecte">
                     <div class="card-header bg-white border-bottom p-4">
-                        <h2 class="h5 mb-1">Documents et données à rassembler — votre guide étape par étape</h2>
-                        <p class="text-muted small mb-2">Pour chaque ligne : récupérez la pièce justificative indiquée auprès du référent mentionné, reportez la valeur dans le tableur téléchargé plus haut (colonnes Valeur, Unité, Source), puis cochez-la ici une fois faite. Les valeurs « Déjà connu » viennent de votre pré-diagnostic : il suffira de les confirmer dans le tableur.</p>
-                        <details>
-                            <summary class="small text-success" style="cursor: pointer;">📖 À quoi sert chaque colonne du tableur ?</summary>
-                            <dl class="small mt-2 mb-0 row">
-                                @foreach (var colonne in QuestionnaireCollecteCatalogue.ColonnesTableur)
-                                {
-                                    <dt class="col-sm-3 text-success">@colonne.Nom</dt>
-                                    <dd class="col-sm-9">@colonne.Explication</dd>
-                                }
-                            </dl>
-                        </details>
+                        <h2 class="h5 mb-1">Mes données à renseigner</h2>
+                        <p class="text-muted small mb-0">Pour chaque ligne : récupérez la pièce justificative indiquée auprès du référent mentionné, puis renseignez la valeur et son statut. Les valeurs « Déjà connu » viennent de votre pré-diagnostic.</p>
                     </div>
                     <div class="card-body p-4">
-                        <form method="post" asp-page-handler="CocherElements">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-success btn-sm mb-3">💾 Enregistrer mes cases cochées</button>
-                            @foreach (var groupe in Model.Checklist.GroupBy(e => e.Poste))
-                            {
-                                var onglet = TableurCollecteGenerator.NomOnglet(groupe.Key);
-                                <h3 class="h6 mt-3 text-success">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key) <span class="badge bg-success-subtle text-success-emphasis fw-normal">Onglet « @onglet » du tableur</span></h3>
-                                var note = QuestionnaireCollecteCatalogue.NotePedagogique(groupe.Key);
-                                @if (!string.IsNullOrWhiteSpace(note))
-                                {
-                                    <p class="text-muted small fst-italic mb-2">💡 @note</p>
-                                }
-                                <ul class="list-unstyled mb-0">
-                                    @{ var ligneExcel = 3; }
-                                    @foreach (var element in groupe)
-                                    {
-                                        ligneExcel++;
-                                        var idCase = $"coche-{element.Cle.GetHashCode()}";
-                                        <li class="border-bottom py-2">
-                                            <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
-                                                <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input" id="@idCase" name="elementsCoches" value="@element.Cle" checked="@element.EstCoche">
-                                                    <label class="form-check-label @(element.EstCoche ? "text-decoration-line-through text-muted" : "")" for="@idCase">
-                                                        @element.Donnee
-                                                        @if (element.Valeur.HasValue)
-                                                        {
-                                                            <span class="badge bg-success-subtle text-success-emphasis ms-1">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span>
-                                                        }
-                                                    </label>
-                                                </div>
-                                                <span class="text-muted small text-nowrap">📍 Onglet « @onglet », ligne @ligneExcel</span>
-                                            </div>
-                                            <div class="small text-muted ps-4">📄 @element.PieceJustificative · <span class="fst-italic">Référent : @element.Referent</span></div>
-                                            @if (element.ValeurFichier is { } vf)
-                                            {
-                                                <div class="small text-success-emphasis ps-4 mt-1">
-                                                    📥 Saisi dans votre tableur (@vf.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy"))
-                                                    @if (vf.Valeur is not null) { <text> — <strong>@vf.Valeur @vf.Unite</strong></text> }
-                                                    @if (vf.Statut is not null) { <span class="badge bg-success-subtle text-success-emphasis ms-1">@vf.Statut</span> }
-                                                    @if (vf.Source is not null) { <text> · Source : @vf.Source</text> }
-                                                    @if (vf.Hypotheses is not null) { <text> · Hypothèses : @vf.Hypotheses</text> }
-                                                    @if (vf.Commentaire is not null) { <text> · Commentaire : @vf.Commentaire</text> }
-                                                </div>
-                                            }
-                                        </li>
-                                    }
-                                </ul>
-                            }
-                            <button type="submit" class="btn btn-outline-success mt-3">💾 Enregistrer mes cases cochées</button>
-                        </form>
+                        @{ ViewData["FormAction"] = Url.Page("/EspaceClient/Index", "EnregistrerValeurs"); }
+                        <partial name="_ChecklistCollecteFormulaire" model="Model.Checklist" view-data="ViewData" />
                     </div>
                 </div>
             }
+
+            <details class="mt-4">
+                <summary class="text-muted" style="cursor: pointer;">📊 Mode avancé : utiliser le tableur Excel à la place</summary>
+                <div class="card border-0 shadow-sm mt-3" style="max-width: 720px;">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h2 class="h5 mb-1">Télécharger / déposer le tableur</h2>
+                        <p class="text-muted small mb-0">Un onglet par poste d'émission. Vos saisies dans le formulaire ci-dessus sont déjà dans le tableur téléchargé ; à l'inverse, un tableur déposé ici met à jour le formulaire. Les deux restent synchronisés.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <a class="btn btn-outline-success btn-sm mb-3" asp-page="/EspaceClient/Index" asp-page-handler="Tableur">
+                            ⬇️ @(Model.Dossier.TableurDeposeLe is not null ? "Reprendre mon tableur là où je l'ai laissé (.xlsx)" : "Télécharger mon tableur de collecte (.xlsx)")
+                        </a>
+                        <form method="post" asp-page-handler="DeposerTableur" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <label for="fichier" class="form-label">Déposer le fichier rempli (.xlsx)</label>
+                                <input type="file" class="form-control" id="fichier" name="fichier" accept=".xlsx" required>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="collecteTerminee" name="collecteTerminee" value="true">
+                                <label class="form-check-label" for="collecteTerminee">J'ai terminé la collecte de toutes les données</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Déposer ce fichier</button>
+                        </form>
+                    </div>
+                </div>
+            </details>
         }
     </div>
 </section>

@@ -495,6 +495,46 @@ public static class ChallengeEmailTemplates
         return (sujet, corps);
     }
 
+    // Invitation d'un collaborateur sur un dossier Bilan Carbone(R) deja ouvert - par le
+    // contact principal lui-meme ou par un Gestionnaire, cf.
+    // ICollecteCarboneService.InviterCollaborateurAsync. Compte sans mot de passe (nouveau ou
+    // existant) : lien d'activation a definir.
+    public static (string Sujet, string CorpsHtml) InvitationCollaborateurCarbone(string? prenom, string raisonSociale, string? inviteParNom, string lienActivation)
+    {
+        const string sujet = "Vous avez été invité(e) sur l'espace Bilan Carbone® — Challenges Factory";
+
+        var salutation = string.IsNullOrWhiteSpace(prenom) ? "Bonjour," : $"Bonjour {WebUtility.HtmlEncode(prenom)},";
+        var parQui = string.IsNullOrWhiteSpace(inviteParNom) ? string.Empty : $" par {WebUtility.HtmlEncode(inviteParNom)}";
+
+        var corps = $"""
+            <p>{salutation}</p>
+            <p>Vous avez été invité(e){parQui} à contribuer au dossier Bilan Carbone® de <strong>{WebUtility.HtmlEncode(raisonSociale)}</strong> sur Challenges Factory. Vous pourrez y compléter les données qui vous concernent, au même titre que les autres personnes déjà invitées.</p>
+            <p>Pour activer votre accès, définissez votre mot de passe :</p>
+            <p><a href="{lienActivation}">Définir mon mot de passe</a></p>
+            <p>Ce lien est valable 7 jours.</p>
+            """;
+
+        return (sujet, corps);
+    }
+
+    // Meme invitation, mais le compte existait deja avec un mot de passe deja defini.
+    public static (string Sujet, string CorpsHtml) InvitationCollaborateurCarboneCompteExistant(string? prenom, string raisonSociale, string? inviteParNom, string lienConnexion)
+    {
+        const string sujet = "Vous avez été invité(e) sur l'espace Bilan Carbone® — Challenges Factory";
+
+        var salutation = string.IsNullOrWhiteSpace(prenom) ? "Bonjour," : $"Bonjour {WebUtility.HtmlEncode(prenom)},";
+        var parQui = string.IsNullOrWhiteSpace(inviteParNom) ? string.Empty : $" par {WebUtility.HtmlEncode(inviteParNom)}";
+
+        var corps = $"""
+            <p>{salutation}</p>
+            <p>Vous avez été invité(e){parQui} à contribuer au dossier Bilan Carbone® de <strong>{WebUtility.HtmlEncode(raisonSociale)}</strong> sur Challenges Factory.</p>
+            <p>Vous avez déjà un compte Challenges Factory avec cette adresse email : connectez-vous avec votre identifiant et votre mot de passe habituels, ce dossier y est maintenant accessible.</p>
+            <p><a href="{lienConnexion}">Me connecter</a></p>
+            """;
+
+        return (sujet, corps);
+    }
+
     public static (string Sujet, string CorpsHtml) QuestionnaireCollecteCarbone(string? prenom, string raisonSociale, string lienQuestionnaire)
     {
         const string sujet = "Préparez votre Bilan Carbone® : votre questionnaire est disponible";

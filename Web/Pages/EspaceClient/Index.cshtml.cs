@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Web.Data;
+using Web.Models;
 
 namespace Web.Pages.EspaceClient;
 
@@ -139,4 +140,84 @@ public class IndexModel(ICollecteCarboneService collecteService, UserManager<App
 
         return RedirectToPage();
     }
+
+    // Mode simple (par defaut) : saisie directe dans le formulaire web, sans passer par le
+    // tableur Excel - cf. ICollecteCarboneService.EnregistrerValeursFormulaireAsync.
+    public async Task<IActionResult> OnPostEnregistrerValeursAsync(List<ValeurSaisieLigneForm>? lignes)
+    {
+        var utilisateur = await userManager.GetUserAsync(User);
+        if (utilisateur is null)
+        {
+            return Challenge();
+        }
+
+        var donnees = (lignes ?? []).Select(l => (l.Cle, new ValeurSaisieFichier
+        {
+            LibellePersonnalise = l.LibellePersonnalise,
+            Valeur = l.Valeur,
+            Unite = l.Unite,
+            Type = l.Type,
+            Source = l.Source,
+            Hypotheses = l.Hypotheses,
+            Statut = l.Statut,
+            Commentaire = l.Commentaire,
+        })).ToList();
+
+        var nomAffiche = utilisateur.Prenom ?? utilisateur.Email ?? "Vous";
+        var (success, errorMessage) = await collecteService.EnregistrerValeursFormulaireAsync(utilisateur.Id, nomAffiche, donnees);
+
+        TempData[success ? "StatusMessage" : "ErreurDepotTableur"] = success ? "Vos données ont été enregistrées." : errorMessage;
+
+        return RedirectToPage();
+    }
+
+    // Self-service : le contact principal invite un collegue a contribuer au meme dossier
+    // (RH, facilities, comptabilite...). Acces complet, pas de perimetre par poste.
+    public async Task<IActionResult> OnPostInviterCollaborateurAsync(string email)
+    {
+        var utilisateur = await userManager.GetUserAsync(User);
+        if (utilisateur is null)
+        {
+            return Challenge();
+        }
+
+        var dossier = await collecteService.GetDossierClientAsync(utilisateur.Id);
+        if (dossier is null)
+        {
+            return RedirectToPage("/Dashboard/Index");
+        }
+
+        var (success, errorMessage) = await collecteService.InviterCollaborateurAsync(dossier.Id, email, utilisateur.Id, LienActivation, LienConnexion());
+
+        TempData[success ? "StatusMessage" : "ErreurDepotTableur"] = success ? "Invitation envoyée." : errorMessage;
+
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostRetirerCollaborateurAsync(string utilisateurId)
+    {
+        var utilisateur = await userManager.GetUserAsync(User);
+        if (utilisateur is null)
+        {
+            return Challenge();
+        }
+
+        var dossier = await collecteService.GetDossierClientAsync(utilisateur.Id);
+        if (dossier is null)
+        {
+            return RedirectToPage("/Dashboard/Index");
+        }
+
+        var (success, errorMessage) = await collecteService.RetirerCollaborateurAsync(dossier.Id, utilisateurId);
+
+        TempData[success ? "StatusMessage" : "ErreurDepotTableur"] = success ? "Accès retiré." : errorMessage;
+
+        return RedirectToPage();
+    }
+
+    private string LienActivation(string token) =>
+        Url.Page("/Compte/DefinirMotDePasse", null, new { token }, Request.Scheme) ?? $"/Compte/DefinirMotDePasse?token={token}";
+
+    private string LienConnexion() =>
+        Url.Page("/Account/Login", null, new { area = "Identity" }, Request.Scheme) ?? "/Identity/Account/Login";
 }

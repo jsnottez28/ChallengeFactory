@@ -1,11 +1,14 @@
 @model Application.Common.Interfaces.PreBilanResultatInfo
 @using Application.Common.Interfaces
 @using Domain.Entities
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
 @{
     ViewData["Title"] = "Pré-diagnostic carbone";
     var infoCrm = ViewData["InfoCrm"] as PreBilanCarboneInfo;
     var dossier = ViewData["Dossier"] as DossierCarboneInfo;
     var checklist = ViewData["Checklist"] as List<ElementCollecteInfo>;
+    var peutModifier = (await AuthorizationService.AuthorizeAsync(User, "Droit:PREBILAN.MODIFIER")).Succeeded;
 
     string LibellePoste(PosteEmission poste) => poste switch
     {
@@ -234,8 +237,62 @@
                                 Télécharger le fichier déposé par le client
                             </a>
                         }
+
+                        <droit-visible code="PREBILAN.MODIFIER">
+                            @if (dossier is not null)
+                            {
+                                <hr />
+                                <p class="small text-muted mb-2">Vous avez vous-même recueilli des données pour ce client (visite sur site, appel...) ? Déposez votre propre tableur rempli, il sera fusionné avec le reste.</p>
+                                <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="DeposerTableurGestionnaire" asp-route-id="@Model.Id" enctype="multipart/form-data" class="d-flex gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="file" class="form-control form-control-sm" name="fichier" accept=".xlsx" required>
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm text-nowrap">Déposer</button>
+                                </form>
+                            }
+                        </droit-visible>
                     </div>
                 </div>
+
+                @if (dossier is not null)
+                {
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-white border-bottom p-4">
+                            <h2 class="h5 mb-1">Collaborateurs</h2>
+                            <p class="text-muted small mb-0">Personnes (en plus du contact principal) ayant accès à ce dossier pour y renseigner des données.</p>
+                        </div>
+                        <div class="card-body p-4">
+                            @if (dossier.Collaborateurs.Count > 0)
+                            {
+                                <ul class="list-unstyled mb-3">
+                                    @foreach (var collaborateur in dossier.Collaborateurs)
+                                    {
+                                        <li class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                            <span>@(collaborateur.Prenom ?? collaborateur.Email) <span class="text-muted small">(@collaborateur.Email)</span></span>
+                                            <droit-visible code="PREBILAN.MODIFIER">
+                                                <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="RetirerCollaborateur" asp-route-id="@Model.Id" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="utilisateurId" value="@collaborateur.UtilisateurId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Retirer</button>
+                                                </form>
+                                            </droit-visible>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-3">Aucun collaborateur pour l'instant.</p>
+                            }
+                            <droit-visible code="PREBILAN.MODIFIER">
+                                <form method="post" asp-controller="PreDiagnosticsCarbone" asp-action="InviterCollaborateur" asp-route-id="@Model.Id" class="d-flex gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="email" name="email" class="form-control form-control-sm" placeholder="email@collegue-du-client.fr" required />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm text-nowrap">Inviter</button>
+                                </form>
+                            </droit-visible>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
@@ -290,69 +347,76 @@
                         </details>
                     }
                 </div>
-                <div class="card-body p-0">
-                    <div class="accordion accordion-flush" id="accordionChecklist">
-                        @for (var i = 0; i < groupes.Count; i++)
-                        {
-                            var groupe = groupes[i];
-                            var cochesGroupe = groupe.Count(e => e.EstCoche);
-                            var idPanneau = $"checklistPoste{i}";
-                            <div class="accordion-item">
-                                <h3 class="accordion-header">
-                                    <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@idPanneau">
-                                        <span class="flex-grow-1">@Web.Services.QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</span>
-                                        <span class="badge bg-success-subtle text-success-emphasis me-3">@cochesGroupe / @groupe.Count()</span>
-                                    </button>
-                                </h3>
-                                <div id="@idPanneau" class="accordion-collapse collapse @(i == 0 ? "show" : "")">
-                                    <div class="accordion-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-sm align-middle mb-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col" style="width: 2.5rem;"></th>
-                                                        <th scope="col">Donnée</th>
-                                                        <th scope="col">Pièce justificative</th>
-                                                        <th scope="col">Référent</th>
-                                                        <th scope="col">Pourquoi</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach (var element in groupe)
-                                                    {
+                <div class="card-body p-4">
+                    @if (peutModifier)
+                    {
+                        <p class="small text-muted">Vous pouvez compléter ou corriger les données vous-même ci-dessous (ex. données recueillies par téléphone avec le client) - elles se fusionnent avec ce que le client et ses collaborateurs ont déjà saisi.</p>
+                        ViewData["FormAction"] = Url.Action("EnregistrerValeursGestionnaire", "PreDiagnosticsCarbone", new { id = Model.Id });
+                        <partial name="_ChecklistCollecteFormulaire" model="checklist" view-data="ViewData" />
+                    }
+                    else
+                    {
+                        <div class="accordion accordion-flush" id="accordionChecklist">
+                            @for (var i = 0; i < groupes.Count; i++)
+                            {
+                                var groupe = groupes[i];
+                                var idPanneau = $"checklistPoste{i}";
+                                var compteRecu = groupe.Count(e => e.ValeurFichier?.Statut is "Reçu" or "Validé");
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header">
+                                        <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@idPanneau">
+                                            <span class="flex-grow-1">@Web.Services.QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</span>
+                                            <span class="badge bg-success-subtle text-success-emphasis me-3">@compteRecu / @groupe.Count()</span>
+                                        </button>
+                                    </h3>
+                                    <div id="@idPanneau" class="accordion-collapse collapse @(i == 0 ? "show" : "")">
+                                        <div class="accordion-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-sm align-middle mb-0">
+                                                    <thead>
                                                         <tr>
-                                                            <td class="text-center" title="@(element.EstCoche ? "Cochée comme saisie par le client" : "Pas encore cochée par le client")">@(element.EstCoche ? "✅" : "⬜")</td>
-                                                            <td>
-                                                                @element.Donnee
-                                                                @if (element.Valeur.HasValue)
-                                                                {
-                                                                    <span class="badge bg-success-subtle text-success-emphasis ms-1">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span>
-                                                                }
-                                                                @if (element.ValeurFichier is { } vf)
-                                                                {
-                                                                    <div class="small text-success-emphasis mt-1">
-                                                                        📥 Saisi dans le fichier (@vf.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy"))
-                                                                        @if (vf.Valeur is not null) { <text> — <strong>@vf.Valeur @vf.Unite</strong></text> }
-                                                                        @if (vf.Statut is not null) { <span class="badge bg-success-subtle text-success-emphasis ms-1">@vf.Statut</span> }
-                                                                        @if (vf.Source is not null) { <text> · Source : @vf.Source</text> }
-                                                                        @if (vf.Hypotheses is not null) { <text> · Hypothèses : @vf.Hypotheses</text> }
-                                                                        @if (vf.Commentaire is not null) { <text> · Commentaire : @vf.Commentaire</text> }
-                                                                    </div>
-                                                                }
-                                                            </td>
-                                                            <td class="small">@element.PieceJustificative</td>
-                                                            <td class="small">@element.Referent</td>
-                                                            <td class="small text-muted">@element.Declencheur</td>
+                                                            <th scope="col">Donnée</th>
+                                                            <th scope="col">Pièce justificative</th>
+                                                            <th scope="col">Référent</th>
+                                                            <th scope="col">Pourquoi</th>
                                                         </tr>
-                                                    }
-                                                </tbody>
-                                            </table>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var element in groupe)
+                                                        {
+                                                            <tr>
+                                                                <td>
+                                                                    @element.Donnee
+                                                                    @if (element.Valeur.HasValue)
+                                                                    {
+                                                                        <span class="badge bg-success-subtle text-success-emphasis ms-1">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span>
+                                                                    }
+                                                                    @if (element.ValeurFichier is { } vf)
+                                                                    {
+                                                                        <div class="small text-success-emphasis mt-1">
+                                                                            📥 Saisi par @(vf.SaisiePar ?? "le client") le @vf.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy")
+                                                                            @if (vf.Valeur is not null) { <text> — <strong>@vf.Valeur @vf.Unite</strong></text> }
+                                                                            @if (vf.Statut is not null) { <span class="badge bg-success-subtle text-success-emphasis ms-1">@vf.Statut</span> }
+                                                                            @if (vf.Source is not null) { <text> · Source : @vf.Source</text> }
+                                                                            @if (vf.Hypotheses is not null) { <text> · Hypothèses : @vf.Hypotheses</text> }
+                                                                            @if (vf.Commentaire is not null) { <text> · Commentaire : @vf.Commentaire</text> }
+                                                                        </div>
+                                                                    }
+                                                                </td>
+                                                                <td class="small">@element.PieceJustificative</td>
+                                                                <td class="small">@element.Referent</td>
+                                                                <td class="small text-muted">@element.Declencheur</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
+                    }
                 </div>
             </div>
         }

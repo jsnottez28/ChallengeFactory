@@ -196,10 +196,10 @@ public sealed class CollecteCarboneService(
 
     public async Task<DossierCarboneInfo?> GetDossierClientAsync(string clientUtilisateurId)
     {
-        // Le plus recent si le meme compte client porte plusieurs dossiers (ex. un second
-        // pre-diagnostic de la meme entreprise l'annee suivante).
-        var dossier = await RequeteDossiers()
-            .Where(d => d.ClientUtilisateurId == clientUtilisateurId)
+        // Le plus recent si le meme compte porte plusieurs dossiers (ex. un second
+        // pre-diagnostic de la meme entreprise l'annee suivante, ou un compte collaborateur
+        // sur plusieurs dossiers).
+        var dossier = await AccessiblePar(RequeteDossiers(), clientUtilisateurId)
             .OrderByDescending(d => d.OuvertLe)
             .FirstOrDefaultAsync();
 
@@ -208,8 +208,7 @@ public sealed class CollecteCarboneService(
 
     public async Task<(bool Success, string? ErrorMessage)> EnregistrerReponsesAsync(string clientUtilisateurId, Dictionary<string, string> reponses, bool soumettre)
     {
-        var dossier = await RequeteDossiers()
-            .Where(d => d.ClientUtilisateurId == clientUtilisateurId)
+        var dossier = await AccessiblePar(RequeteDossiers(), clientUtilisateurId)
             .OrderByDescending(d => d.OuvertLe)
             .FirstOrDefaultAsync();
 
@@ -279,8 +278,7 @@ public sealed class CollecteCarboneService(
 
     public async Task<(bool Success, string? ErrorMessage)> EnregistrerElementsCochesAsync(string clientUtilisateurId, IReadOnlyCollection<string> elementsCoches)
     {
-        var dossier = await dbContext.DossiersCarbone
-            .Where(d => d.ClientUtilisateurId == clientUtilisateurId)
+        var dossier = await AccessiblePar(dbContext.DossiersCarbone, clientUtilisateurId)
             .OrderByDescending(d => d.OuvertLe)
             .FirstOrDefaultAsync();
         if (dossier is null)
@@ -338,29 +336,54 @@ public sealed class CollecteCarboneService(
 
     public async Task<(bool Success, string? ErrorMessage)> DeposerTableurRempliAsync(string clientUtilisateurId, Stream contenu, string nomFichier, bool collecteDeclareeTerminee)
     {
+        var dossier = await AccessiblePar(RequeteDossiers(), clientUtilisateurId)
+            .OrderByDescending(d => d.OuvertLe)
+            .FirstOrDefaultAsync();
+        var deposant = dossier is null ? null : await userManager.FindByIdAsync(clientUtilisateurId);
+
+        return await DeposerTableurInterneAsync(
+            dossier, contenu, nomFichier, collecteDeclareeTerminee, deposant?.Prenom ?? deposant?.Email,
+            "Aucun espace client Bilan Carbone® ne vous est associé.");
+    }
+
+    // Cote Gestionnaire : saisie pour le compte du client (donnees recueillies par un autre
+    // canal - visite terrain, appel telephonique...). Memes mecanismes d'extraction/fusion
+    // que le depot client ; SaisiePar porte la mention "(consultant)" pour que le client et
+    // ses collaborateurs comprennent d'ou vient la donnee. CollecteDeclareeTerminee n'est
+    // jamais touche ici : c'est une declaration du client, pas du consultant.
+    public async Task<(bool Success, string? ErrorMessage)> DeposerTableurRempliParGestionnaireAsync(int preBilanId, Stream contenu, string nomFichier, string gestionnaireNomAffiche)
+    {
+        var dossier = await RequeteDossiers().FirstOrDefaultAsync(d => d.PreBilanCarboneId == preBilanId);
+
+        return await DeposerTableurInterneAsync(
+            dossier, contenu, nomFichier, collecteDeclareeTerminee: null, $"{gestionnaireNomAffiche} (consultant)",
+            "Ouvrez d'abord l'espace client.");
+    }
+
+    private async Task<(bool Success, string? ErrorMessage)> DeposerTableurInterneAsync(
+        DossierCarbone? dossier, Stream contenu, string nomFichier, bool? collecteDeclareeTerminee, string? saisiePar, string messageDossierIntrouvable)
+    {
         // RequeteDossiers() (pas une requete DossiersCarbone nue) : il faut PreBilanCarbone
         // + Questionnaire charges pour reconstruire la check-list (ChecklistCollecteBuilder)
         // et donc les cles connues servant a extraire les valeurs saisies ci-dessous.
-        var dossier = await RequeteDossiers()
-            .Where(d => d.ClientUtilisateurId == clientUtilisateurId)
-            .OrderByDescending(d => d.OuvertLe)
-            .FirstOrDefaultAsync();
         if (dossier is null)
         {
-            return (false, "Aucun espace client Bilan Carbone® ne vous est associé.");
+            return (false, messageDossierIntrouvable);
         }
 
-        // Tamponne une seule fois : un flux sert a la validation/au calcul de l'avancement
-        // (lecture XLWorkbook), l'autre au stockage brut - XLWorkbook consomme le flux
-        // qu'on lui passe, impossible de le reutiliser tel quel pour les deux usages.
+        // Tamponne une seule fois : un flux sert a l'extraction (lecture XLWorkbook),
+        // l'autre au stockage brut - XLWorkbook consomme le flux qu'on lui passe,
+        // impossible de le reutiliser tel quel pour les deux usages.
         await using var tampon = new MemoryStream();
         await contenu.CopyToAsync(tampon);
         var octets = tampon.ToArray();
 
-        var avancement = TableurCollecteAvancementCalculator.Calculer(new MemoryStream(octets));
-        if (avancement is null)
+        var clesConnues = ChecklistCollecteBuilder.Construire(dossier.PreBilanCarbone, LireReponses(dossier.Questionnaire)).Select(e => e.Cle).ToHashSet();
+        var maintenant = DateTime.UtcNow;
+        var extraction = TableurCollecteValeursExtracteur.Extraire(new MemoryStream(octets), clesConnues, maintenant);
+        if (extraction is null)
         {
-            return (false, "Ce fichier n'a pas pu être lu comme un classeur Excel valide (.xlsx). Vérifiez qu'il s'agit bien du tableur de collecte téléchargé depuis votre espace, non modifié dans sa structure.");
+            return (false, "Ce fichier n'a pas pu être lu comme un classeur Excel valide (.xlsx). Vérifiez qu'il s'agit bien du tableur de collecte téléchargé depuis l'espace, non modifié dans sa structure.");
         }
 
         if (!string.IsNullOrWhiteSpace(dossier.TableurDeposeCheminStockage))
@@ -372,24 +395,208 @@ public sealed class CollecteCarboneService(
 
         var cheminStockage = await stockageService.EnregistrerAsync(new MemoryStream(octets), nomFichier);
 
-        dossier.TableurDeposeCheminStockage = cheminStockage;
-        dossier.TableurDeposeNomFichier = nomFichier;
-        dossier.TableurDeposeLe = DateTime.UtcNow;
-        dossier.TableurDeposeAvancementPourcent = avancement;
-        dossier.CollecteDeclareeTerminee = collecteDeclareeTerminee;
-
-        // Extraction des valeurs reellement saisies (fusion incrementale avec le depot
-        // precedent) + des lignes non reconnues (toujours remplacees par le dernier depot,
-        // pas cumulatif - cf. DossierCarbone.LignesSupplementairesJson).
-        var clesConnues = ChecklistCollecteBuilder.Construire(dossier.PreBilanCarbone, LireReponses(dossier.Questionnaire)).Select(e => e.Cle).ToList();
-        var extraction = TableurCollecteValeursExtracteur.Extraire(new MemoryStream(octets), clesConnues, DateTime.UtcNow);
-        if (extraction is not null)
+        foreach (var valeur in extraction.Valeurs.Values)
         {
-            var valeursExistantes = LireValeursSaisies(dossier.ValeursSaisiesJson);
-            dossier.ValeursSaisiesJson = JsonSerializer.Serialize(FusionnerValeursSaisies(valeursExistantes, extraction.Valeurs));
-            dossier.LignesSupplementairesJson = JsonSerializer.Serialize(extraction.LignesSupplementaires);
+            valeur.SaisiePar = saisiePar;
         }
 
+        // Extraction des valeurs reellement saisies (fusion incrementale avec le depot
+        // precedent, et avec tout ce qui a deja ete saisi via le formulaire web) + des
+        // lignes non reconnues (toujours remplacees par le dernier depot, pas cumulatif -
+        // cf. DossierCarbone.LignesSupplementairesJson).
+        var valeursFusionnees = FusionnerValeursSaisies(LireValeursSaisies(dossier.ValeursSaisiesJson), extraction.Valeurs);
+
+        dossier.TableurDeposeCheminStockage = cheminStockage;
+        dossier.TableurDeposeNomFichier = nomFichier;
+        dossier.TableurDeposeLe = maintenant;
+        dossier.TableurDeposeAvancementPourcent = CalculerAvancement(valeursFusionnees, clesConnues.Count);
+        if (collecteDeclareeTerminee.HasValue)
+        {
+            dossier.CollecteDeclareeTerminee = collecteDeclareeTerminee.Value;
+        }
+
+        dossier.ValeursSaisiesJson = JsonSerializer.Serialize(valeursFusionnees);
+        dossier.LignesSupplementairesJson = JsonSerializer.Serialize(extraction.LignesSupplementaires);
+
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> EnregistrerValeursFormulaireAsync(string utilisateurId, string nomAffiche, IReadOnlyList<(string Cle, ValeurSaisieFichier Valeur)> lignes)
+    {
+        var dossier = await AccessiblePar(RequeteDossiers(), utilisateurId)
+            .OrderByDescending(d => d.OuvertLe)
+            .FirstOrDefaultAsync();
+
+        return await EnregistrerValeursFormulaireInterneAsync(dossier, nomAffiche, lignes, "Aucun espace client Bilan Carbone® ne vous est associé.");
+    }
+
+    // Cote Gestionnaire : meme formulaire simple, pour le compte du client.
+    public async Task<(bool Success, string? ErrorMessage)> EnregistrerValeursFormulaireParGestionnaireAsync(int preBilanId, string gestionnaireNomAffiche, IReadOnlyList<(string Cle, ValeurSaisieFichier Valeur)> lignes)
+    {
+        var dossier = await RequeteDossiers().FirstOrDefaultAsync(d => d.PreBilanCarboneId == preBilanId);
+
+        return await EnregistrerValeursFormulaireInterneAsync(dossier, $"{gestionnaireNomAffiche} (consultant)", lignes, "Ouvrez d'abord l'espace client.");
+    }
+
+    private async Task<(bool Success, string? ErrorMessage)> EnregistrerValeursFormulaireInterneAsync(
+        DossierCarbone? dossier, string nomAffiche, IReadOnlyList<(string Cle, ValeurSaisieFichier Valeur)> lignes, string messageDossierIntrouvable)
+    {
+        if (dossier is null)
+        {
+            return (false, messageDossierIntrouvable);
+        }
+
+        var clesConnues = ChecklistCollecteBuilder.Construire(dossier.PreBilanCarbone, LireReponses(dossier.Questionnaire)).Select(e => e.Cle).ToHashSet();
+        var valeurs = LireValeursSaisies(dossier.ValeursSaisiesJson);
+        var maintenant = DateTime.UtcNow;
+
+        foreach (var (cle, valeurBrute) in lignes)
+        {
+            if (!clesConnues.Contains(cle))
+            {
+                // Cle inconnue/perimee (poste retire du catalogue depuis l'affichage du
+                // formulaire) : jamais bloquant, meme principe que EnregistrerElementsCochesAsync.
+                continue;
+            }
+
+            // Normalise avant tout : un champ <input> laisse vide poste une chaine vide, pas
+            // null - sans ca, le test "ligne vide" ci-dessous ne declencherait jamais.
+            var valeur = new ValeurSaisieFichier
+            {
+                LibellePersonnalise = Normaliser(valeurBrute.LibellePersonnalise),
+                Valeur = Normaliser(valeurBrute.Valeur),
+                Unite = Normaliser(valeurBrute.Unite),
+                Type = Normaliser(valeurBrute.Type),
+                Source = Normaliser(valeurBrute.Source),
+                Hypotheses = Normaliser(valeurBrute.Hypotheses),
+                Statut = Normaliser(valeurBrute.Statut),
+                Commentaire = Normaliser(valeurBrute.Commentaire),
+            };
+
+            var estVide = valeur.LibellePersonnalise is null && valeur.Valeur is null && valeur.Unite is null && valeur.Type is null
+                && valeur.Source is null && valeur.Hypotheses is null && valeur.Statut is null && valeur.Commentaire is null;
+
+            if (estVide)
+            {
+                // Soit la ligne n'a jamais ete touchee, soit l'utilisateur a deliberement
+                // tout efface (contrairement au depot Excel, le formulaire est pre-rempli
+                // avec les valeurs actuelles : un champ vide est une decision, pas une
+                // absence de saisie) - dans les deux cas, rien a garder.
+                valeurs.Remove(cle);
+                continue;
+            }
+
+            valeur.MiseAJourLe = maintenant;
+            valeur.SaisiePar = nomAffiche;
+            valeurs[cle] = valeur;
+        }
+
+        dossier.ValeursSaisiesJson = JsonSerializer.Serialize(valeurs);
+        dossier.TableurDeposeAvancementPourcent = CalculerAvancement(valeurs, clesConnues.Count);
+        await dbContext.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> InviterCollaborateurAsync(int dossierId, string email, string inviteParId, Func<string, string> construireLienActivation, string lienConnexion)
+    {
+        var dossier = await dbContext.DossiersCarbone
+            .Include(d => d.ClientUtilisateur)
+            .Include(d => d.Collaborateurs)
+            .FirstOrDefaultAsync(d => d.Id == dossierId);
+        if (dossier is null)
+        {
+            return (false, "Dossier introuvable.");
+        }
+
+        var emailNormalise = email.Trim();
+        if (string.Equals(emailNormalise, dossier.ClientUtilisateur.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            return (false, "Cette personne est déjà le contact principal de ce dossier.");
+        }
+
+        var utilisateur = await userManager.FindByEmailAsync(emailNormalise);
+        var compteCree = false;
+
+        // Memes principes que OuvrirCompteClientInterneAsync : les acces se cumulent, un
+        // compte existant (Participant ou deja collaborateur d'un autre dossier) recoit
+        // simplement l'acces en plus, sans que son TypeCompte change.
+        if (utilisateur is null)
+        {
+            utilisateur = new ApplicationUser
+            {
+                UserName = emailNormalise,
+                Email = emailNormalise,
+                Mode = ModePlateforme.BtoB,
+                TypeCompte = TypeCompte.ClientCarbone,
+                EmailConfirmed = true,
+            };
+
+            var resultat = await userManager.CreateAsync(utilisateur);
+            if (!resultat.Succeeded)
+            {
+                return (false, string.Join(" ", resultat.Errors.Select(e => e.Description)));
+            }
+
+            compteCree = true;
+        }
+        else if (utilisateur.Id == dossier.ClientUtilisateurId || dossier.Collaborateurs.Any(c => c.UtilisateurId == utilisateur.Id))
+        {
+            return (false, "Cette personne a déjà accès à ce dossier.");
+        }
+
+        dbContext.DossierCarboneCollaborateurs.Add(new DossierCarboneCollaborateur
+        {
+            DossierCarboneId = dossier.Id,
+            UtilisateurId = utilisateur.Id,
+            InviteParId = inviteParId,
+        });
+        await dbContext.SaveChangesAsync();
+
+        if (compteCree || !await userManager.HasPasswordAsync(utilisateur))
+        {
+            var inviteurInfo = await userManager.FindByIdAsync(inviteParId);
+            var invitation = new InvitationCompte
+            {
+                UtilisateurId = utilisateur.Id,
+                Token = Guid.NewGuid().ToString("N"),
+                CreeLe = DateTime.UtcNow,
+                ExpireLe = DateTime.UtcNow.AddDays(7),
+                EstActif = true,
+            };
+            dbContext.InvitationsComptes.Add(invitation);
+            await dbContext.SaveChangesAsync();
+
+            if (!string.IsNullOrWhiteSpace(utilisateur.Email))
+            {
+                var (sujet, corps) = ChallengeEmailTemplates.InvitationCollaborateurCarbone(
+                    utilisateur.Prenom, dossier.RaisonSociale, inviteurInfo?.Prenom ?? inviteurInfo?.Email, construireLienActivation(invitation.Token));
+                await emailService.EnvoyerAsync(utilisateur.Email, sujet, corps);
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(utilisateur.Email))
+        {
+            var inviteurInfo = await userManager.FindByIdAsync(inviteParId);
+            var (sujet, corps) = ChallengeEmailTemplates.InvitationCollaborateurCarboneCompteExistant(
+                utilisateur.Prenom, dossier.RaisonSociale, inviteurInfo?.Prenom ?? inviteurInfo?.Email, lienConnexion);
+            await emailService.EnvoyerAsync(utilisateur.Email, sujet, corps);
+        }
+
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> RetirerCollaborateurAsync(int dossierId, string utilisateurId)
+    {
+        var collaborateur = await dbContext.DossierCarboneCollaborateurs
+            .FirstOrDefaultAsync(c => c.DossierCarboneId == dossierId && c.UtilisateurId == utilisateurId);
+        if (collaborateur is null)
+        {
+            return (false, "Ce collaborateur n'a pas (ou plus) accès à ce dossier.");
+        }
+
+        dbContext.DossierCarboneCollaborateurs.Remove(collaborateur);
         await dbContext.SaveChangesAsync();
 
         return (true, null);
@@ -410,7 +617,15 @@ public sealed class CollecteCarboneService(
     private IQueryable<DossierCarbone> RequeteDossiers() => dbContext.DossiersCarbone
         .Include(d => d.ClientUtilisateur)
         .Include(d => d.Questionnaire)
+        .Include(d => d.Collaborateurs).ThenInclude(c => c.Utilisateur)
         .Include(d => d.PreBilanCarbone).ThenInclude(p => p.Lignes).ThenInclude(l => l.FacteurEmission);
+
+    // Un dossier est accessible a son contact principal ET a tous ses collaborateurs (acces
+    // complet, pas de perimetre par poste - cf. DossierCarbone.Collaborateurs). A utiliser
+    // partout ou un Id de dossier est resolu depuis l'utilisateur connecte, jamais depuis une
+    // valeur fournie par le client.
+    private static IQueryable<DossierCarbone> AccessiblePar(IQueryable<DossierCarbone> requete, string utilisateurId) =>
+        requete.Where(d => d.ClientUtilisateurId == utilisateurId || d.Collaborateurs.Any(c => c.UtilisateurId == utilisateurId));
 
     private async Task EnvoyerInvitationAsync(ApplicationUser utilisateur, string raisonSociale, Func<string, string> construireLienActivation)
     {
@@ -445,6 +660,8 @@ public sealed class CollecteCarboneService(
         var (sujet, corps) = ChallengeEmailTemplates.EspaceClientCarboneOuvertCompteExistant(utilisateur.Prenom, raisonSociale, lienConnexion);
         await emailService.EnvoyerAsync(utilisateur.Email, sujet, corps);
     }
+
+    private static string? Normaliser(string? valeur) => string.IsNullOrWhiteSpace(valeur) ? null : valeur.Trim();
 
     private static Dictionary<string, string> LireReponses(QuestionnaireCollecte? questionnaire)
     {
@@ -499,6 +716,16 @@ public sealed class CollecteCarboneService(
         TableurDeposeAvancementPourcent = dossier.TableurDeposeAvancementPourcent,
         CollecteDeclareeTerminee = dossier.CollecteDeclareeTerminee,
         LignesSupplementaires = LireLignesSupplementaires(dossier.LignesSupplementairesJson),
+        Collaborateurs = dossier.Collaborateurs
+            .OrderBy(c => c.InviteLe)
+            .Select(c => new CollaborateurInfo
+            {
+                UtilisateurId = c.UtilisateurId,
+                Email = c.Utilisateur.Email ?? string.Empty,
+                Prenom = c.Utilisateur.Prenom,
+                InviteLe = c.InviteLe,
+            })
+            .ToList(),
     };
 
     private static Dictionary<string, ValeurSaisieFichier> LireValeursSaisies(string valeursSaisiesJson)
@@ -556,10 +783,18 @@ public sealed class CollecteCarboneService(
                     Statut = nouvelle.Statut ?? ancienne.Statut,
                     Commentaire = nouvelle.Commentaire ?? ancienne.Commentaire,
                     MiseAJourLe = nouvelle.MiseAJourLe,
+                    SaisiePar = nouvelle.SaisiePar ?? ancienne.SaisiePar,
                 }
                 : nouvelle;
         }
 
         return resultat;
     }
+
+    // % des elements connus dont le Statut saisi (formulaire ou fichier) vaut Recu/Valide -
+    // calcule sur l'ensemble fusionne, jamais sur un seul canal de saisie : un client qui
+    // commence par le formulaire web puis finit sur Excel (ou l'inverse) voit une jauge
+    // cumulee, pas remise a zero en changeant de canal.
+    private static int CalculerAvancement(Dictionary<string, ValeurSaisieFichier> valeurs, int totalElementsConnus) =>
+        totalElementsConnus == 0 ? 0 : (int)Math.Round(valeurs.Values.Count(v => v.Statut is "Reçu" or "Validé") * 100.0 / totalElementsConnus);
 }

@@ -1,0 +1,99 @@
+@using Application.Common.Interfaces
+@using Web.Services
+@model IEnumerable<ElementCollecteInfo>
+@{
+    var formAction = (string)ViewData["FormAction"]!;
+    var groupes = Model.GroupBy(e => e.Poste).ToList();
+    var index = 0;
+}
+
+<form method="post" action="@formAction">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-primary mb-3">💾 Enregistrer mes données</button>
+
+    <div class="accordion accordion-flush" id="accordionFormulaireCollecte">
+        @for (var g = 0; g < groupes.Count; g++)
+        {
+            var groupe = groupes[g];
+            var idPanneau = $"formulaireCollectePoste{g}";
+            var compteRecu = groupe.Count(e => e.ValeurFichier?.Statut is "Reçu" or "Validé");
+            <div class="accordion-item">
+                <h3 class="accordion-header">
+                    <button class="accordion-button @(g == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@idPanneau">
+                        <span class="flex-grow-1">@QuestionnaireCollecteCatalogue.LibellePoste(groupe.Key)</span>
+                        <span class="badge bg-success-subtle text-success-emphasis me-3">@compteRecu / @groupe.Count()</span>
+                    </button>
+                </h3>
+                <div id="@idPanneau" class="accordion-collapse collapse @(g == 0 ? "show" : "")">
+                    <div class="accordion-body">
+                        @foreach (var element in groupe)
+                        {
+                            var vf = element.ValeurFichier;
+                            var i = index;
+                            index++;
+                            <div class="border-bottom py-3">
+                                <input type="hidden" name="Lignes[@i].Cle" value="@element.Cle" />
+                                <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-1">
+                                    <strong>@element.Donnee</strong>
+                                    @if (vf?.SaisiePar is not null)
+                                    {
+                                        <span class="text-muted small text-nowrap">Saisi par @vf.SaisiePar le @vf.MiseAJourLe.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                    }
+                                </div>
+                                <div class="small text-muted mb-2">📄 @element.PieceJustificative · <span class="fst-italic">Référent : @element.Referent</span></div>
+                                @if (element.Valeur.HasValue)
+                                {
+                                    <p class="small mb-2"><span class="badge bg-success-subtle text-success-emphasis">Déjà connu : @element.Valeur.Value.ToString("N2") @element.Unite</span></p>
+                                }
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label small mb-0">Valeur</label>
+                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Valeur" value="@vf?.Valeur" />
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small mb-0">Unité</label>
+                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Unite" value="@(vf?.Unite ?? (element.Unite.Length > 0 ? element.Unite : null))" />
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label small mb-0">Type</label>
+                                        <select class="form-select form-select-sm" name="Lignes[@i].Type">
+                                            <option value=""></option>
+                                            @foreach (var t in QuestionnaireCollecteCatalogue.TypesDonnee)
+                                            {
+                                                <option value="@t" selected="@(vf?.Type == t)">@t</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label small mb-0">Statut</label>
+                                        <select class="form-select form-select-sm" name="Lignes[@i].Statut">
+                                            <option value=""></option>
+                                            @foreach (var s in QuestionnaireCollecteCatalogue.StatutsCollecte)
+                                            {
+                                                <option value="@s" selected="@(vf?.Statut == s)">@s</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small mb-0">Source</label>
+                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Source" value="@vf?.Source" placeholder="ex. Facture EDF janvier 2026" />
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small mb-0">Hypothèses</label>
+                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Hypotheses" value="@vf?.Hypotheses" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small mb-0">Commentaire</label>
+                                        <input type="text" class="form-control form-control-sm" name="Lignes[@i].Commentaire" value="@vf?.Commentaire" />
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">💾 Enregistrer mes données</button>
+</form>

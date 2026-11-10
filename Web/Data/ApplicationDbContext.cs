@@ -62,6 +62,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<PreBilanLigne> PreBilanLignes { get; set; }
     public DbSet<DossierCarbone> DossiersCarbone { get; set; }
     public DbSet<QuestionnaireCollecte> QuestionnairesCollecte { get; set; }
+    public DbSet<DossierCarboneCollaborateur> DossierCarboneCollaborateurs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -814,6 +815,23 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<DossierCarbone>().Property(d => d.RaisonSociale).HasMaxLength(200);
+
+        // Un collaborateur ne peut etre invite qu'une seule fois sur un meme dossier.
+        builder.Entity<DossierCarboneCollaborateur>()
+            .HasIndex(c => new { c.DossierCarboneId, c.UtilisateurId })
+            .IsUnique();
+
+        builder.Entity<DossierCarboneCollaborateur>()
+            .HasOne(c => c.DossierCarbone)
+            .WithMany(d => d.Collaborateurs)
+            .HasForeignKey(c => c.DossierCarboneId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<DossierCarboneCollaborateur>()
+            .HasOne(c => c.Utilisateur)
+            .WithMany()
+            .HasForeignKey(c => c.UtilisateurId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<QuestionnaireCollecte>()
             .HasOne(q => q.DossierCarbone)

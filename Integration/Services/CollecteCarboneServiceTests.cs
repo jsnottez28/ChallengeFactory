@@ -547,4 +547,150 @@ public class CollecteCarboneServiceTests
         classeur.SaveAs(flux);
         return flux.ToArray();
     }
+
+    [Fact]
+    public async Task InviterCollaborateurAsync_DonneAccesAuDossierEtEnvoieUneInvitation()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, emails) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var contact = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(contact);
+        emails.Envois.Clear();
+
+        var (success, erreur) = await service.InviterCollaborateurAsync(dossier!.Id, "collegue@test.local", contact, token => $"{Lien}?token={token}", Lien);
+
+        Assert.True(success, erreur);
+        var collaborateur = await dbContext.Users.SingleAsync(u => u.Email == "collegue@test.local");
+        var envoi = Assert.Single(emails.Envois);
+        Assert.Equal("collegue@test.local", envoi.Destinataire);
+
+        // Le collaborateur retrouve le MEME dossier que le contact principal.
+        var dossierVuParCollaborateur = await service.GetDossierClientAsync(collaborateur.Id);
+        Assert.Equal(dossier.Id, dossierVuParCollaborateur!.Id);
+        Assert.Single(dossierVuParCollaborateur.Collaborateurs, c => c.UtilisateurId == collaborateur.Id);
+    }
+
+    [Fact]
+    public async Task RetirerCollaborateurAsync_RetireLAcces()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var contact = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(contact);
+        await service.InviterCollaborateurAsync(dossier!.Id, "collegue@test.local", contact, _ => Lien, Lien);
+        var collaborateurId = (await dbContext.Users.SingleAsync(u => u.Email == "collegue@test.local")).Id;
+
+        var (success, erreur) = await service.RetirerCollaborateurAsync(dossier.Id, collaborateurId);
+
+        Assert.True(success, erreur);
+        Assert.Null(await service.GetDossierClientAsync(collaborateurId));
+    }
+
+    [Fact]
+    public async Task EnregistrerValeursFormulaireAsync_RemplaceDirectementSansFusionChampParChamp()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+        var cle = (await service.GetChecklistAsync(dossier!.Id))[0].Cle;
+
+        await service.EnregistrerValeursFormulaireAsync(clientId, "Camille", [(cle, new ValeurSaisieFichier { Valeur = "100", Source = "Facture A" })]);
+
+        // Second enregistrement : Source laissee vide - contrairement au depot Excel, le
+        // formulaire remplace directement (l'utilisateur voit le formulaire pre-rempli, un
+        // champ vide est une decision deliberee d'effacer).
+        await service.EnregistrerValeursFormulaireAsync(clientId, "Camille", [(cle, new ValeurSaisieFichier { Valeur = "200" })]);
+
+        var valeurFichier = (await service.GetChecklistAsync(dossier.Id)).Single(e => e.Cle == cle).ValeurFichier;
+        Assert.NotNull(valeurFichier);
+        Assert.Equal("200", valeurFichier!.Valeur);
+        Assert.Null(valeurFichier.Source);
+        Assert.Equal("Camille", valeurFichier.SaisiePar);
+    }
+
+    [Fact]
+    public async Task EnregistrerValeursFormulaireAsync_IgnoreLesLignesEntierementVides()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+        var cle = (await service.GetChecklistAsync(dossier!.Id))[0].Cle;
+
+        var (success, erreur) = await service.EnregistrerValeursFormulaireAsync(clientId, "Camille", [(cle, new ValeurSaisieFichier())]);
+
+        Assert.True(success, erreur);
+        Assert.Null((await service.GetChecklistAsync(dossier.Id)).Single(e => e.Cle == cle).ValeurFichier);
+    }
+
+    [Fact]
+    public async Task DeposerTableurRempliParGestionnaireAsync_FusionneEtMarqueLaProvenanceConsultant()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+        var elementEnergie = (await service.GetChecklistAsync(dossier!.Id)).First(e => e.Poste == PosteCollecte.Energie);
+
+        var tableur = await service.GenererTableurAsync(preBilan.Id);
+        var rempli = SaisirCellule(tableur!.Value.Contenu, "Énergie", elementEnergie.Donnee, colonne: 7, "Relevé pris sur site");
+
+        var (success, erreur) = await service.DeposerTableurRempliParGestionnaireAsync(preBilan.Id, new MemoryStream(rempli), "consultant.xlsx", "Jean Dupont");
+
+        Assert.True(success, erreur);
+        var valeurFichier = (await service.GetChecklistAsync(dossier.Id)).Single(e => e.Cle == elementEnergie.Cle).ValeurFichier;
+        Assert.NotNull(valeurFichier);
+        Assert.Equal("Relevé pris sur site", valeurFichier!.Source);
+        Assert.Equal("Jean Dupont (consultant)", valeurFichier.SaisiePar);
+    }
+
+    [Fact]
+    public async Task EnregistrerValeursFormulaireParGestionnaireAsync_FonctionnePourLeCompteDuClient()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var clientId = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(clientId);
+        var cle = (await service.GetChecklistAsync(dossier!.Id))[0].Cle;
+
+        var (success, erreur) = await service.EnregistrerValeursFormulaireParGestionnaireAsync(preBilan.Id, "Jean Dupont", [(cle, new ValeurSaisieFichier { Valeur = "42", Statut = "Reçu" })]);
+
+        Assert.True(success, erreur);
+        var valeurFichier = (await service.GetChecklistAsync(dossier.Id)).Single(e => e.Cle == cle).ValeurFichier;
+        Assert.NotNull(valeurFichier);
+        Assert.Equal("42", valeurFichier!.Valeur);
+        Assert.Equal("Jean Dupont (consultant)", valeurFichier.SaisiePar);
+    }
+
+    [Fact]
+    public async Task DeposerTableurRempliAsync_FonctionnePourUnCollaborateur()
+    {
+        await using var dbContext = InMemoryDbContextFactory.Create();
+        var preBilan = await SemerPreBilanAsync(dbContext);
+        var (service, _) = CreerService(dbContext);
+        await service.OuvrirCompteClientAsync(preBilan.Id, "g", _ => Lien, Lien);
+        var contact = (await dbContext.Users.SingleAsync()).Id;
+        var dossier = await service.GetDossierClientAsync(contact);
+        await service.InviterCollaborateurAsync(dossier!.Id, "collegue@test.local", contact, _ => Lien, Lien);
+        var collaborateurId = (await dbContext.Users.SingleAsync(u => u.Email == "collegue@test.local")).Id;
+
+        var tableur = await service.GenererTableurAsync(preBilan.Id);
+        var (success, erreur) = await service.DeposerTableurRempliAsync(collaborateurId, new MemoryStream(tableur!.Value.Contenu), "depot-collegue.xlsx", collecteDeclareeTerminee: false);
+
+        Assert.True(success, erreur);
+        Assert.Equal("depot-collegue.xlsx", (await service.GetDossierClientAsync(contact))!.TableurDeposeNomFichier);
+    }
 }

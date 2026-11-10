@@ -1360,6 +1360,38 @@ namespace Web.Migrations
                     b.ToTable("DossiersCarbone");
                 });
 
+            modelBuilder.Entity("Web.Data.DossierCarboneCollaborateur", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DossierCarboneId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("InviteLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InviteParId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UtilisateurId");
+
+                    b.HasIndex("DossierCarboneId", "UtilisateurId")
+                        .IsUnique();
+
+                    b.ToTable("DossierCarboneCollaborateurs");
+                });
+
             modelBuilder.Entity("Web.Data.Emargement", b =>
                 {
                     b.Property<int>("Id")
@@ -2845,6 +2877,25 @@ namespace Web.Migrations
                     b.Navigation("PreBilanCarbone");
                 });
 
+            modelBuilder.Entity("Web.Data.DossierCarboneCollaborateur", b =>
+                {
+                    b.HasOne("Web.Data.DossierCarbone", "DossierCarbone")
+                        .WithMany("Collaborateurs")
+                        .HasForeignKey("DossierCarboneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Web.Data.ApplicationUser", "Utilisateur")
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DossierCarbone");
+
+                    b.Navigation("Utilisateur");
+                });
+
             modelBuilder.Entity("Web.Data.Emargement", b =>
                 {
                     b.HasOne("Web.Data.CarteAttribution", "CarteAttribution")
@@ -3341,6 +3392,8 @@ namespace Web.Migrations
 
             modelBuilder.Entity("Web.Data.DossierCarbone", b =>
                 {
+                    b.Navigation("Collaborateurs");
+
                     b.Navigation("Questionnaire");
                 });
 

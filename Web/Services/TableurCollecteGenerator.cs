@@ -12,8 +12,6 @@ namespace Web.Services;
 // pre-remplies : la saisie peut ensuite etre recopiee telle quelle dans le tableur ABC.
 public static class TableurCollecteGenerator
 {
-    private static readonly string[] TypesDonnee = ["Physique", "Comptable", "Extrapolée", "Statistique", "Approchée"];
-    private static readonly string[] StatutsCollecte = ["À demander", "Demandé", "En attente", "Reçu", "Validé"];
 
     // Noms et explications des colonnes : source unique QuestionnaireCollecteCatalogue.ColonnesTableur
     // (aussi affichee en legende sur l'Espace Client).
@@ -154,8 +152,8 @@ public static class TableurCollecteGenerator
         // par les memes listes deroulantes.
         var derniereLigne = ligne + 20;
 
-        feuille.Range(ligneEntete + 1, 6, derniereLigne, 6).CreateDataValidation().List($"\"{string.Join(",", TypesDonnee)}\"", true);
-        feuille.Range(ligneEntete + 1, 11, derniereLigne, 11).CreateDataValidation().List($"\"{string.Join(",", StatutsCollecte)}\"", true);
+        feuille.Range(ligneEntete + 1, 6, derniereLigne, 6).CreateDataValidation().List($"\"{string.Join(",", QuestionnaireCollecteCatalogue.TypesDonnee)}\"", true);
+        feuille.Range(ligneEntete + 1, 11, derniereLigne, 11).CreateDataValidation().List($"\"{string.Join(",", QuestionnaireCollecteCatalogue.StatutsCollecte)}\"", true);
 
         var largeurs = new[] { 28, 48, 24, 12, 14, 14, 30, 30, 40, 26, 14, 30, 40 };
         for (var c = 0; c < largeurs.Length; c++)

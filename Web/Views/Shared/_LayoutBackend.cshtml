@@ -34,7 +34,7 @@
     {
         var currentUserId = UserManager.GetUserId(User);
         aAccesEspaceCarbone = currentUserId is not null && await DbContext.DossiersCarbone
-            .AnyAsync(d => d.ClientUtilisateurId == currentUserId);
+            .AnyAsync(d => d.ClientUtilisateurId == currentUserId || d.Collaborateurs.Any(c => c.UtilisateurId == currentUserId));
 
         // Un compte purement ClientCarbone (jamais un Participant, meme avec un acces
         // Carbone en plus) n'a jamais de Scope (ce n'est pas un Gestionnaire) : sans cette

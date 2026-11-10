@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Web.Data;
+using Web.Models;
 
 namespace Web.Controllers;
 
@@ -15,6 +16,9 @@ public class PreDiagnosticsCarboneController(
     ICollecteCarboneService collecteService,
     UserManager<ApplicationUser> userManager) : Controller
 {
+    private const long TailleMaxTableurOctets = 10 * 1024 * 1024; // 10 Mo
+
+
     [HttpGet("")]
     [Authorize(Policy = "Droit:PREBILAN.CONSULTER")]
     public async Task<IActionResult> Index()
@@ -135,6 +139,102 @@ public class PreDiagnosticsCarboneController(
         }
 
         return File(tableur.Value.Contenu, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", tableur.Value.NomFichier);
+    }
+
+    // Saisie par le consultant pour le compte du client (donnees recueillies par un autre
+    // canal - visite terrain, appel...), mode simple : meme formulaire web que cote client.
+    [HttpPost("{id:int}/EnregistrerValeurs")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnregistrerValeursGestionnaire(int id, List<ValeurSaisieLigneForm>? lignes)
+    {
+        var gestionnaire = await userManager.GetUserAsync(User);
+        var nomAffiche = gestionnaire?.Prenom ?? gestionnaire?.Email ?? "Le consultant";
+
+        var donnees = (lignes ?? []).Select(l => (l.Cle, new ValeurSaisieFichier
+        {
+            LibellePersonnalise = l.LibellePersonnalise,
+            Valeur = l.Valeur,
+            Unite = l.Unite,
+            Type = l.Type,
+            Source = l.Source,
+            Hypotheses = l.Hypotheses,
+            Statut = l.Statut,
+            Commentaire = l.Commentaire,
+        })).ToList();
+
+        var (success, errorMessage) = await collecteService.EnregistrerValeursFormulaireParGestionnaireAsync(id, nomAffiche, donnees);
+        TempData["StatusMessage"] = success ? "Données enregistrées." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // Saisie par le consultant pour le compte du client, mode avance : depot d'un tableur
+    // rempli par le consultant lui-meme (reunion sur site, fichier recu par email...).
+    [HttpPost("{id:int}/DeposerTableur")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeposerTableurGestionnaire(int id, IFormFile? fichier)
+    {
+        if (fichier is null || fichier.Length == 0)
+        {
+            TempData["StatusMessage"] = "Merci de choisir un fichier avant de le déposer.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        if (!string.Equals(Path.GetExtension(fichier.FileName), ".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["StatusMessage"] = "Seuls les fichiers .xlsx sont acceptés.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        if (fichier.Length > TailleMaxTableurOctets)
+        {
+            TempData["StatusMessage"] = $"Ce fichier dépasse la taille maximale autorisée ({TailleMaxTableurOctets / (1024 * 1024)} Mo).";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var gestionnaire = await userManager.GetUserAsync(User);
+        var nomAffiche = gestionnaire?.Prenom ?? gestionnaire?.Email ?? "Le consultant";
+
+        await using var flux = fichier.OpenReadStream();
+        var (success, errorMessage) = await collecteService.DeposerTableurRempliParGestionnaireAsync(id, flux, fichier.FileName, nomAffiche);
+        TempData["StatusMessage"] = success ? "Tableur déposé : l'avancement a été mis à jour." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/InviterCollaborateur")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> InviterCollaborateur(int id, string email)
+    {
+        var dossier = await collecteService.GetDossierParPreBilanAsync(id);
+        if (dossier is null)
+        {
+            TempData["StatusMessage"] = "Ouvrez d'abord l'espace client.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var gestionnaireId = userManager.GetUserId(User) ?? string.Empty;
+        var (success, errorMessage) = await collecteService.InviterCollaborateurAsync(dossier.Id, email, gestionnaireId, LienActivation, LienConnexion());
+        TempData["StatusMessage"] = success ? "Invitation envoyée." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("{id:int}/RetirerCollaborateur")]
+    [Authorize(Policy = "Droit:PREBILAN.MODIFIER")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RetirerCollaborateur(int id, string utilisateurId)
+    {
+        var dossier = await collecteService.GetDossierParPreBilanAsync(id);
+        if (dossier is null)
+        {
+            TempData["StatusMessage"] = "Ouvrez d'abord l'espace client.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var (success, errorMessage) = await collecteService.RetirerCollaborateurAsync(dossier.Id, utilisateurId);
+        TempData["StatusMessage"] = success ? "Accès retiré." : errorMessage;
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     private string LienActivation(string token) =>

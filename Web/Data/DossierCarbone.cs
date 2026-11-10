@@ -35,9 +35,11 @@ public class DossierCarbone
     public string? TableurDeposeNomFichier { get; set; }
     public DateTime? TableurDeposeLe { get; set; }
 
-    // Avancement estimatif (0-100), recalcule a chaque depot : % des lignes du tableur au
-    // statut Recu/Valide. Approximatif par nature (cf. TableurCollecteAvancementCalculator)
-    // - jamais presente comme une mesure exacte.
+    // Avancement (0-100), recalcule a chaque depot Excel ou sauvegarde du formulaire web :
+    // % des elements connus dont le Statut saisi (toutes sources fusionnees) vaut
+    // Recu/Valide (cf. CollecteCarboneService.CalculerAvancement). Approximatif par nature
+    // (le client peut renommer un onglet, deplacer des colonnes...) - jamais presente comme
+    // une mesure exacte.
     public int? TableurDeposeAvancementPourcent { get; set; }
 
     // Declaration du client au moment du depot ("j'ai termine la collecte") - purement
@@ -62,6 +64,33 @@ public class DossierCarbone
     // le Gestionnaire, jamais integrees a la check-list structuree. Remplacees en bloc (pas
     // cumulatif) a chaque nouveau depot - reflete toujours le dernier fichier.
     public string LignesSupplementairesJson { get; set; } = "[]";
+
+    // Comptes supplementaires (collegues du contact principal ClientUtilisateur) qui peuvent
+    // eux aussi consulter et completer ce dossier - une entreprise a souvent besoin de
+    // plusieurs personnes (RH, facilities, comptabilite...) pour renseigner des postes
+    // differents. Acces complet pour tous les collaborateurs, pas de perimetre par poste
+    // (cf. discussion produit) ; jamais le contact principal lui-meme (deja via
+    // ClientUtilisateurId).
+    public ICollection<DossierCarboneCollaborateur> Collaborateurs { get; set; } = new List<DossierCarboneCollaborateur>();
+}
+
+// Un collaborateur invite sur un DossierCarbone, en plus du contact principal
+// (DossierCarbone.ClientUtilisateurId). Invitation possible par le contact principal
+// lui-meme (self-service, cf. EspaceClient/Index) ou par un Gestionnaire depuis la fiche
+// admin - InviteParId garde la trace de qui a invite, utile si le collaborateur a une
+// question sur pourquoi il a acces a ce dossier.
+public class DossierCarboneCollaborateur
+{
+    public int Id { get; set; }
+
+    public int DossierCarboneId { get; set; }
+    public DossierCarbone DossierCarbone { get; set; } = null!;
+
+    public string UtilisateurId { get; set; } = string.Empty;
+    public ApplicationUser Utilisateur { get; set; } = null!;
+
+    public DateTime InviteLe { get; set; } = DateTime.UtcNow;
+    public string InviteParId { get; set; } = string.Empty;
 }
 
 // Questionnaire de collecte (questions de filtrage du Bilan Carbone(R)) rempli par le client

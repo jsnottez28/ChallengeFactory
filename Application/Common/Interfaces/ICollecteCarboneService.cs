@@ -58,6 +58,12 @@ public sealed class ValeurSaisieFichier
     public string? Statut { get; set; }
     public string? Commentaire { get; set; }
     public DateTime MiseAJourLe { get; set; }
+
+    // Qui a saisi/modifie cette ligne en dernier (prenom ou email) - utile des qu'un dossier
+    // a plusieurs collaborateurs (cf. DossierCarboneCollaborateur), pour que le consultant
+    // (ou un autre collaborateur) sache a qui demander une precision. Granularite "ligne"
+    // seulement, pas par champ - coherent avec MiseAJourLe.
+    public string? SaisiePar { get; set; }
 }
 
 // Une ligne presente dans le tableur depose mais dont la cle (Poste+Sous-poste+Donnee) ne
@@ -110,6 +116,19 @@ public sealed class DossierCarboneInfo
     // Lignes du dernier tableur depose non reconnues (cf. LigneSupplementaireCollecte) -
     // affiche au Gestionnaire comme signal "a traiter", jamais integre a la check-list.
     public List<LigneSupplementaireCollecte> LignesSupplementaires { get; set; } = [];
+
+    // Collaborateurs (cf. DossierCarboneCollaborateur) ayant acces a ce dossier en plus du
+    // contact principal (ClientUtilisateurId/ClientEmail ci-dessus).
+    public List<CollaborateurInfo> Collaborateurs { get; set; } = [];
+}
+
+// Un collaborateur invite sur un DossierCarbone, en plus du contact principal.
+public sealed class CollaborateurInfo
+{
+    public string UtilisateurId { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Prenom { get; set; }
+    public DateTime InviteLe { get; set; }
 }
 
 // Dossier client carbone : ouverture d'un compte ClientCarbone a partir d'un
@@ -169,16 +188,50 @@ public interface ICollecteCarboneService
     // un ajout cumulatif), meme principe que EnregistrerReponsesAsync.
     Task<(bool Success, string? ErrorMessage)> EnregistrerElementsCochesAsync(string clientUtilisateurId, IReadOnlyCollection<string> elementsCoches);
 
+    // Mode simple (par defaut) : le client (ou un collaborateur) saisit directement les
+    // valeurs dans le formulaire web de sa check-list, sans passer par le tableur Excel.
+    // Contrairement au depot Excel (fusion "une cellule vide ne remplace jamais une valeur
+    // existante"), ici une valeur laissee vide REMPLACE la valeur enregistree : l'utilisateur
+    // voit le formulaire pre-rempli avec les valeurs actuelles, donc un champ vide est un
+    // effacement delibere, pas une absence de saisie. nomAffiche alimente
+    // ValeurSaisieFichier.SaisiePar.
+    Task<(bool Success, string? ErrorMessage)> EnregistrerValeursFormulaireAsync(string utilisateurId, string nomAffiche, IReadOnlyList<(string Cle, ValeurSaisieFichier Valeur)> lignes);
+
+    // Cote Gestionnaire : meme formulaire simple, pour saisir des donnees recueillies par un
+    // autre canal (visite terrain, appel...) pour le compte du client. nomAffiche recoit la
+    // mention "(consultant)" cote appelant, pour que le client comprenne la provenance.
+    Task<(bool Success, string? ErrorMessage)> EnregistrerValeursFormulaireParGestionnaireAsync(int preBilanId, string gestionnaireNomAffiche, IReadOnlyList<(string Cle, ValeurSaisieFichier Valeur)> lignes);
+
+    // Invite un collaborateur (collegue du contact principal) a acceder a ce dossier, avec
+    // les memes droits que le contact principal (pas de perimetre par poste). Reutilise le
+    // meme mecanisme d'invitation/notification par email que OuvrirCompteClientAsync : lien
+    // d'activation si le compte (nouveau ou existant) n'a pas de mot de passe, simple
+    // notification "connectez-vous" sinon. inviteParId : le contact principal lui-meme
+    // (self-service) ou un Gestionnaire - toujours renseigne (contrairement a
+    // DossierCarbone.OuvertParId), pour tracer qui a invite qui.
+    Task<(bool Success, string? ErrorMessage)> InviterCollaborateurAsync(int dossierId, string email, string inviteParId, Func<string, string> construireLienActivation, string lienConnexion);
+
+    // Retire l'acces d'un collaborateur a ce dossier (erreur d'invitation, depart...). Ne
+    // supprime jamais le contact principal (ClientUtilisateurId) - operation reservee aux
+    // collaborateurs ajoutes via InviterCollaborateurAsync.
+    Task<(bool Success, string? ErrorMessage)> RetirerCollaborateurAsync(int dossierId, string utilisateurId);
+
     // Tableur de collecte .xlsx (colonnes de la Matrice de collecte ABC, pre-rempli).
     // lienEspaceClient (optionnel) : affiche dans la feuille "Lisez-moi" un lien de retour
     // vers l'Espace Client, pour suivre sa progression et retrouver ce fichier en ligne.
     Task<(byte[] Contenu, string NomFichier)?> GenererTableurAsync(int preBilanId, string? lienEspaceClient = null);
 
     // Depot par le client de son tableur de collecte rempli - remplace le depot precedent
-    // (un seul conserve, jamais un historique). Recalcule l'avancement estimatif a partir
-    // du contenu (cf. TableurCollecteAvancementCalculator). Refuse si le fichier n'est pas
-    // un classeur Excel valide.
+    // (un seul conserve, jamais un historique). Extrait et fusionne les valeurs saisies (cf.
+    // TableurCollecteValeursExtracteur), puis recalcule l'avancement a partir de l'ensemble
+    // fusionne (donc cumule avec ce qui a ete saisi via le formulaire web). Refuse si le
+    // fichier n'est pas un classeur Excel valide.
     Task<(bool Success, string? ErrorMessage)> DeposerTableurRempliAsync(string clientUtilisateurId, Stream contenu, string nomFichier, bool collecteDeclareeTerminee);
+
+    // Cote Gestionnaire : depot d'un tableur rempli par le consultant lui-meme, pour le
+    // compte du client (donnees recueillies sur site, fichier recu par email...). Memes
+    // mecanismes d'extraction/fusion que le depot client.
+    Task<(bool Success, string? ErrorMessage)> DeposerTableurRempliParGestionnaireAsync(int preBilanId, Stream contenu, string nomFichier, string gestionnaireNomAffiche);
 
     // Cote Gestionnaire : le dernier fichier depose par le client, tel quel (pas
     // regenere) - null si aucun depot n'a encore ete fait.
