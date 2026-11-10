@@ -5,7 +5,27 @@
     // Lien de reservation reutilise tel quel depuis Contact.cshtml (meme agenda Google
     // Calendar) - centralise ici pour eviter les divergences entre les boutons de la page.
     const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+    const string DomainePublic = "https://challenges-factory.com";
 }
+
+@* Donnees structurees Organization/ProfessionalService (SEO) : permet a Google d'afficher
+   un Knowledge Panel / rich snippet pour l'entreprise. Place uniquement sur la page
+   d'accueil (page canonique pour representer l'organisation), pas sur chaque page. *@
+<script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": ["Organization", "ProfessionalService"],
+        "name": "Challenges Factory",
+        "alternateName": "CHALLENGES-FACTORY",
+        "url": "@DomainePublic",
+        "logo": "@DomainePublic/brand/mark.png",
+        "image": "@DomainePublic/brand/mark.png",
+        "description": "Challenges Factory réalise le Bilan Carbone® des PME et ETI puis transforme leur plan de transition en défis terrain portés par les salariés.",
+        "email": "contact@challenges-factory.fr",
+        "areaServed": "FR",
+        "serviceType": ["Bilan Carbone", "Formation", "Accompagnement à la décarbonation"]
+    }
+</script>
 
 <!-- hero -->
 <section class="cf-hero-home">
