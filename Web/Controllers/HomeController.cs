@@ -120,6 +120,14 @@ namespace Web.Controllers
             return View();
         }
 
+        // Page statique (hors DocumentLegal) : contenu fixe sans logique de versionnement/
+        // reacceptation, a la difference de /cgu et /confidentialite (cf. LegalController).
+        [Route("mentions-legales")]
+        public IActionResult MentionsLegales()
+        {
+            return View();
+        }
+
         // Page publique + canal de contact dedie, exigence Qualiopi indicateur 26
         // (referent handicap identifiable). Meme circuit email que le formulaire de
         // contact general (aucune boite dediee distincte pour l'instant) - le sujet

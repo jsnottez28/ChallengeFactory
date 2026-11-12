@@ -40,6 +40,7 @@ public class SitemapController(IArticleService articleService) : Controller
         ("/reclamation", new DateTime(2026, 9, 16), "yearly", "0.3"),
         ("/cgu", new DateTime(2026, 9, 11), "yearly", "0.2"),
         ("/confidentialite", new DateTime(2026, 9, 11), "yearly", "0.2"),
+        ("/mentions-legales", new DateTime(2026, 11, 12), "yearly", "0.2"),
     ];
 
     [HttpGet("sitemap.xml")]
