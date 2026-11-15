@@ -243,7 +243,12 @@ namespace Web.Controllers
             var challenges = await _challengeService.GetAllAsync();
             var challengesDisponibles = challenges
                 .Where(c => c.Mode == ModePlateforme.BtoC && c.Statut == StatutChallenge.Publie)
-                .OrderBy(c => RangSousFamille(c.SousFamille))
+                // "Matinale dirigeants" (SENS-04) est la carte la plus directement adressee a la
+                // cible decideur PME/ETI du bloc d'accroche - mise en avant en toute premiere
+                // position plutot que simplement triee avec le reste de Sensibiliser (prompt
+                // 2e audit prospection).
+                .OrderBy(c => c.Code == "SENS-04" ? 0 : 1)
+                .ThenBy(c => RangSousFamille(c.SousFamille))
                 .ThenBy(c => c.Titre)
                 .Select(challenge => new FormationViewModel
                 {
