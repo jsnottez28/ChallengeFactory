@@ -243,7 +243,8 @@ namespace Web.Controllers
             var challenges = await _challengeService.GetAllAsync();
             var challengesDisponibles = challenges
                 .Where(c => c.Mode == ModePlateforme.BtoC && c.Statut == StatutChallenge.Publie)
-                .OrderBy(c => c.Titre)
+                .OrderBy(c => RangSousFamille(c.SousFamille))
+                .ThenBy(c => c.Titre)
                 .Select(challenge => new FormationViewModel
                 {
                     ChallengeId = challenge.Id,
@@ -382,6 +383,24 @@ namespace Web.Controllers
 
             return RedirectToAction(nameof(Formation), new { challengeId });
         }
+
+        // Ordre d'affichage du catalogue (prompt audit prospection : "tri qui suit les 4
+        // etapes" plutot que l'ordre alphabetique, qui met en avant des sujets avances comme
+        // l'IA avant les parcours d'entree de gamme). Suit le bloc "Par ou commencer ?" de
+        // /formations : Sensibiliser -> Bilan -> trajectoire -> postes -> IA -> GRAINE, puis
+        // les parcours Humain & Organisation.
+        private static int RangSousFamille(SousFamilleChallenge? sousFamille) => sousFamille switch
+        {
+            SousFamilleChallenge.Sensibiliser => 1,
+            SousFamilleChallenge.DuBilanALAction => 2,
+            SousFamilleChallenge.PiloterTrajectoireSnbc => 3,
+            SousFamilleChallenge.DefisParPosteEmission => 4,
+            SousFamilleChallenge.IaEtTransition => 5,
+            SousFamilleChallenge.ManagerEtEmbarquer => 6,
+            SousFamilleChallenge.InspireesDuGraine => 7,
+            SousFamilleChallenge.ParticuliersEtReconversion => 8,
+            _ => 9,
+        };
 
         // Extrait texte pour l'apercu carte (prompt : "on voit encore les balises HTML" sur
         // la liste) : la Description peut desormais contenir du HTML simple (paragraphes,

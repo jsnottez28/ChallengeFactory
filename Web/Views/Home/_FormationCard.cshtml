@@ -2,6 +2,7 @@
 @model Web.Controllers.FormationViewModel
 @{
     var estDecarbonation = Model.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation;
+    var estParticuliers = Model.SousFamille == Domain.Entities.SousFamilleChallenge.ParticuliersEtReconversion;
     var sousFamilleCode = Model.SousFamille?.ToString() ?? "";
     var texteRecherche = (Model.Titre + " " + Model.Slogan + " " + Model.PublicVise).ToLowerInvariant();
 }
@@ -51,7 +52,7 @@
             <span class="badge @(Model.NombreCohortesOuvertes > 0 ? "text-bg-success" : "text-bg-light")">
                 @(Model.NombreCohortesOuvertes > 0
                     ? $"{Model.NombreCohortesOuvertes} session{(Model.NombreCohortesOuvertes > 1 ? "s" : "")} en cours"
-                    : "Intra-entreprise, à vos dates")
+                    : estParticuliers ? "Prochaine session sur demande" : "Intra-entreprise, à vos dates")
             </span>
             <span class="cf-formation-cta">Découvrir →</span>
         </div>
