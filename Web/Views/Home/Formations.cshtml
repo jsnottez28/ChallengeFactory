@@ -4,8 +4,12 @@
     ViewData["Title"] = "Formations";
     ViewData["MetaDescription"] = "Le catalogue des parcours Challenges Factory : Cap Bas Carbone et nos parcours Compétences & IA, en méthode Challenge-Based Learning.";
 
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+
     var parcoursDecarbonation = Model.Where(c => c.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation).ToList();
     var parcoursHumain = Model.Where(c => c.Thematique == Domain.Entities.ThematiqueChallenge.HumainEtOrganisation).ToList();
+    var parcoursManagerEtGraine = parcoursHumain.Where(c => c.SousFamille != Domain.Entities.SousFamilleChallenge.ParticuliersEtReconversion).ToList();
+    var parcoursParticuliers = parcoursHumain.Where(c => c.SousFamille == Domain.Entities.SousFamilleChallenge.ParticuliersEtReconversion).ToList();
 }
 
 <section class="cf-hero-home">
@@ -20,7 +24,69 @@
     </div>
 </section>
 
-<section class="cf-section pt-0">
+@* "Par où commencer ?" (prompt audit prospection) : un dirigeant de PME face a 47 Challenges
+   ne sait pas par ou entrer - ce bloc donne un chemin unique et clair vers le pre-diagnostic,
+   avant meme le catalogue filtre. *@
+<section class="cf-section pt-0 pb-0">
+    <div class="container">
+        <div class="cf-formation-demarrage">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <span class="cf-eyebrow">Par où commencer ?</span>
+                    <h2 class="cf-h2 mb-3">Un seul chemin, quatre étapes</h2>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="cf-process-step">
+                                <span class="cf-process-num">1</span>
+                                <h6 class="mb-1">🔍 Pré-diagnostic</h6>
+                                <p class="text-muted small mb-0">Gratuit, 30 min</p>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="cf-process-step">
+                                <span class="cf-process-num">2</span>
+                                <h6 class="mb-1">📊 Bilan Carbone®</h6>
+                                <p class="text-muted small mb-0">Vos postes d'émission</p>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="cf-process-step">
+                                <span class="cf-process-num">3</span>
+                                <h6 class="mb-1">🎯 Plan d'action</h6>
+                                <p class="text-muted small mb-0">Priorités chiffrées</p>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="cf-process-step">
+                                <span class="cf-process-num">4</span>
+                                <h6 class="mb-1">⚡ Défi d'équipe</h6>
+                                <p class="text-muted small mb-0">Un des Challenges ci-dessous</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a class="cf-btn cf-btn-primary cf-btn-wrap d-block d-lg-inline-flex mb-2" href="@LienPreDiagnostic" target="_blank" rel="noopener">📅 Cadrer mon Challenge →</a>
+                    <p class="text-muted small mb-0">Challenge Cap Bas Carbone à partir de <strong>3 900 € HT</strong> · finançable OPCO · ou <a href="tel:+33699876114">06 99 87 61 14</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- temoignage client (identique a la home, cf. accord 2026-09-11 : rester generique) -->
+<section class="cf-section cf-section--grey">
+    <div class="container text-center">
+        <blockquote class="cf-h3 mb-3" style="max-width:680px;margin:0 auto;">
+            « Avant même d'avoir lancé la moindre action, le simple fait de mesurer nous a
+            fait avancer. Le travail rendu par Challenges Factory a été à la hauteur de nos
+            attentes. »
+        </blockquote>
+        <p class="text-muted mb-0">Dirigeant — PME du secteur informatique, à propos de son Bilan Carbone®</p>
+    </div>
+</section>
+
+<section class="cf-section">
     <div class="container">
         @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
         {
@@ -78,13 +144,31 @@
             </div>
         }
 
-        @if (parcoursHumain.Count > 0)
+        @if (parcoursManagerEtGraine.Count > 0)
         {
             <div class="@(parcoursDecarbonation.Count > 0 ? "mt-5" : "")" id="humain-organisation" data-cf-section>
                 <span class="cf-eyebrow cf-eyebrow-indigo">🤝 Humain &amp; Organisation</span>
                 <h2 class="cf-h2 mb-3">Mieux vivre les transitions, ensemble</h2>
                 <div class="row g-3">
-                    @foreach (var challenge in parcoursHumain)
+                    @foreach (var challenge in parcoursManagerEtGraine)
+                    {
+                        <partial name="_FormationCard" model="challenge" />
+                    }
+                </div>
+            </div>
+        }
+
+        @* Cible distincte (particuliers/reconversion, hors B2B) : separee visuellement en fin
+           de page plutot que melangee aux Challenges entreprise, cf. prompt audit prospection
+           ("cibles melangees"). *@
+        @if (parcoursParticuliers.Count > 0)
+        {
+            <div class="mt-5" id="particuliers" data-cf-section>
+                <span class="cf-eyebrow">🌱 Pour les particuliers</span>
+                <h2 class="cf-h2 mb-3">Reconversion vers les métiers de la transition</h2>
+                <p class="cf-lead mb-4" style="max-width:640px;">Vous êtes salarié, demandeur d'emploi ou étudiant : ces parcours s'adressent à vous à titre individuel, pas à votre entreprise.</p>
+                <div class="row g-3">
+                    @foreach (var challenge in parcoursParticuliers)
                     {
                         <partial name="_FormationCard" model="challenge" />
                     }
@@ -153,4 +237,9 @@
     .cf-formation-card--humain:hover { border-color: var(--cf-indigo); }
     .cf-formation-title { font-size: 17px; font-weight: 700; color: var(--cf-dark); }
     .cf-formation-cta { font-size: 13px; font-weight: 600; color: var(--cf-orange); }
+    .cf-formation-demarrage {
+        background: var(--cf-grey-100);
+        border-radius: var(--cf-radius-lg);
+        padding: 32px;
+    }
 </style>

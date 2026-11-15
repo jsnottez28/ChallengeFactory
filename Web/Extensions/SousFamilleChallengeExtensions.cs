@@ -12,7 +12,7 @@ public static class SousFamilleChallengeExtensions
         SousFamilleChallenge.ManagerEtEmbarquer => "Manager et embarquer",
         SousFamilleChallenge.DefisParPosteEmission => "Défis par poste d'émission",
         SousFamilleChallenge.IaEtTransition => "IA et transition",
-        SousFamilleChallenge.InspireesDuGraine => "Inspirées du GRAINE",
+        SousFamilleChallenge.InspireesDuGraine => "Ancrer et transmettre",
         SousFamilleChallenge.ParticuliersEtReconversion => "Particuliers et reconversion",
         _ => sousFamille.ToString(),
     };
