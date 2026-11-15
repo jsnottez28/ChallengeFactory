@@ -316,6 +316,9 @@ namespace Web.Migrations
                     b.Property<int>("NombreEtapes")
                         .HasColumnType("int");
 
+                    b.Property<string>("Prerequis")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Prix")
                         .HasColumnType("nvarchar(max)");
 

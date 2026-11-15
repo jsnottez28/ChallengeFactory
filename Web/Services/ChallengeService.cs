@@ -55,6 +55,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
             Financement = input.Financement,
             Prix = input.Prix,
             DisponibleEnPresentiel = input.DisponibleEnPresentiel,
+            Prerequis = input.Prerequis,
         };
 
         dbContext.Challenges.Add(challenge);
@@ -99,6 +100,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
         challenge.Financement = input.Financement;
         challenge.Prix = input.Prix;
         challenge.DisponibleEnPresentiel = input.DisponibleEnPresentiel;
+        challenge.Prerequis = input.Prerequis;
 
         await dbContext.SaveChangesAsync();
 
@@ -440,6 +442,7 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
                 challenge.Prix = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "prix"));
                 var presentielTexte = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "disponible_en_presentiel"));
                 challenge.DisponibleEnPresentiel = presentielTexte is not null && EstValeurVraie(presentielTexte);
+                challenge.Prerequis = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "prerequis"));
 
                 if (estNouveau)
                 {

@@ -103,6 +103,7 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
             Financement = challenge.Financement,
             Prix = challenge.Prix,
             DisponibleEnPresentiel = challenge.DisponibleEnPresentiel,
+            Prerequis = challenge.Prerequis,
         });
     }
 
@@ -293,6 +294,7 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
         Financement = model.Financement,
         Prix = model.Prix,
         DisponibleEnPresentiel = model.DisponibleEnPresentiel,
+        Prerequis = model.Prerequis,
     };
 
     private static ChallengeEtapeInput VersEtapeInput(ChallengeEtapeFormModel model) => new()
@@ -350,6 +352,9 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
 
         [Display(Name = "Disponible en présentiel")]
         public bool DisponibleEnPresentiel { get; set; }
+
+        [Display(Name = "Prérequis (Qualiopi)")]
+        public string? Prerequis { get; set; }
     }
 
     public sealed class ChallengeEtapeFormModel

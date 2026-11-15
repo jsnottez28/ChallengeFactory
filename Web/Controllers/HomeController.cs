@@ -296,6 +296,7 @@ namespace Web.Controllers
                 Financement = challenge.Financement,
                 Prix = challenge.Prix,
                 DisponibleEnPresentiel = challenge.DisponibleEnPresentiel,
+                Prerequis = challenge.Prerequis,
                 Etapes = challenge.Etapes
                     .OrderBy(e => e.NumeroEtape)
                     .Select(e => new EtapeApercuViewModel
@@ -448,6 +449,7 @@ namespace Web.Controllers
         public string? Financement { get; set; }
         public string? Prix { get; set; }
         public bool DisponibleEnPresentiel { get; set; }
+        public string? Prerequis { get; set; }
         public List<EtapeApercuViewModel> Etapes { get; set; } = [];
         public List<CohorteResume> CohortesOuvertes { get; set; } = [];
     }

@@ -20,6 +20,7 @@ public sealed class ChallengeInput
     public string? Financement { get; set; }
     public string? Prix { get; set; }
     public bool DisponibleEnPresentiel { get; set; }
+    public string? Prerequis { get; set; }
 }
 
 public sealed class ChallengeEtapeInput

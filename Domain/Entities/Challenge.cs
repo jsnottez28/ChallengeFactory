@@ -49,6 +49,12 @@ public class Challenge
     public string? Financement { get; set; }
     public string? Prix { get; set; }
 
+    // Prerequis d'acces (texte libre, ex. "Aucun prerequis" ou "Poste en lien avec les
+    // emissions carbone de l'entreprise") - information Qualiopi obligatoire sur toute fiche
+    // publique de formation (indicateur 4 du referentiel), distincte du PublicVise (qui decrit
+    // la cible, pas une condition d'entree).
+    public string? Prerequis { get; set; }
+
     // Le format Challenge reste le mode privilegie chez Challenges Factory (cf. CLAUDE.md) :
     // ce champ signale seulement qu'un format presentiel est aussi propose pour ce
     // Challenge, jamais un mode par defaut.

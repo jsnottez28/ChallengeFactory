@@ -54,7 +54,7 @@
                 @if (Model.Etapes.Count > 0)
                 {
                     <h2 class="cf-h3 mb-3">Le programme</h2>
-                    <ol class="cf-formation-programme list-unstyled mb-0">
+                    <ol class="cf-formation-programme list-unstyled mb-4">
                         @foreach (var etape in Model.Etapes)
                         {
                             <li class="d-flex gap-3 mb-3">
@@ -70,12 +70,21 @@
                         }
                     </ol>
                 }
+
+                <div class="cf-formation-qualiopi-bloc">
+                    <h2 class="cf-h3 mb-3">Évaluation des acquis</h2>
+                    <p class="text-muted small mb-0">
+                        Pas de QCM : chaque étape se valide par le dépôt d'une <strong>preuve d'action</strong> réalisée sur le terrain
+                        (photo, vidéo, témoignage écrit ou capture d'écran), vérifiée par les pairs de la cohorte, un Tuteur Master ou,
+                        sur les points sensibles, un Coach Challenges Factory — c'est toujours un humain qui valide, jamais l'IA seule.
+                    </p>
+                </div>
             </div>
 
             <div class="col-12 col-lg-5">
-                @if (!string.IsNullOrWhiteSpace(Model.Duree) || !string.IsNullOrWhiteSpace(Model.PublicVise) || !string.IsNullOrWhiteSpace(Model.Prix) || !string.IsNullOrWhiteSpace(Model.Financement))
+                @if (!string.IsNullOrWhiteSpace(Model.Duree) || !string.IsNullOrWhiteSpace(Model.PublicVise) || !string.IsNullOrWhiteSpace(Model.Prix) || !string.IsNullOrWhiteSpace(Model.Financement) || !string.IsNullOrWhiteSpace(Model.Prerequis))
                 {
-                    <div class="cf-card mb-4">
+                    <div class="cf-card cf-card-auto mb-4">
                         <h2 class="cf-h3 mb-3">En pratique</h2>
                         <ul class="list-unstyled small mb-0">
                             @if (!string.IsNullOrWhiteSpace(Model.Duree))
@@ -84,21 +93,31 @@
                             }
                             @if (!string.IsNullOrWhiteSpace(Model.PublicVise))
                             {
-                                <li class="mb-2"><strong>Public :</strong> @Model.PublicVise</li>
+                                <li class="mb-2"><strong>Public visé :</strong> @Model.PublicVise</li>
                             }
+                            <li class="mb-2"><strong>Prérequis :</strong> @(string.IsNullOrWhiteSpace(Model.Prerequis) ? "Aucun prérequis" : Model.Prerequis)</li>
+                            <li class="mb-2">
+                                <strong>Modalités pédagogiques :</strong>
+                                Challenge-Based Learning à distance, action sur le terrain et accompagnement par cohorte
+                                @(Model.DisponibleEnPresentiel ? " (présentiel également possible)" : "").
+                            </li>
                             @if (!string.IsNullOrWhiteSpace(Model.Financement))
                             {
                                 <li class="mb-2"><strong>Financement :</strong> @Model.Financement</li>
                             }
                             @if (!string.IsNullOrWhiteSpace(Model.Prix))
                             {
-                                <li class="mb-0"><strong>Prix :</strong> @Model.Prix</li>
+                                <li class="mb-2"><strong>Prix :</strong> @Model.Prix</li>
                             }
+                            <li class="mb-0">
+                                <strong>Accessibilité :</strong>
+                                <a asp-controller="Home" asp-action="Accessibilite">conditions d'accès pour les personnes en situation de handicap</a>.
+                            </li>
                         </ul>
                     </div>
                 }
 
-                <div class="cf-card">
+                <div class="cf-card cf-card-auto">
                     <h2 class="cf-h3 mb-3">Rejoindre ce Challenge</h2>
 
                     @if (Model.CohortesOuvertes.Count > 0)
@@ -149,5 +168,16 @@
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         font-weight: 700; font-size: 14px;
+    }
+    /* .cf-card force height:100% (prevu pour une seule carte par colonne de grille) : sur
+       cette page, deux cartes sont empilees verticalement dans la meme colonne, chacune
+       essayant alors de prendre 100% de la hauteur de la colonne -> debordement visuel sur
+       le contenu suivant (pied de page). .cf-card-auto neutralise la hauteur sans toucher a
+       la classe globale, utilisee telle quelle ailleurs sur le site pour de vraies grilles. */
+    .cf-card-auto { height: auto; }
+    .cf-formation-qualiopi-bloc {
+        background: var(--cf-grey-100);
+        border-radius: var(--cf-radius-md);
+        padding: 24px;
     }
 </style>
