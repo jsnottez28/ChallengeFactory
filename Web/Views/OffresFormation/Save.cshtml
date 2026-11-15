@@ -1,0 +1,146 @@
+@model Web.Controllers.OffresFormationController.OffreFormationFormModel
+@{
+    var estModification = Model.Id.HasValue;
+    ViewData["Title"] = estModification ? "Modifier une formation" : "Ajouter une formation";
+    var challenges = ViewData["Challenges"] as List<Domain.Entities.Challenge> ?? [];
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item"><a asp-controller="OffresFormation" asp-action="Index">Catalogue de formations</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            <a asp-controller="OffresFormation" asp-action="Index" class="btn btn-outline-secondary">Retour au catalogue</a>
+        </div>
+
+        <form method="post" asp-controller="OffresFormation" asp-action="@(estModification ? "Edit" : "Create")" asp-route-id="@Model.Id">
+            @Html.AntiForgeryToken()
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Titre" class="form-label"></label>
+                            <input asp-for="Titre" class="form-control" autocomplete="off">
+                            <span asp-validation-for="Titre" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Categorie" class="form-label"></label>
+                            <select asp-for="Categorie" class="form-select">
+                                <option value="@Domain.Entities.CategorieOffreFormation.Sensibiliser">1. Sensibiliser</option>
+                                <option value="@Domain.Entities.CategorieOffreFormation.MonterEnCompetenceCarbone">2. Monter en compétence carbone</option>
+                                <option value="@Domain.Entities.CategorieOffreFormation.PiloteTrajectoireSnbc">3. Pilote de trajectoire SNBC 3</option>
+                                <option value="@Domain.Entities.CategorieOffreFormation.ManagerEtEmbarquer">4. Manager et embarquer</option>
+                                <option value="@Domain.Entities.CategorieOffreFormation.ThematiquesParPosteEmission">5. Thématiques par poste d'émission</option>
+                                <option value="@Domain.Entities.CategorieOffreFormation.IaEtTransition">6. IA et transition</option>
+                                <option value="@Domain.Entities.CategorieOffreFormation.InspireesDuGraine">7. Inspirées du GRAINE</option>
+                                <option value="@Domain.Entities.CategorieOffreFormation.ParticuliersEtReconversion">8. Particuliers et reconversion</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Cible" class="form-label"></label>
+                            <select asp-for="Cible" class="form-select">
+                                <option value="@Domain.Entities.ModePlateforme.BtoB">Entreprise (BtoB)</option>
+                                <option value="@Domain.Entities.ModePlateforme.BtoC">Particulier (BtoC)</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="LienAvecOffre" class="form-label"></label>
+                            <input asp-for="LienAvecOffre" class="form-control" autocomplete="off" placeholder="ex. Répond au « plan sans pilote »">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Duree" class="form-label"></label>
+                            <input asp-for="Duree" class="form-control" autocomplete="off" placeholder="ex. 1 jour">
+                            <span asp-validation-for="Duree" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Public" class="form-label"></label>
+                            <input asp-for="Public" class="form-control" autocomplete="off" placeholder="ex. Dirigeants PME et ETI">
+                            <span asp-validation-for="Public" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Financement" class="form-label"></label>
+                            <input asp-for="Financement" class="form-control" autocomplete="off" placeholder="ex. OPCO, CPF, Gratuit">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Prix" class="form-label"></label>
+                            <input asp-for="Prix" class="form-control" autocomplete="off">
+                            <div class="form-text">Prix affiché sur la vitrine (exigence Qualiopi). « Sur devis » tant que l'offre n'est pas cadrée précisément.</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label d-block">Modalités</label>
+                            <div class="form-check">
+                                <input asp-for="DisponibleEnChallenge" class="form-check-input" type="checkbox">
+                                <label asp-for="DisponibleEnChallenge" class="form-check-label"></label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="DisponibleEnPresentiel" class="form-check-input" type="checkbox">
+                                <label asp-for="DisponibleEnPresentiel" class="form-check-label"></label>
+                            </div>
+                            <div class="form-text">Le format Challenge reste le mode privilégié chez Challenges Factory ; le présentiel est une alternative, pas le mode par défaut.</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Statut" class="form-label"></label>
+                            <select asp-for="Statut" class="form-select">
+                                <option value="@Domain.Entities.StatutOffreFormation.SurDemande">Sur demande (pas encore montée)</option>
+                                <option value="@Domain.Entities.StatutOffreFormation.Disponible">Disponible (déjà montée)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12"><hr></div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="ChallengeId" class="form-label"></label>
+                            <select asp-for="ChallengeId" class="form-select">
+                                <option value="">— Aucun —</option>
+                                @foreach (var challenge in challenges)
+                                {
+                                    <option value="@challenge.Id">@challenge.Titre (#@challenge.Id)</option>
+                                }
+                            </select>
+                            <div class="form-text">Une fois renseigné, la carte publique de cette formation pointe directement vers l'inscription au Challenge au lieu du formulaire de contact.</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="LienPersonnalise" class="form-label"></label>
+                            <input asp-for="LienPersonnalise" class="form-control" autocomplete="off" placeholder="ex. /bilan-de-competences">
+                            <div class="form-text">Utilisé seulement si aucun Challenge n'est associé ci-dessus (ex. une page statique existante).</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Ordre" class="form-label"></label>
+                            <input asp-for="Ordre" type="number" class="form-control">
+                            <div class="form-text">Ordre d'affichage au sein de la catégorie (les formations à égalité sont triées par titre).</div>
+                        </div>
+                        <div class="col-12 col-md-6 d-flex align-items-end">
+                            <div class="form-check">
+                                <input asp-for="EstPublie" class="form-check-input" type="checkbox">
+                                <label asp-for="EstPublie" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-4">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <a asp-controller="OffresFormation" asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">@(estModification ? "Enregistrer" : "Créer la formation")</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

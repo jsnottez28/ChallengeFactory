@@ -488,6 +488,73 @@ namespace Web.Migrations
                     b.ToTable("GroupesDroit");
                 });
 
+            modelBuilder.Entity("Domain.Entities.OffreFormation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Categorie")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ChallengeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Cible")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreeLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DisponibleEnChallenge")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DisponibleEnPresentiel")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Duree")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EstPublie")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Financement")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LienAvecOffre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LienPersonnalise")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Ordre")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Prix")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Public")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Statut")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Titre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChallengeId");
+
+                    b.ToTable("OffresFormation");
+                });
+
             modelBuilder.Entity("Domain.Entities.Ressource", b =>
                 {
                     b.Property<int>("Id")
@@ -2562,6 +2629,15 @@ namespace Web.Migrations
                     b.Navigation("Ressource");
 
                     b.Navigation("TypeAction");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OffreFormation", b =>
+                {
+                    b.HasOne("Domain.Entities.Challenge", "Challenge")
+                        .WithMany()
+                        .HasForeignKey("ChallengeId");
+
+                    b.Navigation("Challenge");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

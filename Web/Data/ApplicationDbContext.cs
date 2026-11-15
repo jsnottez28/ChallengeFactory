@@ -27,6 +27,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ArticleSource> ArticleSources { get; set; }
     public DbSet<CarteAttribution> CarteAttributions { get; set; }
     public DbSet<Challenge> Challenges { get; set; }
+    public DbSet<OffreFormation> OffresFormation { get; set; }
     public DbSet<ChallengeEtape> ChallengeEtapes { get; set; }
     public DbSet<ChallengeEtapeCarte> ChallengeEtapeCartes { get; set; }
     public DbSet<Cohorte> Cohortes { get; set; }

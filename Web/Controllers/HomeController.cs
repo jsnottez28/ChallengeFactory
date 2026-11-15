@@ -21,6 +21,7 @@ namespace Web.Controllers
         private readonly IEmailService _emailService;
         private readonly ICohorteService _cohorteService;
         private readonly IChallengeService _challengeService;
+        private readonly IOffreFormationService _offreFormationService;
         private readonly IReclamationService _reclamationService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IRecaptchaService _recaptchaService;
@@ -31,6 +32,7 @@ namespace Web.Controllers
             IEmailService emailService,
             ICohorteService cohorteService,
             IChallengeService challengeService,
+            IOffreFormationService offreFormationService,
             IReclamationService reclamationService,
             UserManager<ApplicationUser> userManager,
             IRecaptchaService recaptchaService,
@@ -40,6 +42,7 @@ namespace Web.Controllers
             _emailService = emailService;
             _cohorteService = cohorteService;
             _challengeService = challengeService;
+            _offreFormationService = offreFormationService;
             _reclamationService = reclamationService;
             _userManager = userManager;
             _recaptchaService = recaptchaService;
@@ -167,10 +170,20 @@ namespace Web.Controllers
 
         [HttpGet]
         [Route("contact")]
-        public IActionResult Contact()
+        public IActionResult Contact(string? formation = null)
         {
             ExposerCleRecaptcha();
-            return View(new ContactFormModel());
+
+            // Pre-remplissage depuis une carte du catalogue /catalogue-formations ("Je suis
+            // intereresse(e)") : permet de savoir, dans le message recu, quelle formation
+            // prioriser pour une creation reelle (cf. CLAUDE.md - "je les cree s'il y a des
+            // demandes"). Simple pre-remplissage, jamais fait confiance tel quel (c'est un
+            // champ texte libre, modifiable par le visiteur avant envoi).
+            var message = string.IsNullOrWhiteSpace(formation)
+                ? string.Empty
+                : $"Je suis intéressé(e) par la formation \"{formation}\" du catalogue.\n\n";
+
+            return View(new ContactFormModel { Message = message });
         }
 
         [HttpPost]
@@ -299,6 +312,50 @@ namespace Web.Controllers
             return View("FormationDetail", viewModel);
         }
 
+        // Vitrine marketing du catalogue de formations (distincte de /formations ci-dessus,
+        // qui liste les Challenges BtoC reellement rejoignables) : regroupe les formations
+        // deja montees et celles encore a l'etat de catalogue ("sur demande"), cf.
+        // OffreFormation.
+        [HttpGet]
+        [Route("catalogue-formations")]
+        public async Task<IActionResult> CatalogueFormations()
+        {
+            var offres = await _offreFormationService.GetPubliquesAsync();
+
+            ViewData["Title"] = "Catalogue de formations";
+            ViewData["MetaDescription"] = "Toutes les formations Challenges Factory : décarbonation, pilotage de trajectoire SNBC, management de la transition, IA — en format Challenge ou en présentiel.";
+
+            return View(offres
+                .Select(o => new OffreFormationViewModel
+                {
+                    Titre = o.Titre,
+                    Categorie = o.Categorie,
+                    LienAvecOffre = o.LienAvecOffre,
+                    Duree = o.Duree,
+                    Public = o.Public,
+                    Financement = o.Financement,
+                    Prix = o.Prix,
+                    DisponibleEnChallenge = o.DisponibleEnChallenge,
+                    DisponibleEnPresentiel = o.DisponibleEnPresentiel,
+                    Cible = o.Cible,
+                    Statut = o.Statut,
+                    // Un Challenge associe mais pas (ou plus) publie en BtoC ne doit jamais
+                    // proposer un lien d'inscription casse - on retombe alors sur le contact,
+                    // comme une offre sans Challenge du tout.
+                    UrlAction = o.Challenge is { Statut: StatutChallenge.Publie, Mode: ModePlateforme.BtoC }
+                        ? Url.Action(nameof(Formation), new { challengeId = o.ChallengeId })
+                        : !string.IsNullOrWhiteSpace(o.LienPersonnalise)
+                            ? o.LienPersonnalise
+                            : "/contact?formation=" + Uri.EscapeDataString(o.Titre),
+                    LibelleAction = o.Challenge is { Statut: StatutChallenge.Publie, Mode: ModePlateforme.BtoC }
+                        ? "Rejoindre ce Challenge"
+                        : !string.IsNullOrWhiteSpace(o.LienPersonnalise)
+                            ? "En savoir plus"
+                            : "Je suis intéressé(e)",
+                })
+                .ToList());
+        }
+
         [HttpPost]
         [Route("formations/{cohorteId:int}/inscription")]
         [ValidateAntiForgeryToken]
@@ -394,6 +451,24 @@ namespace Web.Controllers
         public int NombreEtapes { get; set; }
         public int NombreCohortesOuvertes { get; set; }
         public ThematiqueChallenge Thematique { get; set; }
+    }
+
+    // Vue publique d'une ligne de la vitrine /catalogue-formations - cf. OffreFormation.
+    public class OffreFormationViewModel
+    {
+        public string Titre { get; set; } = string.Empty;
+        public CategorieOffreFormation Categorie { get; set; }
+        public string? LienAvecOffre { get; set; }
+        public string Duree { get; set; } = string.Empty;
+        public string Public { get; set; } = string.Empty;
+        public string? Financement { get; set; }
+        public string Prix { get; set; } = string.Empty;
+        public bool DisponibleEnChallenge { get; set; }
+        public bool DisponibleEnPresentiel { get; set; }
+        public ModePlateforme Cible { get; set; }
+        public StatutOffreFormation Statut { get; set; }
+        public string? UrlAction { get; set; }
+        public string LibelleAction { get; set; } = string.Empty;
     }
 
     // Page de presentation dediee a un Challenge (prompt section H) : description complete

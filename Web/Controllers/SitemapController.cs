@@ -29,6 +29,7 @@ public class SitemapController(IArticleService articleService) : Controller
         ("/bilan-carbone-eure-et-loir", new DateTime(2026, 9, 11), "monthly", "0.7"),
         ("/la-methode", new DateTime(2026, 9, 11), "monthly", "0.8"),
         ("/formations", new DateTime(2026, 9, 11), "weekly", "0.8"),
+        ("/catalogue-formations", new DateTime(2026, 11, 15), "weekly", "0.7"),
         ("/a-propos", new DateTime(2026, 9, 11), "monthly", "0.6"),
         ("/le-lab", new DateTime(2026, 9, 11), "weekly", "0.6"),
         ("/articles", new DateTime(2026, 10, 31), "weekly", "0.6"),
