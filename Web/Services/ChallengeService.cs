@@ -427,6 +427,20 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
                 challenge.Thematique = thematique;
                 challenge.Format = format;
 
+                // Champs vitrine/Qualiopi (cf. CLAUDE.md, "Catalogue de formations") :
+                // facultatifs comme thematique/format ci-dessus, pour rester compatible avec
+                // les fichiers d'import existants qui ne les connaissent pas encore.
+                var sousFamilleTexte = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "sous_famille"));
+                challenge.SousFamille = sousFamilleTexte is not null && TryParserSousFamille(sousFamilleTexte, out var sousFamilleParsee)
+                    ? sousFamilleParsee
+                    : null;
+                challenge.Duree = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "duree"));
+                challenge.PublicVise = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "public_vise"));
+                challenge.Financement = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "financement"));
+                challenge.Prix = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "prix"));
+                var presentielTexte = ImportTextNormalizer.Normaliser(ExcelImportHelpers.ValeurColonne(ligne, colonnes, "disponible_en_presentiel"));
+                challenge.DisponibleEnPresentiel = presentielTexte is not null && EstValeurVraie(presentielTexte);
+
                 if (estNouveau)
                 {
                     dbContext.Challenges.Add(challenge);
@@ -684,6 +698,27 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
     private static bool EstStatutPublie(string valeur) =>
         string.Equals(valeur, "Publie", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(valeur, "Publié", StringComparison.OrdinalIgnoreCase);
+
+    private static bool TryParserSousFamille(string valeur, out SousFamilleChallenge sousFamille)
+    {
+        foreach (var candidat in Enum.GetValues<SousFamilleChallenge>())
+        {
+            if (string.Equals(valeur, candidat.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                sousFamille = candidat;
+                return true;
+            }
+        }
+
+        sousFamille = default;
+        return false;
+    }
+
+    private static bool EstValeurVraie(string valeur) =>
+        string.Equals(valeur, "Oui", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(valeur, "Vrai", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(valeur, "True", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(valeur, "1", StringComparison.OrdinalIgnoreCase);
 
     // Bloque toute modification de l'architecture (etapes, cartes rattachees) des qu'une
     // Cohorte issue de ce Challenge a ete lancee (Active ou Terminee) : une Cohorte
