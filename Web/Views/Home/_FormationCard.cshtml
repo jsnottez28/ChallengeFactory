@@ -1,13 +1,29 @@
+@using Web.Extensions
 @model Web.Controllers.FormationViewModel
 @{
     var estDecarbonation = Model.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation;
+    var sousFamilleCode = Model.SousFamille?.ToString() ?? "";
+    var texteRecherche = (Model.Titre + " " + Model.Slogan + " " + Model.PublicVise).ToLowerInvariant();
 }
-<div class="col-12 col-md-6 col-xl-4">
+<div class="col-12 col-md-6 col-xl-4 cf-formation-col"
+     data-thematique="@Model.Thematique"
+     data-sousfamille="@sousFamilleCode"
+     data-recherche="@texteRecherche">
     <a asp-controller="Home" asp-action="Formation" asp-route-challengeId="@Model.ChallengeId"
        class="cf-formation-card @(estDecarbonation ? "cf-formation-card--decarbonation" : "cf-formation-card--humain") d-block h-100 text-decoration-none">
-        <span class="cf-track-badge @(estDecarbonation ? "cf-track-decarbonation" : "cf-track-humain") mb-2 align-self-start">
-            @(estDecarbonation ? "🌱 Décarbonation" : "🤝 Humain & Organisation")
-        </span>
+        <div class="d-flex flex-wrap gap-2 mb-2">
+            <span class="cf-track-badge @(estDecarbonation ? "cf-track-decarbonation" : "cf-track-humain") align-self-start">
+                @(estDecarbonation ? "🌱 Décarbonation" : "🤝 Humain & Organisation")
+            </span>
+            @if (Model.SousFamille.HasValue)
+            {
+                <span class="badge text-bg-light align-self-start">@Model.SousFamille.Value.Libelle()</span>
+            }
+            @if (Model.DisponibleEnPresentiel)
+            {
+                <span class="badge text-bg-light align-self-start">Présentiel possible</span>
+            }
+        </div>
         <h3 class="cf-formation-title mb-1">@Model.Titre</h3>
         @if (!string.IsNullOrWhiteSpace(Model.Slogan))
         {
@@ -17,6 +33,20 @@
         {
             <p class="small mb-2">@Model.DescriptionExtrait</p>
         }
+        <ul class="list-unstyled small mb-2">
+            @if (!string.IsNullOrWhiteSpace(Model.Duree))
+            {
+                <li><strong>Durée :</strong> @Model.Duree</li>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.PublicVise))
+            {
+                <li><strong>Public :</strong> @Model.PublicVise</li>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Prix))
+            {
+                <li><strong>Prix :</strong> @Model.Prix</li>
+            }
+        </ul>
         <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
             <span class="badge @(Model.NombreCohortesOuvertes > 0 ? "text-bg-success" : "text-bg-light")">
                 @(Model.NombreCohortesOuvertes > 0

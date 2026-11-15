@@ -35,6 +35,25 @@ public class Challenge
     // de Thematique (qui porte sur le contenu, pas la structure du parcours).
     public FormatChallenge Format { get; set; } = FormatChallenge.Collectif;
 
+    // Classement fin (8 familles), a cote de Thematique - cf. SousFamilleChallenge. Nullable
+    // : les Challenges existants avant ce champ n'en ont pas besoin pour continuer a
+    // s'afficher sur /formations.
+    public SousFamilleChallenge? SousFamille { get; set; }
+
+    // Champs vitrine/Qualiopi (durée, public, financement, prix affiché) - affiches sur la
+    // fiche publique quand renseignes. Textes libres (duree/public/financement/prix
+    // heterogenes d'une formation a l'autre, cf. CLAUDE.md "Catalogue de formations") plutot
+    // que des champs structures qui contraindraient inutilement la saisie.
+    public string? Duree { get; set; }
+    public string? PublicVise { get; set; }
+    public string? Financement { get; set; }
+    public string? Prix { get; set; }
+
+    // Le format Challenge reste le mode privilegie chez Challenges Factory (cf. CLAUDE.md) :
+    // ce champ signale seulement qu'un format presentiel est aussi propose pour ce
+    // Challenge, jamais un mode par defaut.
+    public bool DisponibleEnPresentiel { get; set; }
+
     public DateTime CreeLe { get; set; } = DateTime.UtcNow;
 
     public List<ChallengeEtape> Etapes { get; set; } = [];

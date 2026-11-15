@@ -1,3 +1,4 @@
+@using Web.Extensions
 @model Web.Controllers.FormationDetailViewModel
 @{
     ViewData["Title"] = Model.Titre;
@@ -12,6 +13,14 @@
                     <span class="cf-track-badge @(Model.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "cf-track-decarbonation" : "cf-track-humain")">
                         @(Model.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "🌱 Décarbonation" : "🤝 Humain & Organisation")
                     </span>
+                    @if (Model.SousFamille.HasValue)
+                    {
+                        <span class="badge text-bg-light">@Model.SousFamille.Value.Libelle()</span>
+                    }
+                    @if (Model.DisponibleEnPresentiel)
+                    {
+                        <span class="badge text-bg-light">Présentiel possible</span>
+                    }
                 </div>
                 <h1 class="cf-h1 mb-2 mt-2">@Model.Titre</h1>
                 @if (!string.IsNullOrWhiteSpace(Model.Slogan))
@@ -64,6 +73,31 @@
             </div>
 
             <div class="col-12 col-lg-5">
+                @if (!string.IsNullOrWhiteSpace(Model.Duree) || !string.IsNullOrWhiteSpace(Model.PublicVise) || !string.IsNullOrWhiteSpace(Model.Prix) || !string.IsNullOrWhiteSpace(Model.Financement))
+                {
+                    <div class="cf-card mb-4">
+                        <h2 class="cf-h3 mb-3">En pratique</h2>
+                        <ul class="list-unstyled small mb-0">
+                            @if (!string.IsNullOrWhiteSpace(Model.Duree))
+                            {
+                                <li class="mb-2"><strong>Durée :</strong> @Model.Duree</li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.PublicVise))
+                            {
+                                <li class="mb-2"><strong>Public :</strong> @Model.PublicVise</li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Financement))
+                            {
+                                <li class="mb-2"><strong>Financement :</strong> @Model.Financement</li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Prix))
+                            {
+                                <li class="mb-0"><strong>Prix :</strong> @Model.Prix</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
                 <div class="cf-card">
                     <h2 class="cf-h3 mb-3">Rejoindre ce Challenge</h2>
 

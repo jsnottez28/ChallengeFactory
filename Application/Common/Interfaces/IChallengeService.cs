@@ -14,6 +14,12 @@ public sealed class ChallengeInput
     public ModePlateforme Mode { get; set; }
     public ThematiqueChallenge Thematique { get; set; } = ThematiqueChallenge.HumainEtOrganisation;
     public FormatChallenge Format { get; set; } = FormatChallenge.Collectif;
+    public SousFamilleChallenge? SousFamille { get; set; }
+    public string? Duree { get; set; }
+    public string? PublicVise { get; set; }
+    public string? Financement { get; set; }
+    public string? Prix { get; set; }
+    public bool DisponibleEnPresentiel { get; set; }
 }
 
 public sealed class ChallengeEtapeInput

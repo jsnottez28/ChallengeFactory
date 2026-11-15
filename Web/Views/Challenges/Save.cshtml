@@ -77,6 +77,46 @@
                             </select>
                             <div class="form-text">Collectif : Cohorte à plusieurs apprenants, cartes partagées. Bilan de compétences individuel : parcours solo — seul ce format pourra, à terme, autoriser la personnalisation des cartes selon le diagnostic propre à la personne.</div>
                         </div>
+                        <div class="col-12"><hr></div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="SousFamille" class="form-label"></label>
+                            <select asp-for="SousFamille" class="form-select">
+                                <option value="">— Aucune —</option>
+                                <option value="@Domain.Entities.SousFamilleChallenge.Sensibiliser">Sensibiliser</option>
+                                <option value="@Domain.Entities.SousFamilleChallenge.DuBilanALAction">Passer du Bilan Carbone à l'action</option>
+                                <option value="@Domain.Entities.SousFamilleChallenge.PiloterTrajectoireSnbc">Piloter sa trajectoire SNBC 3</option>
+                                <option value="@Domain.Entities.SousFamilleChallenge.ManagerEtEmbarquer">Manager et embarquer</option>
+                                <option value="@Domain.Entities.SousFamilleChallenge.DefisParPosteEmission">Défis par poste d'émission</option>
+                                <option value="@Domain.Entities.SousFamilleChallenge.IaEtTransition">IA et transition</option>
+                                <option value="@Domain.Entities.SousFamilleChallenge.InspireesDuGraine">Inspirées du GRAINE</option>
+                                <option value="@Domain.Entities.SousFamilleChallenge.ParticuliersEtReconversion">Particuliers et reconversion</option>
+                            </select>
+                            <div class="form-text">Classement fin affiché en badge et utilisable pour filtrer la vitrine /formations.</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Duree" class="form-label"></label>
+                            <input asp-for="Duree" class="form-control" autocomplete="off" placeholder="ex. 1 jour + 6 semaines sur le terrain">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="PublicVise" class="form-label"></label>
+                            <input asp-for="PublicVise" class="form-control" autocomplete="off" placeholder="ex. Dirigeants PME et ETI">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Financement" class="form-label"></label>
+                            <input asp-for="Financement" class="form-control" autocomplete="off" placeholder="ex. OPCO, CPF, Gratuit">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Prix" class="form-label"></label>
+                            <input asp-for="Prix" class="form-control" autocomplete="off" placeholder="ex. Sur devis">
+                            <div class="form-text">Prix affiché sur la fiche publique (exigence Qualiopi).</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input asp-for="DisponibleEnPresentiel" class="form-check-input" type="checkbox">
+                                <label asp-for="DisponibleEnPresentiel" class="form-check-label"></label>
+                            </div>
+                            <div class="form-text">Le format Challenge reste le mode privilégié ; cette case ajoute seulement la mention « présentiel possible » sur la fiche.</div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer bg-white border-top p-4">

@@ -253,6 +253,12 @@ namespace Web.Controllers
                     NombreEtapes = challenge.NombreEtapes,
                     NombreCohortesOuvertes = nombreCohortesOuvertesParChallenge.GetValueOrDefault(challenge.Id),
                     Thematique = challenge.Thematique,
+                    SousFamille = challenge.SousFamille,
+                    Duree = challenge.Duree,
+                    PublicVise = challenge.PublicVise,
+                    Financement = challenge.Financement,
+                    Prix = challenge.Prix,
+                    DisponibleEnPresentiel = challenge.DisponibleEnPresentiel,
                 })
                 .ToList();
 
@@ -284,6 +290,12 @@ namespace Web.Controllers
                 Slogan = challenge.Slogan,
                 Description = challenge.Description,
                 Thematique = challenge.Thematique,
+                SousFamille = challenge.SousFamille,
+                Duree = challenge.Duree,
+                PublicVise = challenge.PublicVise,
+                Financement = challenge.Financement,
+                Prix = challenge.Prix,
+                DisponibleEnPresentiel = challenge.DisponibleEnPresentiel,
                 Etapes = challenge.Etapes
                     .OrderBy(e => e.NumeroEtape)
                     .Select(e => new EtapeApercuViewModel
@@ -350,6 +362,23 @@ namespace Web.Controllers
                 ? "Ta demande d'embarquement a été enregistrée ! Notre équipe l'étudie et reviendra vers toi dès qu'une session est prête."
                 : errorMessage;
 
+            // Notifie le gestionnaire par email (cf. CLAUDE.md : aucune automatisation ne
+            // doit se substituer a la validation humaine, mais encore faut-il qu'il soit
+            // informe qu'une demande attend dans /Administration/Cohortes/Embarquement).
+            if (success)
+            {
+                var demandeur = await _userManager.GetUserAsync(User);
+                var challenge = await _challengeService.GetByIdAsync(challengeId);
+                if (demandeur is not null && challenge is not null)
+                {
+                    var nomDemandeur = string.IsNullOrWhiteSpace(demandeur.Prenom) && string.IsNullOrWhiteSpace(demandeur.Nom)
+                        ? demandeur.Email ?? "Utilisateur"
+                        : $"{demandeur.Prenom} {demandeur.Nom}".Trim();
+                    var corpsEmail = EmailTemplates.DemandeEmbarquement(nomDemandeur, demandeur.Email ?? "", challenge.Titre);
+                    await _emailService.EnvoyerAsync(EmailDestinataireContact, $"Demande d'embarquement — {challenge.Titre}", corpsEmail);
+                }
+            }
+
             return RedirectToAction(nameof(Formation), new { challengeId });
         }
 
@@ -394,6 +423,12 @@ namespace Web.Controllers
         public int NombreEtapes { get; set; }
         public int NombreCohortesOuvertes { get; set; }
         public ThematiqueChallenge Thematique { get; set; }
+        public SousFamilleChallenge? SousFamille { get; set; }
+        public string? Duree { get; set; }
+        public string? PublicVise { get; set; }
+        public string? Financement { get; set; }
+        public string? Prix { get; set; }
+        public bool DisponibleEnPresentiel { get; set; }
     }
 
     // Page de presentation dediee a un Challenge (prompt section H) : description complete
@@ -407,6 +442,12 @@ namespace Web.Controllers
         public string? Slogan { get; set; }
         public string? Description { get; set; }
         public ThematiqueChallenge Thematique { get; set; }
+        public SousFamilleChallenge? SousFamille { get; set; }
+        public string? Duree { get; set; }
+        public string? PublicVise { get; set; }
+        public string? Financement { get; set; }
+        public string? Prix { get; set; }
+        public bool DisponibleEnPresentiel { get; set; }
         public List<EtapeApercuViewModel> Etapes { get; set; } = [];
         public List<CohorteResume> CohortesOuvertes { get; set; } = [];
     }

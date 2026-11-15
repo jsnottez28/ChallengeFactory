@@ -161,6 +161,33 @@ public static class EmailTemplates
             """);
     }
 
+    // Notification au gestionnaire (cf. CLAUDE.md : "l'humain valide, l'IA assiste" -
+    // aucune automatisation ne cree de session depuis cette demande, elle reste une
+    // Cohorte Proposee en attente de validation humaine, cf. CohorteService
+    // .DemanderEmbarquementAsync) : chaque demande d'embarquement doit etre vue, pas
+    // seulement consultable sur demande dans /Administration/Cohortes/Embarquement.
+    public static string DemandeEmbarquement(string nomUtilisateur, string emailUtilisateur, string titreChallenge)
+    {
+        var nomSecurise = System.Net.WebUtility.HtmlEncode(nomUtilisateur);
+        var emailSecurise = System.Net.WebUtility.HtmlEncode(emailUtilisateur);
+        var titreSecurise = System.Net.WebUtility.HtmlEncode(titreChallenge);
+
+        return BaseTemplate("Nouvelle demande d'embarquement", $"""
+            <h2 style="color:#003189;font-size:20px;margin:0 0 16px;">
+                Nouvelle demande d'embarquement
+            </h2>
+            <p style="color:#444444;font-size:15px;line-height:1.6;margin:0 0 8px;">
+                <strong>{nomSecurise}</strong> ({emailSecurise}) souhaite rejoindre le Challenge :
+            </p>
+            <p style="color:#444444;font-size:16px;line-height:1.6;margin:0 0 16px;font-weight:bold;">
+                {titreSecurise}
+            </p>
+            <p style="color:#444444;font-size:15px;line-height:1.6;margin:16px 0 0;">
+                Rendez-vous dans /Administration/Cohortes « Demandes d'embarquement » pour l'étudier.
+            </p>
+            """);
+    }
+
     public static string AccuseReceptionReclamation(string nom)
     {
         var nomSecurise = System.Net.WebUtility.HtmlEncode(nom);

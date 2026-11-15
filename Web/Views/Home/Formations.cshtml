@@ -1,3 +1,4 @@
+@using Web.Extensions
 @model List<Web.Controllers.FormationViewModel>
 @{
     ViewData["Title"] = "Formations";
@@ -33,10 +34,39 @@
         {
             <p class="text-muted">Aucun Challenge n'est disponible pour le moment. Revenez bientôt !</p>
         }
+        else
+        {
+            <div class="row g-2 align-items-end mb-4" id="cf-formations-filtres">
+                <div class="col-12 col-md-4">
+                    <label for="cf-filtre-thematique" class="form-label small mb-1">Thématique</label>
+                    <select id="cf-filtre-thematique" class="form-select form-select-sm">
+                        <option value="">Toutes les thématiques</option>
+                        <option value="Decarbonation">🌱 Décarbonation</option>
+                        <option value="HumainEtOrganisation">🤝 Humain &amp; Organisation</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for="cf-filtre-sousfamille" class="form-label small mb-1">Catégorie</label>
+                    <select id="cf-filtre-sousfamille" class="form-select form-select-sm">
+                        <option value="">Toutes les catégories</option>
+                        @foreach (var valeur in Enum.GetValues<Domain.Entities.SousFamilleChallenge>())
+                        {
+                            <option value="@valeur">@valeur.Libelle()</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for="cf-filtre-recherche" class="form-label small mb-1">Rechercher</label>
+                    <input type="search" id="cf-filtre-recherche" class="form-control form-control-sm" placeholder="Titre, public visé...">
+                </div>
+            </div>
+
+            <p id="cf-formations-aucun-resultat" class="text-muted" style="display:none;">Aucune formation ne correspond à ces critères.</p>
+        }
 
         @if (parcoursDecarbonation.Count > 0)
         {
-            <div class="mb-5" id="decarbonation">
+            <div class="mb-5" id="decarbonation" data-cf-section>
                 <span class="cf-eyebrow">🌱 Décarbonation</span>
                 <h2 class="cf-h2 mb-3">Réduire les émissions, en équipe</h2>
                 <div class="row g-3">
@@ -50,7 +80,7 @@
 
         @if (parcoursHumain.Count > 0)
         {
-            <div class="@(parcoursDecarbonation.Count > 0 ? "mt-5" : "")" id="humain-organisation">
+            <div class="@(parcoursDecarbonation.Count > 0 ? "mt-5" : "")" id="humain-organisation" data-cf-section>
                 <span class="cf-eyebrow cf-eyebrow-indigo">🤝 Humain &amp; Organisation</span>
                 <h2 class="cf-h2 mb-3">Mieux vivre les transitions, ensemble</h2>
                 <div class="row g-3">
@@ -63,6 +93,46 @@
         }
     </div>
 </section>
+
+@if (Model.Count > 0)
+{
+    <script>
+        (function () {
+            var selectThematique = document.getElementById('cf-filtre-thematique');
+            var selectSousFamille = document.getElementById('cf-filtre-sousfamille');
+            var champRecherche = document.getElementById('cf-filtre-recherche');
+            var aucunResultat = document.getElementById('cf-formations-aucun-resultat');
+            var colonnes = Array.prototype.slice.call(document.querySelectorAll('.cf-formation-col'));
+            var sections = Array.prototype.slice.call(document.querySelectorAll('[data-cf-section]'));
+
+            function appliquerFiltres() {
+                var thematique = selectThematique.value;
+                var sousFamille = selectSousFamille.value;
+                var recherche = champRecherche.value.trim().toLowerCase();
+                var visibles = 0;
+
+                colonnes.forEach(function (colonne) {
+                    var correspond = (!thematique || colonne.dataset.thematique === thematique)
+                        && (!sousFamille || colonne.dataset.sousfamille === sousFamille)
+                        && (!recherche || colonne.dataset.recherche.indexOf(recherche) !== -1);
+                    colonne.style.display = correspond ? '' : 'none';
+                    if (correspond) { visibles++; }
+                });
+
+                sections.forEach(function (section) {
+                    var aUneCarteVisible = Array.prototype.slice.call(section.querySelectorAll('.cf-formation-col'))
+                        .some(function (colonne) { return colonne.style.display !== 'none'; });
+                    section.style.display = aUneCarteVisible ? '' : 'none';
+                });
+
+                aucunResultat.style.display = visibles === 0 ? '' : 'none';
+            }
+
+            [selectThematique, selectSousFamille].forEach(function (el) { el.addEventListener('change', appliquerFiltres); });
+            champRecherche.addEventListener('input', appliquerFiltres);
+        })();
+    </script>
+}
 
 <style>
     .cf-formation-card {

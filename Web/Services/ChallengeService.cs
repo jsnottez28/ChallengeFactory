@@ -49,6 +49,12 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
             Mode = input.Mode,
             Thematique = input.Thematique,
             Format = input.Format,
+            SousFamille = input.SousFamille,
+            Duree = input.Duree,
+            PublicVise = input.PublicVise,
+            Financement = input.Financement,
+            Prix = input.Prix,
+            DisponibleEnPresentiel = input.DisponibleEnPresentiel,
         };
 
         dbContext.Challenges.Add(challenge);
@@ -87,6 +93,12 @@ public sealed class ChallengeService(ApplicationDbContext dbContext) : IChalleng
         challenge.Mode = input.Mode;
         challenge.Thematique = input.Thematique;
         challenge.Format = input.Format;
+        challenge.SousFamille = input.SousFamille;
+        challenge.Duree = input.Duree;
+        challenge.PublicVise = input.PublicVise;
+        challenge.Financement = input.Financement;
+        challenge.Prix = input.Prix;
+        challenge.DisponibleEnPresentiel = input.DisponibleEnPresentiel;
 
         await dbContext.SaveChangesAsync();
 

@@ -97,6 +97,12 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
             Mode = challenge.Mode,
             Thematique = challenge.Thematique,
             Format = challenge.Format,
+            SousFamille = challenge.SousFamille,
+            Duree = challenge.Duree,
+            PublicVise = challenge.PublicVise,
+            Financement = challenge.Financement,
+            Prix = challenge.Prix,
+            DisponibleEnPresentiel = challenge.DisponibleEnPresentiel,
         });
     }
 
@@ -281,6 +287,12 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
         Mode = model.Mode,
         Thematique = model.Thematique,
         Format = model.Format,
+        SousFamille = model.SousFamille,
+        Duree = model.Duree,
+        PublicVise = model.PublicVise,
+        Financement = model.Financement,
+        Prix = model.Prix,
+        DisponibleEnPresentiel = model.DisponibleEnPresentiel,
     };
 
     private static ChallengeEtapeInput VersEtapeInput(ChallengeEtapeFormModel model) => new()
@@ -320,6 +332,24 @@ public class ChallengesController(IChallengeService challengeService, ICarteComp
 
         [Display(Name = "Format")]
         public FormatChallenge Format { get; set; } = FormatChallenge.Collectif;
+
+        [Display(Name = "Sous-famille (vitrine /formations)")]
+        public SousFamilleChallenge? SousFamille { get; set; }
+
+        [Display(Name = "Durée")]
+        public string? Duree { get; set; }
+
+        [Display(Name = "Public visé")]
+        public string? PublicVise { get; set; }
+
+        [Display(Name = "Financement (OPCO, CPF, Gratuit...)")]
+        public string? Financement { get; set; }
+
+        [Display(Name = "Prix affiché")]
+        public string? Prix { get; set; }
+
+        [Display(Name = "Disponible en présentiel")]
+        public bool DisponibleEnPresentiel { get; set; }
     }
 
     public sealed class ChallengeEtapeFormModel

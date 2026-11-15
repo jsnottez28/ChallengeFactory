@@ -298,6 +298,15 @@ namespace Web.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("DisponibleEnPresentiel")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Duree")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Financement")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Format")
                         .HasColumnType("int");
 
@@ -307,8 +316,17 @@ namespace Web.Migrations
                     b.Property<int>("NombreEtapes")
                         .HasColumnType("int");
 
+                    b.Property<string>("Prix")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PublicVise")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Slogan")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("SousFamille")
+                        .HasColumnType("int");
 
                     b.Property<int>("Statut")
                         .HasColumnType("int");
