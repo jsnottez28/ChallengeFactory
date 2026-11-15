@@ -158,7 +158,7 @@
                 </li>
                 }
 
-                @if (APermission("CARTE.CONSULTER") || APermission("TEST.CONSULTER") || APermission("CHALLENGE.CONSULTER") || APermission("COHORTE.CONSULTER") || APermission("COHORTE.MODIFIER") || APermission("OFFREFORMATION.CONSULTER"))
+                @if (APermission("CARTE.CONSULTER") || APermission("TEST.CONSULTER") || APermission("CHALLENGE.CONSULTER") || APermission("COHORTE.CONSULTER") || APermission("COHORTE.MODIFIER"))
                 {
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -173,9 +173,6 @@
                         </droit-visible>
                         <droit-visible code="CHALLENGE.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="Challenges" asp-action="Index">Challenges</a></li>
-                        </droit-visible>
-                        <droit-visible code="OFFREFORMATION.CONSULTER">
-                            <li><a class="dropdown-item" asp-controller="OffresFormation" asp-action="Index">Catalogue de formations (vitrine)</a></li>
                         </droit-visible>
                         <droit-visible code="COHORTE.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="Cohortes" asp-action="Index">Cohortes</a></li>
