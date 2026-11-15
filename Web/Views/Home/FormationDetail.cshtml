@@ -22,10 +22,10 @@
                         <span class="badge text-bg-light">Présentiel possible</span>
                     }
                 </div>
-                <h1 class="cf-h1 mb-2 mt-2">@Model.Titre</h1>
+                <h1 class="cf-h1 mb-2 mt-3">@Model.Titre</h1>
                 @if (!string.IsNullOrWhiteSpace(Model.Slogan))
                 {
-                    <p class="cf-lead" style="max-width:640px;">@Model.Slogan</p>
+                    <p class="cf-lead cf-formation-slogan @(Model.Thematique == Domain.Entities.ThematiqueChallenge.Decarbonation ? "cf-formation-slogan--decarbonation" : "cf-formation-slogan--humain")" style="max-width:640px;">@Model.Slogan</p>
                 }
             </div>
         </div>
@@ -169,6 +169,12 @@
         display: flex; align-items: center; justify-content: center;
         font-weight: 700; font-size: 14px;
     }
+    /* Sous-titre colore sur la piste du Challenge (meme code couleur que le badge
+       Decarbonation/Humain au-dessus) : le titre lui-meme reste noir, conformement a la
+       charte (hero en noir, orange reserve aux accents) - cf. CLAUDE.md charte graphique. */
+    .cf-formation-slogan { font-weight: 600; font-size: 19px; }
+    .cf-formation-slogan--decarbonation { color: var(--cf-orange); }
+    .cf-formation-slogan--humain { color: var(--cf-indigo); }
     /* .cf-card force height:100% (prevu pour une seule carte par colonne de grille) : sur
        cette page, deux cartes sont empilees verticalement dans la meme colonne, chacune
        essayant alors de prendre 100% de la hauteur de la colonne -> debordement visuel sur
