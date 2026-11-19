@@ -25,6 +25,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CarteRessource> CarteRessources { get; set; }
     public DbSet<Article> Articles { get; set; }
     public DbSet<ArticleSource> ArticleSources { get; set; }
+    public DbSet<Rapport> Rapports { get; set; }
     public DbSet<CarteAttribution> CarteAttributions { get; set; }
     public DbSet<Challenge> Challenges { get; set; }
     public DbSet<ChallengeEtape> ChallengeEtapes { get; set; }
@@ -252,6 +253,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany(a => a.Sources)
             .HasForeignKey(s => s.ArticleId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Rapport>()
+            .HasIndex(r => r.Slug)
+            .IsUnique();
 
         // Pas d'unicite globale sur (CarteCompetenceId, UtilisateurId) seuls : une meme
         // carte peut desormais etre attribuee plusieurs fois au meme utilisateur si elle

@@ -11,7 +11,7 @@ namespace Web.Controllers;
 // automatiquement, sans intervention manuelle). Les pages vitrine (hors Articles) restent
 // une liste fixe ci-dessous : leur volume est stable et connu, aucune base de donnees ne
 // pilote ce catalogue-la.
-public class SitemapController(IArticleService articleService) : Controller
+public class SitemapController(IArticleService articleService, IRapportService rapportService) : Controller
 {
     private const string DomainePublic = "https://challenges-factory.com";
     private static readonly XNamespace Ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
@@ -35,6 +35,7 @@ public class SitemapController(IArticleService articleService) : Controller
         ("/a-propos", new DateTime(2026, 9, 11), "monthly", "0.6"),
         ("/le-lab", new DateTime(2026, 9, 11), "weekly", "0.6"),
         ("/articles", new DateTime(2026, 10, 31), "weekly", "0.6"),
+        ("/rapports", new DateTime(2026, 11, 19), "weekly", "0.6"),
         ("/le-lab/beges-obligatoire-2026", new DateTime(2026, 9, 11), "yearly", "0.5"),
         ("/le-lab/diag-decarbon-action", new DateTime(2026, 9, 11), "yearly", "0.5"),
         ("/le-lab/plans-de-transition-dans-un-tiroir", new DateTime(2026, 9, 11), "yearly", "0.5"),
@@ -57,6 +58,13 @@ public class SitemapController(IArticleService articleService) : Controller
         urls.AddRange(articles.Select(a => ConstruireUrl(
             $"{DomainePublic}/articles/{a.Slug}",
             DateTime.SpecifyKind(a.DatePublication, DateTimeKind.Utc),
+            "monthly",
+            "0.5")));
+
+        var rapports = await rapportService.GetDerniersPublicsAsync(500);
+        urls.AddRange(rapports.Select(r => ConstruireUrl(
+            $"{DomainePublic}/rapports/{r.Slug}",
+            DateTime.SpecifyKind(r.DatePublication, DateTimeKind.Utc),
             "monthly",
             "0.5")));
 

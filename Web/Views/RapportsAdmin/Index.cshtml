@@ -1,0 +1,119 @@
+@model List<Domain.Entities.Rapport>
+@{
+    ViewData["Title"] = "Rapports";
+    var page = (int)(ViewData["Page"] ?? 1);
+    var nombrePages = (int)(ViewData["NombrePages"] ?? 1);
+    var statuts = ViewData["Statuts"] as Dictionary<int, string> ?? [];
+
+    string LibelleType(Domain.Entities.TypeRapport type) => type switch
+    {
+        Domain.Entities.TypeRapport.Acv => "ACV",
+        _ => "Bilan Carbone®",
+    };
+}
+
+<section class="backend-page">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Accueil</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Administration</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Rapports</li>
+            </ol>
+        </nav>
+
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-muted mb-1">Administration</p>
+                <h1 class="h3 mb-0">Rapports</h1>
+            </div>
+            <div class="d-flex gap-2">
+                <droit-visible code="RAPPORT.CREER">
+                    <a asp-controller="RapportsAdmin" asp-action="Create" class="btn btn-primary">Nouveau rapport</a>
+                </droit-visible>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Titre</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Auteur</th>
+                                <th scope="col">Date de publication</th>
+                                <th scope="col">Statut</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-muted text-center py-4">Aucun rapport pour le moment.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var rapport in Model)
+                                {
+                                    var statutAffiche = statuts.GetValueOrDefault(rapport.Id, "Brouillon");
+                                    var badgeClasse = statutAffiche switch
+                                    {
+                                        "Publié" => "text-bg-success",
+                                        "Programmé" => "text-bg-warning",
+                                        _ => "text-bg-secondary",
+                                    };
+                                    <tr>
+                                        <td class="fw-semibold">@rapport.Titre</td>
+                                        <td>@LibelleType(rapport.Type)</td>
+                                        <td>@rapport.Auteur</td>
+                                        <td>@DateTime.SpecifyKind(rapport.DatePublication, DateTimeKind.Utc).ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td><span class="badge @badgeClasse">@statutAffiche</span></td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <a asp-controller="Rapports" asp-action="Details" asp-route-slug="@rapport.Slug" target="_blank" class="btn btn-sm btn-outline-secondary">Voir</a>
+                                                <droit-visible code="RAPPORT.MODIFIER">
+                                                    <a asp-controller="RapportsAdmin" asp-action="Edit" asp-route-id="@rapport.Id" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                                </droit-visible>
+                                                <droit-visible code="RAPPORT.SUPPRIMER">
+                                                    <form method="post" asp-controller="RapportsAdmin" asp-action="Delete" asp-route-id="@rapport.Id" onsubmit="return confirm('Supprimer ce rapport ?');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                                    </form>
+                                                </droit-visible>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (nombrePages > 1)
+                {
+                    <nav aria-label="Pagination" class="mt-4">
+                        <ul class="pagination justify-content-center mb-0">
+                            @for (var p = 1; p <= nombrePages; p++)
+                            {
+                                <li class="page-item @(p == page ? "active" : "")">
+                                    <a class="page-link" asp-controller="RapportsAdmin" asp-action="Index" asp-route-page="@p">@p</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    </div>
+</section>

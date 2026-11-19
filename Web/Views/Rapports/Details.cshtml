@@ -1,0 +1,64 @@
+@model Web.Controllers.RapportDetailViewModel
+@{
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+
+    string LibelleType(Domain.Entities.TypeRapport type) => type switch
+    {
+        Domain.Entities.TypeRapport.Acv => "ACV",
+        _ => "Bilan Carbone®",
+    };
+}
+
+@if (Model.EstApercu)
+{
+    <div class="alert alert-warning text-center mb-0 rounded-0" role="alert">
+        👁️ Mode aperçu — statut actuel : <strong>@Model.StatutAffiche</strong>. Cette page n'est pas visible publiquement.
+    </div>
+}
+
+<section class="cf-hero-home" style="padding-bottom:40px;">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <a class="cf-badge text-decoration-none" asp-controller="Rapports" asp-action="Index">← Études de cas</a>
+                <span class="cf-badge">@LibelleType(Model.Type)</span>
+                <h1 class="cf-h1 mb-3 mt-3">@Model.Titre</h1>
+                <p class="text-muted mb-0">
+                    @Model.Auteur · @Model.DatePublication.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cf-section pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                @if (!string.IsNullOrWhiteSpace(Model.ImageCouverture))
+                {
+                    <img src="~/uploads/rapports/@Model.ImageCouverture" alt="" class="w-100 mb-5" style="border-radius:var(--cf-radius-lg);">
+                }
+
+                <div class="cf-article-body">
+                    @Html.Raw(Model.ContenuHtml)
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.FichierPdf))
+                {
+                    <div class="text-center my-5">
+                        <a class="cf-btn cf-btn-outline cf-btn-wrap" href="~/uploads/rapports/@Model.FichierPdf" target="_blank" rel="noopener">
+                            📄 Télécharger l'étude complète (PDF)
+                        </a>
+                    </div>
+                }
+
+                <div class="text-center my-5">
+                    <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                        📅 Réserver mon pré-diagnostic carbone (30 min)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

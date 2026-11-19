@@ -1,0 +1,69 @@
+@model Web.Controllers.RapportsIndexViewModel
+@{
+    string LibelleType(Domain.Entities.TypeRapport type) => type switch
+    {
+        Domain.Entities.TypeRapport.Acv => "ACV",
+        _ => "Bilan Carbone®",
+    };
+}
+
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">Études de cas</span>
+                <h1 class="cf-h1 mb-3">Nos <span class="cf-accent">rapports</span> Bilan Carbone® et ACV.</h1>
+                <p class="cf-lead" style="max-width:640px;">
+                    Des études réalisées pour nos clients, publiées au fil de l'eau : méthodologie, résultats et enseignements.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /hero -->
+
+<!-- liste des rapports -->
+<section class="cf-section pt-0">
+    <div class="container">
+        @if (Model.Rapports.Count == 0)
+        {
+            <p class="text-muted">Aucun rapport publié pour le moment.</p>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var rapport in Model.Rapports)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <a class="cf-article-card cf-card h-100" asp-controller="Rapports" asp-action="Details" asp-route-slug="@rapport.Slug">
+                            @if (!string.IsNullOrWhiteSpace(rapport.ImageCouverture))
+                            {
+                                <img src="~/uploads/rapports/@rapport.ImageCouverture" alt="" class="w-100 mb-3" style="border-radius:var(--cf-radius-md);aspect-ratio:1200/630;object-fit:cover;">
+                            }
+                            <span class="cf-code-tag">@LibelleType(rapport.Type)</span>
+                            <span class="cf-code-tag">@rapport.DatePublication.ToString("dd/MM/yyyy")</span>
+                            <h3 class="h5 mb-2 cf-article-card-title">@rapport.Titre</h3>
+                            <p class="mb-0 small text-muted">@rapport.Resume</p>
+                        </a>
+                    </div>
+                }
+            </div>
+
+            @if (Model.NombrePages > 1)
+            {
+                <nav aria-label="Pagination" class="mt-5">
+                    <ul class="pagination justify-content-center mb-0">
+                        @for (var p = 1; p <= Model.NombrePages; p++)
+                        {
+                            <li class="page-item @(p == Model.Page ? "active" : "")">
+                                <a class="page-link" asp-controller="Rapports" asp-action="Index" asp-route-page="@p">@p</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+</section>
+<!-- /liste des rapports -->
