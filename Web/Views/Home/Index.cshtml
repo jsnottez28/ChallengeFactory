@@ -280,6 +280,17 @@
            information, un seul element au lieu de cinq - cf. audit EcoIndex). *@
         <p class="text-muted small text-center mt-4 mb-0 fst-italic">Tarifs indicatifs, devis après pré-diagnostic gratuit de 30 minutes.</p>
 
+        @* Lien texte leger (pas de nouvelle carte cf-card) vers les 3 pages d'offre
+           Ecolabels/Label RSE/ACV, pour ne pas revenir sur l'allegement DOM ci-dessous. *@
+        <p class="text-center small mt-3 mb-0">
+            Vous visez un label (Clef Verte, Écolabel, EcoVadis...) ou une ACV ?
+            <a asp-controller="Home" asp-action="EcolabelsEtLabelsEnvironnementaux">Écolabels →</a>
+            ·
+            <a asp-controller="Home" asp-action="LabelRseEcovadis">Label RSE &amp; EcoVadis →</a>
+            ·
+            <a asp-controller="Home" asp-action="AcvSimplifiee">ACV simplifiée →</a>
+        </p>
+
         @* Le teaser "Competences & IA" (Programme PME 1 490 EUR HT/mois / Licence interne sur
            devis) a ete retire de la page d'accueil pour alleger son DOM - cf. audit EcoIndex,
            confirme avec Jean-Sebastien Nottez (page d'accueil desormais centree sur l'offre

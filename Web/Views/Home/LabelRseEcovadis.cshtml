@@ -1,0 +1,174 @@
+@{
+    ViewData["Title"] = "Label RSE & EcoVadis | Chartres";
+    ViewData["MetaDescription"] = "PME et ETI sous-traitantes et industrielles de Chartres : préparez le volet environnement de votre label RSE (EcoVadis, Lucie 26000, Engagé RSE) avec Challenges Factory.";
+
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+
+    var pourQui = new[]
+    {
+        "PME et ETI de 10 à 500 salariés",
+        "Sous-traitants industriels",
+        "Entreprises de la filière cosmétique",
+        "Tout fournisseur évalué par ses donneurs d'ordres",
+    };
+}
+
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">Chartres</span>
+                <h1 class="cf-h1 mb-3">Label RSE, EcoVadis : préparez le volet environnement de votre dossier</h1>
+                <p class="cf-lead mb-4" style="max-width:640px;">
+                    Mesure de vos émissions, plan de réduction et synthèse rédigée au format attendu par
+                    l'évaluation ou le label que vous visez.
+                </p>
+                <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                    📅 Réserver mon pré-diagnostic gratuit (30 min)
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /hero -->
+
+<!-- le constat -->
+<section class="cf-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 text-center">
+                <span class="cf-eyebrow">Le constat</span>
+                <h2 class="cf-h2 mb-3">Vos donneurs d'ordre et vos banques demandent un label ou une évaluation RSE</h2>
+                <p class="cf-lead">
+                    EcoVadis, Lucie 26000, Engagé RSE, PME+, B Corp : quel que soit le référentiel visé, le
+                    volet environnement de votre dossier repose sur une mesure sérieuse de vos émissions —
+                    pas sur une déclaration d'intention.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /le constat -->
+
+<!-- notre offre -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Notre offre</span>
+            <h2 class="cf-h2 mb-3">Le volet environnement & climat de votre dossier</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">📊</div>
+                    <h5 class="mb-0">Bilan Carbone®</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🎯</div>
+                    <h5 class="mb-0">Plan de réduction</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">⚡</div>
+                    <h5 class="mb-0">Challenge d'équipe</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">📄</div>
+                    <h5 class="mb-0">Synthèse au format attendu</h5>
+                </div>
+            </div>
+        </div>
+        <p class="text-center small mt-4 mb-0">
+            Besoin de chiffrer l'impact d'un produit plutôt que de l'entreprise ?
+            <a asp-controller="Home" asp-action="AcvSimplifiee">Voir notre ACV simplifiée →</a>
+        </p>
+    </div>
+</section>
+<!-- /notre offre -->
+
+<!-- pour qui -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Pour qui</span>
+            <h2 class="cf-h2 mb-3">Qui accompagnons-nous</h2>
+        </div>
+        <div class="row g-3 justify-content-center">
+            @foreach (var cible in pourQui)
+            {
+                <div class="col-6 col-md-3">
+                    <div class="cf-card h-100 text-center py-3">
+                        <p class="mb-0 small fw-medium">@cible</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /pour qui -->
+
+<!-- ce que nous ne faisons pas -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="cf-card text-center">
+                    <h5 class="mb-3">Ce que nous ne faisons pas</h5>
+                    <p class="mb-0">
+                        Nous ne sommes ni certificateur ni évaluateur : c'est l'organisme du label ou de
+                        l'évaluation visée qui audite et décide. Notre rôle est de préparer votre dossier, pour
+                        que votre candidature parte dans les meilleures conditions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /ce que nous ne faisons pas -->
+
+<!-- cta final -->
+<section class="cf-section">
+    <div class="container">
+        <div class="cf-cta-band">
+            <h2 class="cf-h2 mb-3" style="color:#fff;">Prêt à préparer votre dossier ?</h2>
+            <p class="mb-4" style="color:rgba(255,255,255,.65);">En 30 minutes, faisons le point sur votre situation et le référentiel visé.</p>
+            <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                📅 Réserver mon pré-diagnostic gratuit (30 min)
+            </a>
+            <p class="small mt-3 mb-0" style="color:rgba(255,255,255,.45);">Challenges Factory, avec un S.</p>
+        </div>
+    </div>
+</section>
+<!-- /cta final -->
+
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@graph": [
+    {
+      "@@type": "Service",
+      "serviceType": "Accompagnement volet environnement et climat pour label RSE et EcoVadis",
+      "provider": {
+        "@@type": "ProfessionalService",
+        "name": "Challenges Factory",
+        "areaServed": ["Eure-et-Loir", "Centre-Val de Loire"]
+      },
+      "areaServed": ["Eure-et-Loir", "Centre-Val de Loire"],
+      "url": "https://challenges-factory.com/label-rse-ecovadis"
+    },
+    {
+      "@@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://challenges-factory.com/" },
+        { "@@type": "ListItem", "position": 2, "name": "Label RSE, EcoVadis", "item": "https://challenges-factory.com/label-rse-ecovadis" }
+      ]
+    }
+  ]
+}
+</script>

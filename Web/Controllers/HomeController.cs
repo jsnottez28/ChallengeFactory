@@ -69,6 +69,36 @@ namespace Web.Controllers
             return View();
         }
 
+        // Page vitrine generaliste sur les ecolabels et labels environnementaux (les 2
+        // ecolabels officiels ISO 14024 - NF Environnement, Ecolabel europeen - plus les
+        // labels sectoriels reconnus comme la Clef Verte ou COSMOS/Ecocert) : remplace une
+        // premiere version ciblee uniquement sur les hebergeurs du Perche, jugee trop etroite
+        // (un secteur = un exemple parmi d'autres ici, pas le sujet de la page).
+        [Route("ecolabels-labels-environnementaux")]
+        public IActionResult EcolabelsEtLabelsEnvironnementaux()
+        {
+            return View();
+        }
+
+        // Page vitrine ciblant les PME/ETI sous-traitantes (dont la filiere cosmetique de
+        // Chartres) qui doivent produire un volet environnement pour un label/evaluation RSE
+        // (EcoVadis, Lucie 26000, Engage RSE...). L'ACV simplifiee a sa propre page dediee
+        // (AcvSimplifiee) plutot qu'une simple section ici.
+        [Route("label-rse-ecovadis")]
+        public IActionResult LabelRseEcovadis()
+        {
+            return View();
+        }
+
+        // Page vitrine dediee a l'ACV simplifiee d'un produit (ordre de grandeur des impacts,
+        // points chauds du cycle de vie) - distincte d'une ACV complete conforme ISO
+        // 14040/14044 avec revue critique, pour laquelle on oriente vers des partenaires.
+        [Route("acv-simplifiee")]
+        public IActionResult AcvSimplifiee()
+        {
+            return View();
+        }
+
         // Bilan de competences (reconversion vers un metier de la transition ecologique) :
         // dispositif distinct du Bilan Carbone(R), encadre par le Code du travail (art.
         // L6313-4). Page de presentation statique, meme principe que les autres pages

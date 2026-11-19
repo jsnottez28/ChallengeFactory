@@ -1,0 +1,218 @@
+@{
+    ViewData["Title"] = "Écolabels & labels environnementaux | PME";
+    ViewData["MetaDescription"] = "NF Environnement, Écolabel européen, Clef Verte, COSMOS : repères sur les écolabels et labels environnementaux, et accompagnement Challenges Factory pour préparer votre candidature.";
+
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+
+    var etapes = new (string Numero, string Titre, string Description)[]
+    {
+        ("1", "Pré-diagnostic", "Un échange de 30 minutes pour situer votre activité et le label le plus adapté."),
+        ("2", "Bilan Carbone®", "Mesure de vos postes d'émission pertinents pour le label visé."),
+        ("3", "Plan d'action", "Des actions concrètes et chiffrées, classées par impact et par facilité de mise en œuvre."),
+        ("4", "Formation & challenge", "Votre référent formé, et une équipe embarquée via un challenge terrain."),
+        ("5", "Dossier de candidature", "Préparation du dossier à déposer auprès de l'organisme du label visé."),
+    };
+
+    var pourQui = new[]
+    {
+        "Hébergements et restaurants (Clef Verte)",
+        "Entreprises de la filière cosmétique (COSMOS)",
+        "Tout produit ou service candidat à l'Écolabel européen ou à NF Environnement",
+        "PME et ETI de tout secteur",
+    };
+}
+
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">Écolabels</span>
+                <h1 class="cf-h1 mb-3">Écolabels et labels environnementaux : repères pour les entreprises</h1>
+                <p class="cf-lead mb-4" style="max-width:640px;">
+                    Quel que soit votre secteur, nous vous aidons à identifier le label le plus adapté, puis à
+                    préparer votre établissement et votre dossier de candidature.
+                </p>
+                <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                    📅 Réserver mon pré-diagnostic gratuit (30 min)
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /hero -->
+
+<!-- les 2 ecolabels officiels -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Les 2 écolabels officiels</span>
+            <h2 class="cf-h2 mb-3">NF Environnement et Écolabel européen</h2>
+            <p class="cf-lead mx-auto" style="max-width:640px;">
+                Les deux seuls labels conformes à la norme ISO 14024, qui peuvent à proprement parler être
+                appelés « écolabels ».
+            </p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="cf-card h-100">
+                    <h5>NF Environnement</h5>
+                    <p class="mb-0">
+                        Écolabel officiel français, délivré par AFNOR Certification, qui atteste qu'un produit
+                        a un impact environnemental limité par rapport aux produits du même type.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="cf-card h-100">
+                    <h5>Écolabel européen</h5>
+                    <p class="mb-0">
+                        Label écologique officiel de l'Union européenne, accompagné par l'ADEME et certifié en
+                        France par AFNOR Certification. Reconnaissance utilisable dans tous les États membres.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /les 2 ecolabels officiels -->
+
+<!-- labels sectoriels -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Les labels sectoriels reconnus</span>
+            <h2 class="cf-h2 mb-3">Au-delà des 2 écolabels officiels</h2>
+            <p class="cf-lead mx-auto" style="max-width:640px;">
+                D'autres labels, propres à certains secteurs, sont largement reconnus par les acheteurs et les
+                clients — même s'ils ne relèvent pas de la norme ISO 14024.
+            </p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="cf-card h-100">
+                    <h5>Clef Verte</h5>
+                    <p class="mb-0">
+                        Label porté en France par l'association Teragir, pour les hébergements touristiques
+                        (hôtels, campings, gîtes) et les restaurants.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="cf-card h-100">
+                    <h5>COSMOS</h5>
+                    <p class="mb-0">
+                        Référentiel européen pour les cosmétiques naturels et biologiques, porté en France
+                        notamment par Ecocert et Cosmébio — pertinent pour la filière cosmétique de Chartres.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /labels sectoriels -->
+
+<!-- notre accompagnement -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Notre accompagnement</span>
+            <h2 class="cf-h2 mb-3">5 étapes, du diagnostic au dossier</h2>
+        </div>
+        <div class="row g-4">
+            @foreach (var etape in etapes)
+            {
+                <div class="col-6 col-md-4 col-lg">
+                    <div class="cf-process-step">
+                        <span class="cf-process-num">@etape.Numero</span>
+                        <h6 class="mb-1">@etape.Titre</h6>
+                        <p class="text-muted small mb-0">@etape.Description</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /notre accompagnement -->
+
+<!-- pour qui -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Pour qui</span>
+            <h2 class="cf-h2 mb-3">Qui accompagnons-nous</h2>
+        </div>
+        <div class="row g-3 justify-content-center">
+            @foreach (var cible in pourQui)
+            {
+                <div class="col-6 col-md-3">
+                    <div class="cf-card h-100 text-center py-3">
+                        <p class="mb-0 small fw-medium">@cible</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /pour qui -->
+
+<!-- ce que nous ne faisons pas -->
+<section class="cf-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="cf-card text-center">
+                    <h5 class="mb-3">Ce que nous ne faisons pas</h5>
+                    <p class="mb-0">
+                        Nous ne délivrons aucun label : c'est toujours l'organisme du label (Teragir, AFNOR
+                        Certification, Ecocert...) qui audite et décide. Notre rôle est de préparer votre
+                        établissement et votre dossier, pour que votre candidature parte dans les meilleures
+                        conditions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /ce que nous ne faisons pas -->
+
+<!-- cta final -->
+<section class="cf-section">
+    <div class="container">
+        <div class="cf-cta-band">
+            <h2 class="cf-h2 mb-3" style="color:#fff;">Prêt à préparer votre candidature ?</h2>
+            <p class="mb-4" style="color:rgba(255,255,255,.65);">En 30 minutes, faisons le point sur votre activité et le label le plus adapté.</p>
+            <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                📅 Réserver mon pré-diagnostic gratuit (30 min)
+            </a>
+            <p class="small mt-3 mb-0" style="color:rgba(255,255,255,.45);">Challenges Factory, avec un S.</p>
+        </div>
+    </div>
+</section>
+<!-- /cta final -->
+
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@graph": [
+    {
+      "@@type": "Service",
+      "serviceType": "Accompagnement écolabels et labels environnementaux",
+      "provider": {
+        "@@type": "ProfessionalService",
+        "name": "Challenges Factory",
+        "areaServed": ["Eure-et-Loir", "Centre-Val de Loire"]
+      },
+      "areaServed": ["Eure-et-Loir", "Centre-Val de Loire"],
+      "url": "https://challenges-factory.com/ecolabels-labels-environnementaux"
+    },
+    {
+      "@@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://challenges-factory.com/" },
+        { "@@type": "ListItem", "position": 2, "name": "Écolabels & labels environnementaux", "item": "https://challenges-factory.com/ecolabels-labels-environnementaux" }
+      ]
+    }
+  ]
+}
+</script>

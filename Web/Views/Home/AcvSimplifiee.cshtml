@@ -1,0 +1,196 @@
+@{
+    ViewData["Title"] = "ACV simplifiée d'un produit | Chartres";
+    ViewData["MetaDescription"] = "Repérez les points chauds environnementaux de votre produit avec une ACV simplifiée : ordre de grandeur des impacts sur le cycle de vie, pour éclairer écoconception et écolabel.";
+
+    const string LienPreDiagnostic = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1u9jEGikHh9zntfc83AKshY3SRBsLas_LlZm9v1x2LypnjeaP73YWl4_EDdPWFdEG2aato2wvo";
+
+    var etapesCycleDeVie = new[]
+    {
+        "Matières premières",
+        "Fabrication",
+        "Distribution",
+        "Usage",
+        "Fin de vie",
+    };
+
+    var pourQui = new[]
+    {
+        "PME et ETI industrielles",
+        "Entreprises de la filière cosmétique",
+        "Fabricants qui préparent un écolabel",
+        "Équipes qui lancent une démarche d'écoconception",
+    };
+}
+
+<!-- hero -->
+<section class="cf-hero-home">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-9">
+                <span class="cf-badge">ACV simplifiée</span>
+                <h1 class="cf-h1 mb-3">ACV simplifiée : repérez les points chauds de votre produit</h1>
+                <p class="cf-lead mb-4" style="max-width:640px;">
+                    Un ordre de grandeur des impacts environnementaux sur le cycle de vie de votre produit,
+                    pour savoir où agir en priorité.
+                </p>
+                <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                    📅 Réserver mon pré-diagnostic gratuit (30 min)
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /hero -->
+
+<!-- pourquoi -->
+<section class="cf-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 text-center">
+                <span class="cf-eyebrow">Pourquoi une ACV simplifiée</span>
+                <h2 class="cf-h2 mb-3">Avant de changer quoi que ce soit, savoir où ça compte vraiment</h2>
+                <p class="cf-lead">
+                    Changer un emballage, un fournisseur ou un procédé sans savoir où se situent les vrais
+                    impacts de votre produit, c'est prendre le risque d'agir sur un point qui ne compte presque
+                    pas. L'ACV simplifiée repère les postes qui pèsent le plus, pour que vos efforts
+                    d'écoconception portent sur ce qui compte.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /pourquoi -->
+
+<!-- cycle de vie -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Ce que nous mesurons</span>
+            <h2 class="cf-h2 mb-3">Le cycle de vie complet du produit</h2>
+        </div>
+        <div class="row g-3 justify-content-center">
+            @foreach (var etape in etapesCycleDeVie)
+            {
+                <div class="col-6 col-md-3 col-lg">
+                    <div class="cf-card h-100 text-center py-3">
+                        <p class="mb-0 small fw-medium">@etape</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /cycle de vie -->
+
+<!-- livrables -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Ce que vous recevez</span>
+            <h2 class="cf-h2 mb-3">Les livrables</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">📄</div>
+                    <h5 class="mb-0">Ordre de grandeur des impacts</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🎯</div>
+                    <h5 class="mb-0">Points chauds identifiés</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cf-card h-100">
+                    <div class="cf-card-icon">🧭</div>
+                    <h5 class="mb-0">Pistes d'écoconception priorisées</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /livrables -->
+
+<!-- ce que nous ne faisons pas -->
+<section class="cf-section cf-section--grey">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="cf-card text-center">
+                    <h5 class="mb-3">Ce que nous ne faisons pas</h5>
+                    <p class="mb-0">
+                        Il s'agit d'une <strong>analyse simplifiée</strong>, pas d'une ACV complète conforme
+                        ISO 14040/14044 avec revue critique. Pour ce niveau d'exigence — nécessaire par exemple
+                        pour certaines allégations environnementales réglementées — nous travaillons avec des
+                        partenaires spécialisés.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /ce que nous ne faisons pas -->
+
+<!-- pour qui -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Pour qui</span>
+            <h2 class="cf-h2 mb-3">Qui accompagnons-nous</h2>
+        </div>
+        <div class="row g-3 justify-content-center">
+            @foreach (var cible in pourQui)
+            {
+                <div class="col-6 col-md-3">
+                    <div class="cf-card h-100 text-center py-3">
+                        <p class="mb-0 small fw-medium">@cible</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /pour qui -->
+
+<!-- cta final -->
+<section class="cf-section">
+    <div class="container">
+        <div class="cf-cta-band">
+            <h2 class="cf-h2 mb-3" style="color:#fff;">Prêt à repérer vos points chauds ?</h2>
+            <p class="mb-4" style="color:rgba(255,255,255,.65);">En 30 minutes, faisons le point sur votre produit et vos objectifs.</p>
+            <a class="cf-btn cf-btn-primary cf-btn-wrap" href="@LienPreDiagnostic" target="_blank" rel="noopener">
+                📅 Réserver mon pré-diagnostic gratuit (30 min)
+            </a>
+            <p class="small mt-3 mb-0" style="color:rgba(255,255,255,.45);">Challenges Factory, avec un S.</p>
+        </div>
+    </div>
+</section>
+<!-- /cta final -->
+
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@graph": [
+    {
+      "@@type": "Service",
+      "serviceType": "ACV simplifiée d'un produit",
+      "provider": {
+        "@@type": "ProfessionalService",
+        "name": "Challenges Factory",
+        "areaServed": ["Eure-et-Loir", "Centre-Val de Loire"]
+      },
+      "areaServed": ["Eure-et-Loir", "Centre-Val de Loire"],
+      "url": "https://challenges-factory.com/acv-simplifiee"
+    },
+    {
+      "@@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://challenges-factory.com/" },
+        { "@@type": "ListItem", "position": 2, "name": "ACV simplifiée", "item": "https://challenges-factory.com/acv-simplifiee" }
+      ]
+    }
+  ]
+}
+</script>
