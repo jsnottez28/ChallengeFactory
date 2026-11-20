@@ -11,6 +11,21 @@
         "Entreprises de la filière cosmétique",
         "Tout fournisseur évalué par ses donneurs d'ordres",
     };
+
+    var referentiels = new (string Nom, string Description)[]
+    {
+        ("EcoVadis", "Plateforme de notation RSE parmi les plus utilisées par les donneurs d'ordres. Le questionnaire évalue 4 thèmes (environnement, social, éthique, achats responsables) à partir de documents justificatifs, pour un score sur 100 renouvelé chaque année."),
+        ("Lucie 26000", "Label RSE français fondé sur la norme ISO 26000, porté par l'Agence LUCIE en lien avec AFNOR Certification. Il évalue la maturité RSE de l'organisation sur l'ensemble des thématiques de la norme, pour les entreprises déjà engagées."),
+        ("Engagé RSE", "Label délivré par AFNOR Certification après un audit sur site, sur la base des 7 questions centrales de l'ISO 26000. La norme elle-même n'étant pas certifiable, c'est un dispositif propre à AFNOR construit à partir de ce référentiel."),
+    };
+
+    var offre = new (string Icone, string Titre, string Description)[]
+    {
+        ("📊", "Bilan Carbone®", "Mesure de vos émissions sur les postes pertinents pour le référentiel visé."),
+        ("🎯", "Plan de réduction", "Des actions concrètes et chiffrées, pour nourrir votre feuille de route RSE."),
+        ("⚡", "Challenge d'équipe", "Une équipe embarquée sur le terrain, pour que la démarche ne reste pas qu'un dossier."),
+        ("📄", "Synthèse au format attendu", "Les résultats rédigés et mis en forme pour votre questionnaire ou votre dossier."),
+    };
 }
 
 <!-- hero -->
@@ -51,6 +66,32 @@
 </section>
 <!-- /le constat -->
 
+<!-- referentiels -->
+<section class="cf-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="cf-eyebrow">Les référentiels les plus demandés</span>
+            <h2 class="cf-h2 mb-3">EcoVadis, Lucie 26000, Engagé RSE</h2>
+            <p class="cf-lead mx-auto" style="max-width:640px;">
+                Trois référentiels fréquemment exigés par les donneurs d'ordres et les partenaires financiers —
+                chacun avec sa propre méthodologie.
+            </p>
+        </div>
+        <div class="row g-4">
+            @foreach (var referentiel in referentiels)
+            {
+                <div class="col-md-4">
+                    <div class="cf-card h-100">
+                        <h5>@referentiel.Nom</h5>
+                        <p class="mb-0">@referentiel.Description</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- /referentiels -->
+
 <!-- notre offre -->
 <section class="cf-section cf-section--grey">
     <div class="container">
@@ -59,30 +100,16 @@
             <h2 class="cf-h2 mb-3">Le volet environnement & climat de votre dossier</h2>
         </div>
         <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">📊</div>
-                    <h5 class="mb-0">Bilan Carbone®</h5>
+            @foreach (var item in offre)
+            {
+                <div class="col-md-6 col-lg-3">
+                    <div class="cf-card h-100">
+                        <div class="cf-card-icon">@item.Icone</div>
+                        <h5 class="mb-1">@item.Titre</h5>
+                        <p class="mb-0 small text-muted">@item.Description</p>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">🎯</div>
-                    <h5 class="mb-0">Plan de réduction</h5>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">⚡</div>
-                    <h5 class="mb-0">Challenge d'équipe</h5>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="cf-card h-100">
-                    <div class="cf-card-icon">📄</div>
-                    <h5 class="mb-0">Synthèse au format attendu</h5>
-                </div>
-            </div>
+            }
         </div>
         <p class="text-center small mt-4 mb-0">
             Besoin de chiffrer l'impact d'un produit plutôt que de l'entreprise ?

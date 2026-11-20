@@ -185,7 +185,7 @@
                 </li>
                 }
 
-                @if (APermission("RECLAMATION.CONSULTER") || APermission("PREBILAN.CONSULTER") || APermission("ARTICLE.CONSULTER"))
+                @if (APermission("RECLAMATION.CONSULTER") || APermission("PREBILAN.CONSULTER") || APermission("ARTICLE.CONSULTER") || APermission("RAPPORT.CONSULTER"))
                 {
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -200,6 +200,9 @@
                         </droit-visible>
                         <droit-visible code="ARTICLE.CONSULTER">
                             <li><a class="dropdown-item" asp-controller="ArticlesAdmin" asp-action="Index">Articles du blog</a></li>
+                        </droit-visible>
+                        <droit-visible code="RAPPORT.CONSULTER">
+                            <li><a class="dropdown-item" asp-controller="RapportsAdmin" asp-action="Index">Rapports (études de cas)</a></li>
                         </droit-visible>
                     </ul>
                 </li>
